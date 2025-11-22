@@ -1,81 +1,73 @@
-import { useState } from 'react';
-import { Plus, TrendingUp, Users, Globe } from 'lucide-react';
-import StoriesFeed from '../components/StoriesFeed';
-import CreateStoryModal from '../components/CreateStoryModal';
+import React, { useState } from 'react';
+import { Camera, Plus } from 'lucide-react';
+import { useStories } from '../contexts/StoriesContext';
 
-const Stories = () => {
+const Stories: React.FC = () => {
+  const { stories, loading } = useStories();
   const [activeTab, setActiveTab] = useState<'all' | 'following' | 'trending'>('all');
-  const [showCreateModal, setShowCreateModal] = useState(false);
-
-  const tabs = [
-    { id: 'all', label: 'All Stories', icon: Globe, description: 'Discover impact stories from everyone' },
-    { id: 'following', label: 'Following', icon: Users, description: 'Stories from people you follow' },
-    { id: 'trending', label: 'Trending', icon: TrendingUp, description: 'Most popular stories today' }
-  ];
 
   return (
-    <div className="min-h-full bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-16 z-10">
-        <div className="px-4 py-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                🎬 Impact Stories
-              </h1>
-              <p className="text-gray-600 text-sm mt-1">Share and discover environmental impact stories</p>
-            </div>
-            
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors shadow-lg hover:shadow-xl"
-            >
-              <Plus className="w-5 h-5" />
-              Share Your Story
-            </button>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto px-4 py-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-4">
+            <Camera className="w-8 h-8 text-emerald-500" />
+            <h1 className="text-2xl font-bold text-gray-900">Impact Stories</h1>
           </div>
-
-          {/* Tabs */}
-          <div className="mt-6 flex space-x-1 bg-gray-100 rounded-lg p-1">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium rounded-md transition-all ${
-                    activeTab === tab.id
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span className="hidden sm:inline">{tab.label}</span>
-                  <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Tab Description */}
-          <div className="mt-3">
-            <p className="text-sm text-gray-500">
-              {tabs.find(tab => tab.id === activeTab)?.description}
-            </p>
-          </div>
+          <button className="flex items-center space-x-2 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600">
+            <Plus className="w-4 h-4" />
+            <span>Share Story</span>
+          </button>
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="max-w-2xl mx-auto px-4 py-6">
-        <StoriesFeed feedType={activeTab} />
-      </div>
+        <div className="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg w-fit">
+          {['all', 'following', 'trending'].map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab as any)}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === tab ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </button>
+          ))}
+        </div>
 
-      {/* Create Story Modal */}
-      <CreateStoryModal 
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-      />
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {stories.map(story => (
+              <div key={story.id} className="bg-white rounded-lg shadow-sm border overflow-hidden">
+                <div className="aspect-square bg-gray-100">
+                  {story.story_type === 'image' ? (
+                    <img src={story.media_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <video src={story.media_url} className="w-full h-full object-cover" controls />
+                  )}
+                </div>
+                <div className="p-4">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <img
+                      src={story.user?.avatar_url || `https://ui-avatars.com/api/?name=${story.user?.full_name}&background=10b981&color=fff`}
+                      alt={story.user?.full_name}
+                      className="w-8 h-8 rounded-full"
+                    />
+                    <span className="font-medium text-gray-900">{story.user?.full_name}</span>
+                  </div>
+                  <p className="text-gray-700 text-sm">{story.caption}</p>
+                  {story.location && (
+                    <p className="text-gray-500 text-xs mt-2">📍 {story.location}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

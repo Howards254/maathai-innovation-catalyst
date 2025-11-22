@@ -9,6 +9,11 @@ import { EventProvider } from './contexts/EventContext';
 import { GamificationProvider } from './contexts/GamificationContext';
 import { InnovationProvider } from './contexts/InnovationContext';
 import { StoriesProvider } from './contexts/StoriesContext';
+import { MessagingProvider } from './contexts/MessagingContext';
+import { GroupsProvider } from './contexts/GroupsContext';
+import { LiveStreamProvider } from './contexts/LiveStreamContext';
+import { ActivityFeedProvider } from './contexts/ActivityFeedContext';
+import { MatchmakingProvider } from './contexts/MatchmakingContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Layouts
@@ -38,11 +43,16 @@ import InnovationHub from './pages/innovation/InnovationHub';
 import SubmitInnovation from './pages/innovation/SubmitInnovation';
 import MyProjects from './pages/innovation/MyProjects';
 import InnovationDetails from './pages/innovation/InnovationDetails';
-import Stories from './pages/Stories';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
+import Stories from './pages/Stories';
+import Messages from './pages/Messages';
+import Groups from './pages/Groups';
+import LiveStreams from './pages/LiveStreams';
+import LiveFeed from './pages/LiveFeed';
+import GreenMatchmaking from './pages/GreenMatchmaking';
 
 // Placeholder components for routes not fully detailed yet
 const Placeholder = ({ title }: { title: string }) => (
@@ -61,8 +71,13 @@ const App: React.FC = () => {
           <EventProvider>
             <GamificationProvider>
               <InnovationProvider>
-                <StoriesProvider>
-                  <CampaignProvider>
+                <CampaignProvider>
+                  <StoriesProvider>
+                    <MessagingProvider>
+                      <GroupsProvider>
+                        <LiveStreamProvider>
+                          <ActivityFeedProvider>
+                            <MatchmakingProvider>
                 <HashRouter>
       <Routes>
         {/* Public Routes */}
@@ -89,9 +104,6 @@ const App: React.FC = () => {
           <Route path="events/create" element={<CreateEvent />} />
           <Route path="events/:id" element={<EventDetails />} />
 
-          {/* Stories */}
-          <Route path="stories" element={<Stories />} />
-          
           {/* Discussions */}
           <Route path="discussions" element={<DiscussionsFeed />} />
           <Route path="discussions/:id" element={<DiscussionDetail />} />
@@ -114,13 +126,30 @@ const App: React.FC = () => {
           {/* Admin */}
           <Route path="admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           
+          {/* Social Features */}
+          <Route path="stories" element={<Stories />} />
+          <Route path="messages" element={<Messages />} />
+          <Route path="groups" element={<Groups />} />
+          
+          {/* Live Features */}
+          <Route path="live-streams" element={<LiveStreams />} />
+          <Route path="live-feed" element={<LiveFeed />} />
+          
+          {/* Matchmaking */}
+          <Route path="matchmaking" element={<GreenMatchmaking />} />
+          
           {/* Marketplace */}
           <Route path="marketplace" element={<Placeholder title="Tree Exchange Marketplace" />} />
         </Route>
       </Routes>
           </HashRouter>
-                  </CampaignProvider>
-                </StoriesProvider>
+                            </MatchmakingProvider>
+                          </ActivityFeedProvider>
+                        </LiveStreamProvider>
+                      </GroupsProvider>
+                    </MessagingProvider>
+                  </StoriesProvider>
+                </CampaignProvider>
               </InnovationProvider>
             </GamificationProvider>
           </EventProvider>

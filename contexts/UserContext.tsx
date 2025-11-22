@@ -21,6 +21,18 @@ export const useUsers = () => {
   return context;
 };
 
+export const useUser = () => {
+  const { user } = useAuth();
+  const { users, updateProfile } = useUsers();
+  
+  const currentUser = users.find(u => u.id === user?.id);
+  
+  return {
+    user: currentUser,
+    updateProfile
+  };
+};
+
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [users, setUsers] = useState<User[]>([]);
   const { user: currentUser } = useAuth();

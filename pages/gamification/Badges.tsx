@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useGamification } from '../../contexts/GamificationContext';
+import ShareButton from '../../components/ShareButton';
 
 const Badges: React.FC = () => {
   const { user } = useAuth();
@@ -60,8 +61,9 @@ const Badges: React.FC = () => {
                 <h3 className="font-bold text-gray-900 mb-1">{badge.name}</h3>
                 <p className="text-xs text-gray-600">{badge.description}</p>
                 {badge.earned && (
-                  <div className="mt-2">
+                  <div className="mt-2 flex items-center justify-center space-x-2">
                     <span className="text-xs bg-primary-100 text-primary-700 px-2 py-1 rounded-full">Earned</span>
+                    <ShareButton type="badge" data={badge} userName={user?.full_name || ''} size="sm" />
                   </div>
                 )}
               </div>

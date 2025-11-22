@@ -141,20 +141,10 @@ VITE_SUPABASE_ANON_KEY=your-anon-key-here
    - `VITE_SUPABASE_ANON_KEY`: Your Supabase anon key
 5. Deploy automatically builds and goes live
 
-### 3. Database Options
-
-**For Development/Testing:**
-- Use `database-setup.sql` (includes sample data)
-
-**For Production:**
-- Use `database-production.sql` (clean, no test data)
-- Creates empty platform ready for real users
-- No demo accounts or test content
-
-### 4. Post-Deployment
+### 3. Post-Deployment
+- Enable Row Level Security in Supabase
 - Test user registration and login
 - Verify all features work in production
-- Platform starts with clean slate
 
 ## 📊 Platform Statistics
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCampaigns } from '../../contexts/CampaignContext';
 import { useAuth } from '../../contexts/AuthContext';
+import ShareButton from '../../components/ShareButton';
 
 const CampaignList: React.FC = () => {
   const { campaigns, loading } = useCampaigns();
@@ -171,12 +172,15 @@ const CampaignList: React.FC = () => {
                       ></div>
                     </div>
                     
-                    <Link 
-                      to={`/app/campaigns/${campaign.id}`} 
-                      className="block w-full text-center bg-gradient-to-r from-green-600 to-emerald-600 text-white font-medium py-3 rounded-xl hover:shadow-lg hover:scale-105 transition-all duration-200"
-                    >
-                      View Campaign
-                    </Link>
+                    <div className="flex space-x-2">
+                      <Link 
+                        to={`/app/campaigns/${campaign.id}`} 
+                        className="flex-1 text-center bg-gradient-to-r from-green-600 to-emerald-600 text-white font-medium py-3 rounded-xl hover:shadow-lg hover:scale-105 transition-all duration-200"
+                      >
+                        View Campaign
+                      </Link>
+                      <ShareButton type="campaign" data={campaign} size="lg" className="!w-12 !h-12 border border-gray-300 bg-white hover:bg-gray-50" />
+                    </div>
                   </div>
                 </div>
               </div>
