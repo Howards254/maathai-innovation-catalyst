@@ -8,6 +8,7 @@ import { DiscussionProvider } from './contexts/DiscussionContext';
 import { EventProvider } from './contexts/EventContext';
 import { GamificationProvider } from './contexts/GamificationContext';
 import { InnovationProvider } from './contexts/InnovationContext';
+import { StoriesProvider } from './contexts/StoriesContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Layouts
@@ -37,6 +38,7 @@ import InnovationHub from './pages/innovation/InnovationHub';
 import SubmitInnovation from './pages/innovation/SubmitInnovation';
 import MyProjects from './pages/innovation/MyProjects';
 import InnovationDetails from './pages/innovation/InnovationDetails';
+import Stories from './pages/Stories';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import Privacy from './pages/Privacy';
@@ -59,7 +61,8 @@ const App: React.FC = () => {
           <EventProvider>
             <GamificationProvider>
               <InnovationProvider>
-                <CampaignProvider>
+                <StoriesProvider>
+                  <CampaignProvider>
                 <HashRouter>
       <Routes>
         {/* Public Routes */}
@@ -86,6 +89,9 @@ const App: React.FC = () => {
           <Route path="events/create" element={<CreateEvent />} />
           <Route path="events/:id" element={<EventDetails />} />
 
+          {/* Stories */}
+          <Route path="stories" element={<Stories />} />
+          
           {/* Discussions */}
           <Route path="discussions" element={<DiscussionsFeed />} />
           <Route path="discussions/:id" element={<DiscussionDetail />} />
@@ -113,7 +119,8 @@ const App: React.FC = () => {
         </Route>
       </Routes>
           </HashRouter>
-                </CampaignProvider>
+                  </CampaignProvider>
+                </StoriesProvider>
               </InnovationProvider>
             </GamificationProvider>
           </EventProvider>
