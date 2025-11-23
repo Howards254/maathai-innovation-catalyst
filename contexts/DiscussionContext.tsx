@@ -56,21 +56,41 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       if (error) throw error;
       
       if (data) {
-        const formattedDiscussions = data.map((d: any) => ({
-          id: d.id,
-          title: d.title,
-          content: d.content,
-          category: d.category,
-          author: d.author_data || { id: d.author_id, username: 'User', fullName: 'User', avatarUrl: '', impactPoints: 0, badges: [], role: 'user' },
-          upvotes: d.upvotes || 0,
-          commentsCount: d.comments_count || 0,
-          postedAt: new Date(d.created_at).toLocaleDateString(),
-          reactions: [],
-          isAnonymous: d.is_anonymous || false,
-          realAuthorId: d.author_id,
-          tags: d.tags || [],
-          mediaUrls: d.media_urls || []
-        }));
+        const formattedDiscussions = data.map((d: any) => {
+          const author = getUserById(d.author_id) || { 
+            id: d.author_id, 
+            username: d.is_anonymous ? 'anonymous' : 'User', 
+            fullName: d.is_anonymous ? 'Anonymous User' : 'User', 
+            avatarUrl: '', 
+            impactPoints: 0, 
+            badges: [], 
+            role: 'user' as const
+          };
+          
+          return {
+            id: d.id,
+            title: d.title,
+            content: d.content,
+            category: d.category,
+            author: d.is_anonymous ? {
+              id: 'anonymous',
+              username: 'anonymous',
+              fullName: 'Anonymous User',
+              avatarUrl: '',
+              impactPoints: 0,
+              badges: [],
+              role: 'user' as const
+            } : author,
+            upvotes: 0,
+            commentsCount: 0,
+            postedAt: new Date(d.created_at).toLocaleDateString(),
+            reactions: [],
+            isAnonymous: d.is_anonymous || false,
+            realAuthorId: d.author_id,
+            tags: [],
+            mediaUrls: []
+          };
+        });
         setDiscussions(formattedDiscussions);
       }
     } catch (error) {
@@ -96,12 +116,7 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           content: discussionData.content,
           category: discussionData.category,
           author_id: user.id,
-          author_data: discussionData.isAnonymous ? null : user,
-          is_anonymous: discussionData.isAnonymous || false,
-          tags: discussionData.tags || [],
-          media_urls: discussionData.mediaUrls || [],
-          upvotes: 0,
-          comments_count: 0
+          is_anonymous: discussionData.isAnonymous || false
         })
         .select()
         .single();
