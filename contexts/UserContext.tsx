@@ -22,20 +22,23 @@ export const useUsers = () => {
 };
 
 export const useUser = () => {
-  const { user } = useAuth();
-  const { updateProfile } = useUsers();
+  const { user: authUser } = useAuth();
+  const { updateProfile, users } = useUsers();
   
   // Always use the authenticated user from Supabase
-  if (user) {
+  if (authUser) {
+    // Try to get user from profiles table first, fallback to auth metadata
+    const profileUser = users.find(u => u.id === authUser.id);
+    
     return {
-      user: {
-        id: user.id,
-        username: user.user_metadata?.username || user.email?.split('@')[0] || 'user',
-        fullName: user.user_metadata?.full_name || user.email || 'User',
-        avatarUrl: user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`,
-        impactPoints: user.user_metadata?.impact_points || 0,
-        badges: user.user_metadata?.badges || [],
-        role: user.user_metadata?.role || 'user'
+      user: profileUser || {
+        id: authUser.id,
+        username: authUser.user_metadata?.username || authUser.email?.split('@')[0] || 'user',
+        fullName: authUser.user_metadata?.full_name || authUser.email || 'User',
+        avatarUrl: authUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${authUser.id}`,
+        impactPoints: authUser.user_metadata?.impact_points || 0,
+        badges: authUser.user_metadata?.badges || [],
+        role: authUser.user_metadata?.role || 'user'
       },
       updateProfile
     };
@@ -64,7 +67,32 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .select('*')
         .order('impact_points', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.log('Profiles table not found, using auth users only');
+        // If profiles table doesn't exist, create mock users for demo
+        const mockUsers = [
+          {
+            id: 'user-1',
+            username: 'eco_warrior',
+            fullName: 'Wangari Demo',
+            avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user-1',
+            impactPoints: 1250,
+            badges: ['Early Adopter', 'Tree Hugger'],
+            role: 'user'
+          },
+          {
+            id: 'user-2',
+            username: 'project_lead',
+            fullName: 'John Smith',
+            avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user-2',
+            impactPoints: 2100,
+            badges: ['Early Adopter', 'Tree Hugger', 'Forest Guardian'],
+            role: 'user'
+          }
+        ];
+        setUsers(mockUsers);
+        return;
+      }
       
       const formattedUsers = (data || []).map(profile => ({
         id: profile.id,
@@ -89,19 +117,36 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateProfile = async (updates: Partial<User>) => {
     if (!currentUser) return;
     
-    // Update Supabase user metadata
-    const { error } = await supabase.auth.updateUser({
-      data: {
-        ...currentUser.user_metadata,
-        full_name: updates.fullName,
-        username: updates.username,
-        impact_points: updates.impactPoints,
-        badges: updates.badges,
-        role: updates.role
-      }
-    });
-    
-    if (error) {
+    try {
+      // Update Supabase user metadata
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          ...currentUser.user_metadata,
+          full_name: updates.fullName,
+          username: updates.username,
+          impact_points: updates.impactPoints,
+          badges: updates.badges,
+          role: updates.role
+        }
+      });
+      
+      if (error) throw error;
+      
+      // Also try to update profiles table if it exists
+      await supabase
+        .from('profiles')
+        .upsert({
+          id: currentUser.id,
+          username: updates.username,
+          full_name: updates.fullName,
+          impact_points: updates.impactPoints,
+          badges: updates.badges,
+          role: updates.role
+        });
+        
+      // Reload users
+      loadUsers();
+    } catch (error) {
       console.error('Error updating profile:', error);
       throw error;
     }
@@ -109,7 +154,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const awardPoints = async (userId: string, points: number, action: string) => {
     try {
-      // Update points in Supabase
+      // Try to update points in Supabase profiles table
       const { data: profile } = await supabase
         .from('profiles')
         .select('impact_points, badges')
@@ -147,6 +192,39 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         // Reload users
         loadUsers();
+      } else {
+        // If profiles table doesn't exist, update auth metadata
+        if (userId === currentUser?.id) {
+          const currentPoints = currentUser.user_metadata?.impact_points || 0;
+          const newPoints = currentPoints + points;
+          const currentBadges = currentUser.user_metadata?.badges || [];
+          const newBadges = [...currentBadges];
+          
+          // Award badges based on points
+          if (newPoints >= 100 && !newBadges.includes('Tree Hugger')) {
+            newBadges.push('Tree Hugger');
+          }
+          if (newPoints >= 500 && !newBadges.includes('Forest Guardian')) {
+            newBadges.push('Forest Guardian');
+          }
+          if (newPoints >= 1000 && !newBadges.includes('Eco Warrior')) {
+            newBadges.push('Eco Warrior');
+          }
+          if (newPoints >= 2000 && !newBadges.includes('Planet Protector')) {
+            newBadges.push('Planet Protector');
+          }
+          if (newPoints >= 5000 && !newBadges.includes('Environmental Champion')) {
+            newBadges.push('Environmental Champion');
+          }
+          
+          await supabase.auth.updateUser({
+            data: {
+              ...currentUser.user_metadata,
+              impact_points: newPoints,
+              badges: newBadges
+            }
+          });
+        }
       }
     } catch (error) {
       console.error('Error awarding points:', error);

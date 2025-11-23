@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCampaigns } from '../contexts/CampaignContext';
 import { useDiscussions } from '../contexts/DiscussionContext';
+import { useUser } from '../contexts/UserContext';
 
 const Dashboard: React.FC = () => {
   const { campaigns, loading: campaignsLoading } = useCampaigns();
   const { discussions, loading: discussionsLoading, voteDiscussion, getUserVote } = useDiscussions();
+  const { user } = useUser();
   const navigate = useNavigate();
   const [filter, setFilter] = useState<'hot' | 'new' | 'top'>('hot');
 
@@ -37,7 +39,7 @@ const Dashboard: React.FC = () => {
         {/* Create Post Bar */}
         <div className="bg-white border-b border-gray-200 sticky top-16 z-10">
           <div className="p-4 flex items-center gap-3">
-            <img src="https://picsum.photos/200" alt="User" className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-100" />
+            <img src={user?.avatarUrl || 'https://picsum.photos/200'} alt="User" className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-100" />
             <input 
                 type="text" 
                 placeholder="What's on your mind about the environment?" 
