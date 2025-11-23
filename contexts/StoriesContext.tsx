@@ -38,23 +38,9 @@ export const StoriesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [user]);
 
   const loadStories = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('stories')
-        .select(`
-          *,
-          user:profiles!stories_user_id_fkey(id, full_name, avatar_url)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setStories(data || []);
-    } catch (error) {
-      console.error('Error loading stories:', error);
-    } finally {
-      setLoading(false);
-    }
+    // Disabled until stories table is properly set up
+    setLoading(false);
+    setStories([]);
   };
 
   const createStory = async (storyData: Partial<Story>) => {
