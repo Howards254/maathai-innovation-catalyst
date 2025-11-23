@@ -34,46 +34,11 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const { awardPoints } = useUsers();
 
   useEffect(() => {
-    const mockEvents: Event[] = [
-      {
-        id: 'e1',
-        title: 'Karura Forest Clean-up',
-        description: 'Join us for a community clean-up event at Karura Forest to remove litter and plant new trees.',
-        date: '2024-02-15',
-        time: '09:00',
-        location: 'Gate C, Karura Forest',
-        attendees: ['user-2', 'user-3'],
-        maxAttendees: 50,
-        type: 'In-Person',
-        imageUrl: getEventImage('e1'),
-        organizerId: 'user-1',
-        organizerName: 'Wangari Demo',
-        status: 'approved',
-        createdAt: '2024-01-20T10:00:00Z'
-      },
-      {
-        id: 'e2',
-        title: 'Agroforestry Webinar',
-        description: 'Learn about sustainable farming practices that integrate trees and crops for better yields.',
-        date: '2024-02-20',
-        time: '18:00',
-        location: 'Online via Zoom',
-        attendees: ['user-1', 'user-3'],
-        type: 'Online',
-        imageUrl: getEventImage('e2'),
-        organizerId: 'user-2',
-        organizerName: 'John Planter',
-        status: 'approved',
-        createdAt: '2024-01-22T15:30:00Z'
-      },
-    ];
-
     const saved = localStorage.getItem('events');
     if (saved) {
       setEvents(JSON.parse(saved));
     } else {
-      setEvents(mockEvents);
-      localStorage.setItem('events', JSON.stringify(mockEvents));
+      setEvents([]);
     }
     setLoading(false);
   }, []);

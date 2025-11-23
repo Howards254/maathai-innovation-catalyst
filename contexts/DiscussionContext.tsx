@@ -42,45 +42,6 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const { awardPoints, getUserById } = useUsers();
 
   useEffect(() => {
-    const mockDiscussions: Discussion[] = [
-      {
-        id: 'd1',
-        title: 'Best indigenous trees for dry areas?',
-        content: 'I am looking to start a project in a semi-arid area. Any recommendations on species that require minimal water after establishment?',
-        author: getUserById('user-1') || {
-          id: 'user-1',
-          username: 'eco_warrior',
-          fullName: 'Wangari Demo',
-          avatarUrl: 'https://picsum.photos/200',
-          impactPoints: 1250,
-          badges: ['Early Adopter', 'Tree Hugger'],
-          role: 'user'
-        },
-        upvotes: 45,
-        commentsCount: 12,
-        postedAt: '2 hours ago',
-        category: 'Help',
-      },
-      {
-        id: 'd2',
-        title: 'We just hit 50% of our goal!',
-        content: 'Thanks to everyone who donated seedlings this weekend. The Rift Valley project is moving fast.',
-        author: getUserById('user-2') || {
-          id: 'user-2',
-          username: 'project_lead',
-          fullName: 'John Smith',
-          avatarUrl: 'https://picsum.photos/201',
-          impactPoints: 2100,
-          badges: ['Early Adopter', 'Tree Hugger', 'Forest Guardian'],
-          role: 'user'
-        },
-        upvotes: 128,
-        commentsCount: 34,
-        postedAt: '5 hours ago',
-        category: 'Success Story',
-      },
-    ];
-
     const saved = localStorage.getItem('discussions');
     const savedComments = localStorage.getItem('comments');
     const savedVotes = localStorage.getItem(`user_votes_${user?.id}`);
@@ -88,8 +49,7 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     if (saved) {
       setDiscussions(JSON.parse(saved));
     } else {
-      setDiscussions(mockDiscussions);
-      localStorage.setItem('discussions', JSON.stringify(mockDiscussions));
+      setDiscussions([]);
     }
     
     if (savedComments) {
@@ -101,7 +61,7 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
     
     setLoading(false);
-  }, [getUserById]);
+  }, [user?.id]);
 
   const saveDiscussions = (newDiscussions: Discussion[]) => {
     setDiscussions(newDiscussions);

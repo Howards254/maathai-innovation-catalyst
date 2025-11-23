@@ -42,92 +42,15 @@ export const CampaignProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const { user } = useAuth();
   const { awardPoints } = useUsers();
 
-  // Initialize with mock data
+  // Load campaigns from localStorage only (no mock data)
   useEffect(() => {
-    const mockCampaigns: Campaign[] = [
-      {
-        id: 'c1',
-        title: 'Reforest the Rift Valley',
-        description: 'Join us in planting 10,000 indigenous trees to restore the water catchment areas.',
-        targetTrees: 10000,
-        plantedTrees: 4500,
-        imageUrl: getCampaignImage('c1'),
-        organizer: 'Green Belt Movement',
-        organizerId: '1',
-        organizerAvatar: getOrganizerAvatar('1'),
-        location: 'Nakuru, Kenya',
-        tags: ['Restoration', 'Water', 'Community'],
-        daysLeft: 15,
-        isPublic: true,
-        status: 'active',
-        participants: ['2', '3'],
-        pendingParticipants: [],
-        updates: [],
-        completionPhotos: [],
-        isCompletionPending: false,
-        createdAt: '2024-01-10T10:00:00Z',
-        startDate: '2024-01-15',
-        endDate: '2024-06-15'
-      },
-      {
-        id: 'c2',
-        title: 'Urban Canopy Project',
-        description: 'Creating green corridors in the city center to reduce heat islands.',
-        targetTrees: 500,
-        plantedTrees: 120,
-        imageUrl: getCampaignImage('c2'),
-        organizer: 'City Green',
-        organizerId: '2',
-        organizerAvatar: getOrganizerAvatar('2'),
-        location: 'Nairobi, Kenya',
-        tags: ['Urban', 'Shade'],
-        daysLeft: 30,
-        isPublic: false,
-        status: 'active',
-        participants: ['1'],
-        pendingParticipants: ['3'],
-        updates: [],
-        completionPhotos: [],
-        isCompletionPending: false,
-        createdAt: '2024-01-25T14:30:00Z',
-        startDate: '2024-02-01',
-        endDate: '2024-05-01'
-      },
-      {
-        id: 'c3',
-        title: 'School Fruit Forest',
-        description: 'Planting fruit trees in 5 local primary schools for nutrition and education.',
-        targetTrees: 200,
-        plantedTrees: 200,
-        imageUrl: getCampaignImage('c3'),
-        organizer: 'EdTech Eco',
-        organizerId: '3',
-        organizerAvatar: getOrganizerAvatar('3'),
-        location: 'Mombasa, Kenya',
-        tags: ['Education', 'Food Security'],
-        daysLeft: 0,
-        isPublic: true,
-        status: 'completed',
-        participants: ['1', '2'],
-        pendingParticipants: [],
-        updates: [],
-        completionPhotos: [],
-        isCompletionPending: false,
-        createdAt: '2024-01-01T08:00:00Z',
-        startDate: '2024-01-05',
-        endDate: '2024-03-05'
-      },
-    ];
-
-    // Load from localStorage or use mock data
     const saved = localStorage.getItem('campaigns');
     const savedSubmissions = localStorage.getItem('submissions');
     
     if (saved) {
       setCampaigns(JSON.parse(saved));
     } else {
-      setCampaigns(mockCampaigns);
-      localStorage.setItem('campaigns', JSON.stringify(mockCampaigns));
+      setCampaigns([]);
     }
     
     if (savedSubmissions) {
