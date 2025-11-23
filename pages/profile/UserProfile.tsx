@@ -11,8 +11,19 @@ const UserProfile: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ fullName: '', bio: '' });
   
-  const user = users.find(u => u.username === username) || currentUser;
-  const isOwnProfile = currentUser?.username === username;
+  // Find user and ensure it's a valid User object
+  const foundUser = users.find(u => u.username === username);
+  const user = foundUser || (currentUser ? {
+    id: currentUser.id,
+    username: currentUser.user_metadata?.username || 'user',
+    fullName: currentUser.user_metadata?.full_name || 'User',
+    avatarUrl: currentUser.user_metadata?.avatar_url || 'https://picsum.photos/200',
+    impactPoints: currentUser.user_metadata?.impact_points || 0,
+    badges: currentUser.user_metadata?.badges || [],
+    role: 'user' as const
+  } : null);
+  
+  const isOwnProfile = currentUser?.user_metadata?.username === username;
   
   if (!user) {
     return (
@@ -59,9 +70,8 @@ const UserProfile: React.FC = () => {
                         </div>
                     ) : (
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900">{user.fullName}</h1>
-                            <p className="text-gray-600">u/{user.username}</p>
-                            {user.bio && <p className="text-gray-700 mt-1">{user.bio}</p>}
+                            <h1 className="text-2xl font-bold text-gray-900">{String(user.fullName || 'User')}</h1>
+                            <p className="text-gray-600">@{String(user.username || 'user')}</p>
                         </div>
                     )}
                 </div>
@@ -104,7 +114,7 @@ const UserProfile: React.FC = () => {
                         <h3 className="text-sm font-bold text-gray-500 uppercase mb-4">Impact Stats</h3>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="text-center p-3 bg-gray-50 rounded">
-                                <div className="text-xl font-bold text-gray-900">{user.impactPoints}</div>
+                                <div className="text-xl font-bold text-gray-900">{Number(user.impactPoints || 0).toLocaleString()}</div>
                                 <div className="text-xs text-gray-500">Impact Points</div>
                             </div>
                             <div className="text-center p-3 bg-gray-50 rounded">
@@ -118,9 +128,9 @@ const UserProfile: React.FC = () => {
                     <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
                         <h3 className="text-sm font-bold text-gray-500 uppercase mb-4">Badges</h3>
                         <div className="flex flex-wrap gap-2">
-                            {user.badges.map(badge => (
-                                <div key={badge} className="px-3 py-1 bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-full text-xs font-bold flex items-center gap-1">
-                                    <span>🏆</span> {badge}
+                            {(Array.isArray(user.badges) ? user.badges : []).map((badge, index) => (
+                                <div key={index} className="px-3 py-1 bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-full text-xs font-bold flex items-center gap-1">
+                                    <span>🏆</span> {String(badge)}
                                 </div>
                             ))}
                             <div className="px-3 py-1 bg-gray-50 text-gray-400 border border-gray-200 border-dashed rounded-full text-xs font-medium">
