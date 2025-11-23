@@ -13,6 +13,24 @@ const DiscussionsFeed: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string>('All');
   const [reactions, setReactions] = useState<Record<string, string>>({});
+  const [showReactionPicker, setShowReactionPicker] = useState<string | null>(null);
+
+  const reactionEmojis = [
+    { emoji: '👍', label: 'Like' },
+    { emoji: '💚', label: 'Love' },
+    { emoji: '🌱', label: 'Growth' },
+    { emoji: '🔥', label: 'Fire' },
+    { emoji: '👏', label: 'Applause' },
+    { emoji: '🎉', label: 'Celebrate' }
+  ];
+
+  const handleReaction = (postId: string, emoji: string) => {
+    setReactions(prev => ({
+      ...prev,
+      [postId]: prev[postId] === emoji ? '' : emoji
+    }));
+    setShowReactionPicker(null);
+  };
 
   const reactionEmojis = ['💚', '🌱', '🔥', '👏', '🎉'];
   
@@ -279,73 +297,70 @@ const DiscussionsFeed: React.FC = () => {
                  )}
                </div>
                
-               {/* Reactions Bar */}
-               <div className="flex items-center gap-2 mb-4 pb-4 border-b border-gray-100">
-                 {reactionEmojis.map((emoji, index) => (
+               {/* Actions */}
+               <div className="flex items-center gap-4 pt-3 border-t border-gray-100">
+                 {/* Like/Reaction Button */}
+                 <div className="relative">
                    <button
-                     key={index}
-                     onClick={() => setReactions({...reactions, [post.id]: emoji})}
-                     className={`px-3 py-1.5 rounded-full text-lg transition-all ${
-                       reactions[post.id] === emoji
-                         ? 'bg-green-100 scale-110'
-                         : 'hover:bg-gray-100'
+                     onClick={(e) => {
+                       e.preventDefault();
+                       if (!reactions[post.id]) {
+                         handleReaction(post.id, '👍');
+                       } else {
+                         setShowReactionPicker(showReactionPicker === post.id ? null : post.id);
+                       }
+                     }}
+                     onMouseEnter={() => setShowReactionPicker(post.id)}
+                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                       reactions[post.id]
+                         ? 'text-green-600 bg-green-50'
+                         : 'text-gray-600 hover:bg-gray-100'
                      }`}
                    >
-                     {emoji}
+                     {reactions[post.id] ? (
+                       <span className="text-base">{reactions[post.id]}</span>
+                     ) : (
+                       <Heart className="w-4 h-4" />
+                     )}
+                     <span>{reactions[post.id] ? 'Reacted' : 'Like'}</span>
                    </button>
-                 ))}
-               </div>
-               
-               {/* Actions */}
-               <div className="flex items-center justify-between">
-                 <div className="flex items-center gap-6">
-                   <div className="flex items-center gap-2">
-                     <button 
-                       onClick={() => handleVote(post.id, 'up')}
-                       className={`p-2 rounded-full transition-colors ${
-                         getUserVote(post.id) === 'up' 
-                           ? 'text-green-600 bg-green-50' 
-                           : 'text-gray-400 hover:text-green-600 hover:bg-green-50'
-                       }`}
-                     >
-                       <svg className="w-5 h-5" fill={getUserVote(post.id) === 'up' ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                       </svg>
-                     </button>
-                     <span className="font-semibold text-gray-700">{post.upvotes}</span>
-                     <button 
-                       onClick={() => handleVote(post.id, 'down')}
-                       className={`p-2 rounded-full transition-colors ${
-                         getUserVote(post.id) === 'down' 
-                           ? 'text-red-600 bg-red-50' 
-                           : 'text-gray-400 hover:text-red-600 hover:bg-red-50'
-                       }`}
-                     >
-                       <svg className="w-5 h-5" fill={getUserVote(post.id) === 'down' ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                       </svg>
-                     </button>
-                   </div>
                    
-                   <Link 
-                     to={`/app/discussions/${post.id}`}
-                     className="flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors"
-                   >
-                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                     </svg>
-                     <span className="font-medium">{post.commentsCount} comments</span>
-                   </Link>
+                   {/* Reaction Picker */}
+                   {showReactionPicker === post.id && (
+                     <div 
+                       className="absolute bottom-full left-0 mb-2 bg-white border border-gray-200 rounded-full shadow-lg px-2 py-2 flex gap-1 z-10"
+                       onMouseLeave={() => setShowReactionPicker(null)}
+                     >
+                       {reactionEmojis.map((reaction, index) => (
+                         <button
+                           key={index}
+                           onClick={(e) => {
+                             e.preventDefault();
+                             handleReaction(post.id, reaction.emoji);
+                           }}
+                           className="text-2xl hover:scale-125 transition-transform p-1"
+                           title={reaction.label}
+                         >
+                           {reaction.emoji}
+                         </button>
+                       ))}
+                     </div>
+                   )}
                  </div>
+                 <Link 
+                   to={`/app/discussions/${post.id}`}
+                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+                 >
+                   <MessageCircle className="w-4 h-4" />
+                   <span>{post.commentsCount || 0}</span>
+                 </Link>
                  
                  <button 
                    onClick={() => handleShare(post)}
-                   className="flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors p-2 rounded-full hover:bg-gray-50"
+                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors ml-auto"
                  >
-                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                   </svg>
-                   <span className="font-medium">Share</span>
+                   <Share2 className="w-4 h-4" />
+                   <span>Share</span>
                  </button>
                </div>
              </div>
