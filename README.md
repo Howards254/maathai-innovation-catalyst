@@ -47,8 +47,8 @@ A modern environmental restoration platform inspired by Nobel Peace Prize winner
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/howards254/maathai-innovation-catalyst.git
-   cd maathai-innovation-catalyst
+   git clone https://github.com/howards254/greenverse.git
+   cd greenverse
    ```
 
 2. **Install dependencies**
@@ -128,14 +128,14 @@ VITE_SUPABASE_ANON_KEY=your-anon-key-here
 
 ### 1. Database Setup (Supabase)
 1. Create account at [supabase.com](https://supabase.com)
-2. Create new project: `maathai-innovation-catalyst`
+2. Create new project: `greenverse`
 3. Go to SQL Editor and run `database-setup.sql`
 4. Copy Project URL and anon key from Settings → API
 
 ### 2. Deploy to Vercel
 1. Push code to GitHub repository
 2. Connect GitHub to [vercel.com](https://vercel.com)
-3. Import project: `howards254/maathai-innovation-catalyst`
+3. Import project: `howards254/greenverse`
 4. Add environment variables:
    - `VITE_SUPABASE_URL`: Your Supabase project URL
    - `VITE_SUPABASE_ANON_KEY`: Your Supabase anon key

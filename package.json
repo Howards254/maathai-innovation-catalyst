@@ -1,5 +1,5 @@
 {
-  "name": "maathai-innovation-catalyst",
+  "name": "greenverse",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -12,8 +12,8 @@
     "supabase:stop": "supabase stop",
     "supabase:reset": "supabase db reset",
     "supabase:studio": "supabase studio",
-    "docker:build": "docker build -t maathai-catalyst .",
-    "docker:run": "docker run -p 3000:80 maathai-catalyst",
+    "docker:build": "docker build -t greenverse .",
+    "docker:run": "docker run -p 3000:80 greenverse",
     "docker:compose": "docker-compose up -d",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "type-check": "tsc --noEmit"

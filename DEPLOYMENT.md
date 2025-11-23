@@ -63,7 +63,7 @@ npm run build
 ```bash
 # Clone repository
 git clone <your-repo-url>
-cd maathai-innovation-catalyst
+cd greenverse
 
 # Install dependencies
 npm ci --only=production

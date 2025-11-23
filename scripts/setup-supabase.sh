@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Maathai Innovation Catalyst - Supabase Setup Script
-echo "🌱 Setting up Supabase for Maathai Innovation Catalyst..."
+# GreenVerse - Supabase Setup Script
+echo "🌱 Setting up Supabase for GreenVerse..."
 
 # Check if Supabase CLI is installed
 if ! command -v supabase &> /dev/null; then

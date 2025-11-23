@@ -1,11 +1,5 @@
-import { Cloudinary } from '@cloudinary/url-gen';
-
-// Cloudinary configuration
-const cloudinary = new Cloudinary({
-  cloud: {
-    cloudName: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'demo'
-  }
-});
+// Cloudinary configuration (simplified)
+const getCloudinaryUrl = (cloudName: string) => `https://res.cloudinary.com/${cloudName}`;
 
 // Upload function for stories (images and videos)
 export const uploadStoryMedia = async (file: File): Promise<{url: string, publicId: string, resourceType: string}> => {
@@ -78,12 +72,8 @@ export const getOptimizedUrl = (publicId: string, options: {
     crop = 'fill'
   } = options;
 
-  return cloudinary
-    .image(publicId)
-    .resize(`w_${width},h_${height},c_${crop}`)
-    .quality(quality)
-    .format(format)
-    .toURL();
+  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'demo';
+  return `https://res.cloudinary.com/${cloudName}/image/upload/w_${width},h_${height},c_${crop},q_${quality},f_${format}/${publicId}`;
 };
 
 // Generate video thumbnail
@@ -92,13 +82,8 @@ export const getVideoThumbnail = (publicId: string, options: {
   height?: number;
 } = {}) => {
   const { width = 400, height = 400 } = options;
-  
-  return cloudinary
-    .video(publicId)
-    .resize(`w_${width},h_${height},c_fill`)
-    .quality('auto')
-    .format('jpg')
-    .toURL();
+  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'demo';
+  return `https://res.cloudinary.com/${cloudName}/video/upload/w_${width},h_${height},c_fill,q_auto,f_jpg/${publicId}`;
 };
 
-export default cloudinary;
+export default { getOptimizedUrl, getVideoThumbnail };
