@@ -53,7 +53,8 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           fullName: 'Wangari Demo',
           avatarUrl: 'https://picsum.photos/200',
           impactPoints: 1250,
-          badges: ['Early Adopter', 'Tree Hugger']
+          badges: ['Early Adopter', 'Tree Hugger'],
+          role: 'user'
         },
         upvotes: 45,
         commentsCount: 12,
@@ -70,7 +71,8 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           fullName: 'John Smith',
           avatarUrl: 'https://picsum.photos/201',
           impactPoints: 2100,
-          badges: ['Early Adopter', 'Tree Hugger', 'Forest Guardian']
+          badges: ['Early Adopter', 'Tree Hugger', 'Forest Guardian'],
+          role: 'user'
         },
         upvotes: 128,
         commentsCount: 34,

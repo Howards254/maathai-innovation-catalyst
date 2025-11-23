@@ -33,7 +33,7 @@ export const useUser = () => {
     return {
       user: profileUser || {
         id: authUser.id,
-        username: authUser.user_metadata?.username || authUser.email?.split('@')[0] || 'user',
+        username: authUser.user_metadata?.username || (authUser.email ? authUser.email.split('@')[0] : 'user'),
         fullName: authUser.user_metadata?.full_name || authUser.email || 'User',
         avatarUrl: authUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${authUser.id}`,
         impactPoints: authUser.user_metadata?.impact_points || 0,
@@ -96,7 +96,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       const formattedUsers = (data || []).map(profile => ({
         id: profile.id,
-        username: profile.username || profile.email?.split('@')[0] || 'user',
+        username: profile.username || (profile.email ? profile.email.split('@')[0] : 'user'),
         fullName: profile.full_name || profile.email || 'User',
         avatarUrl: profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.id}`,
         impactPoints: profile.impact_points || 0,
