@@ -75,6 +75,14 @@ ALTER TABLE user_skills ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_activities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_matches ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Allow all operations on green_teams" ON green_teams;
+DROP POLICY IF EXISTS "Allow all operations on team_members" ON team_members;
+DROP POLICY IF EXISTS "Allow all operations on user_causes" ON user_causes;
+DROP POLICY IF EXISTS "Allow all operations on user_skills" ON user_skills;
+DROP POLICY IF EXISTS "Allow all operations on user_activities" ON user_activities;
+DROP POLICY IF EXISTS "Allow all operations on user_matches" ON user_matches;
+
 -- Create permissive policies
 CREATE POLICY "Allow all operations on green_teams" ON green_teams FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all operations on team_members" ON team_members FOR ALL USING (true) WITH CHECK (true);

@@ -53,6 +53,12 @@ ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE groups ENABLE ROW LEVEL SECURITY;
 ALTER TABLE group_members ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Allow all operations on messages" ON messages;
+DROP POLICY IF EXISTS "Allow all operations on conversations" ON conversations;
+DROP POLICY IF EXISTS "Allow all operations on groups" ON groups;
+DROP POLICY IF EXISTS "Allow all operations on group_members" ON group_members;
+
 -- Create permissive policies
 CREATE POLICY "Allow all operations on messages" ON messages FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all operations on conversations" ON conversations FOR ALL USING (true) WITH CHECK (true);

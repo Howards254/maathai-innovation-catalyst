@@ -28,6 +28,10 @@ ALTER TABLE stories ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Allow all operations on follows" ON follows;
 DROP POLICY IF EXISTS "Allow all operations on stories" ON stories;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Allow all operations on follows" ON follows;
+DROP POLICY IF EXISTS "Allow all operations on stories" ON stories;
+
 -- Create permissive policies
 CREATE POLICY "Allow all operations on follows" ON follows FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all operations on stories" ON stories FOR ALL USING (true) WITH CHECK (true);
