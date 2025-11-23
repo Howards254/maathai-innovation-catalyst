@@ -180,27 +180,90 @@ const DiscussionsFeed: React.FC = () => {
                  
                  {/* Media Grid */}
                  {post.mediaUrls && post.mediaUrls.length > 0 && (
-                   <div className={`grid gap-2 mb-4 ${
-                     post.mediaUrls.length === 1 ? 'grid-cols-1' :
-                     post.mediaUrls.length === 2 ? 'grid-cols-2' :
-                     'grid-cols-2'
-                   }`}>
-                     {post.mediaUrls.map((url, index) => (
-                       <div key={index} className="relative group cursor-pointer rounded-xl overflow-hidden">
+                   <div className="mb-4 -mx-6">
+                     {post.mediaUrls.length === 1 ? (
+                       // Single image - full width, max height
+                       <div className="relative group cursor-pointer bg-gray-100">
                          {post.mediaType === 'video' ? (
                            <div className="relative">
-                             <video src={url} className="w-full h-64 object-cover" />
+                             <video src={post.mediaUrls[0]} className="w-full max-h-[600px] object-contain" />
                              <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center group-hover:bg-opacity-30 transition-all">
-                               <div className="w-12 h-12 bg-white bg-opacity-90 rounded-full flex items-center justify-center">
-                                 <Play className="w-6 h-6 text-gray-800 ml-1" />
+                               <div className="w-16 h-16 bg-white bg-opacity-90 rounded-full flex items-center justify-center">
+                                 <Play className="w-8 h-8 text-gray-800 ml-1" />
                                </div>
                              </div>
                            </div>
                          ) : (
-                           <img src={url} alt="Post media" className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300" />
+                           <img 
+                             src={post.mediaUrls[0]} 
+                             alt="Post media" 
+                             className="w-full max-h-[600px] object-contain"
+                           />
                          )}
                        </div>
-                     ))}
+                     ) : post.mediaUrls.length === 2 ? (
+                       // Two images - side by side
+                       <div className="grid grid-cols-2 gap-0.5">
+                         {post.mediaUrls.map((url, index) => (
+                           <div key={index} className="relative group cursor-pointer bg-gray-100 aspect-square overflow-hidden">
+                             {post.mediaType === 'video' ? (
+                               <div className="relative h-full">
+                                 <video src={url} className="w-full h-full object-cover" />
+                                 <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center group-hover:bg-opacity-30 transition-all">
+                                   <div className="w-12 h-12 bg-white bg-opacity-90 rounded-full flex items-center justify-center">
+                                     <Play className="w-6 h-6 text-gray-800 ml-1" />
+                                   </div>
+                                 </div>
+                               </div>
+                             ) : (
+                               <img 
+                                 src={url} 
+                                 alt={`Post media ${index + 1}`} 
+                                 className="w-full h-full object-cover group-hover:opacity-95 transition-opacity"
+                               />
+                             )}
+                           </div>
+                         ))}
+                       </div>
+                     ) : post.mediaUrls.length === 3 ? (
+                       // Three images - one large, two small
+                       <div className="grid grid-cols-2 gap-0.5">
+                         <div className="row-span-2 relative group cursor-pointer bg-gray-100 overflow-hidden">
+                           <img 
+                             src={post.mediaUrls[0]} 
+                             alt="Post media 1" 
+                             className="w-full h-full object-cover group-hover:opacity-95 transition-opacity"
+                           />
+                         </div>
+                         {post.mediaUrls.slice(1).map((url, index) => (
+                           <div key={index} className="relative group cursor-pointer bg-gray-100 aspect-square overflow-hidden">
+                             <img 
+                               src={url} 
+                               alt={`Post media ${index + 2}`} 
+                               className="w-full h-full object-cover group-hover:opacity-95 transition-opacity"
+                             />
+                           </div>
+                         ))}
+                       </div>
+                     ) : (
+                       // Four images - 2x2 grid
+                       <div className="grid grid-cols-2 gap-0.5">
+                         {post.mediaUrls.slice(0, 4).map((url, index) => (
+                           <div key={index} className="relative group cursor-pointer bg-gray-100 aspect-square overflow-hidden">
+                             <img 
+                               src={url} 
+                               alt={`Post media ${index + 1}`} 
+                               className="w-full h-full object-cover group-hover:opacity-95 transition-opacity"
+                             />
+                             {index === 3 && post.mediaUrls.length > 4 && (
+                               <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center">
+                                 <span className="text-white text-3xl font-bold">+{post.mediaUrls.length - 4}</span>
+                               </div>
+                             )}
+                           </div>
+                         ))}
+                       </div>
+                     )}
                    </div>
                  )}
                  
