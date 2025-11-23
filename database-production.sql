@@ -4,14 +4,33 @@
 -- Enable necessary extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Create custom types
-CREATE TYPE user_role AS ENUM ('user', 'admin', 'moderator');
-CREATE TYPE campaign_status AS ENUM ('active', 'completed', 'paused', 'cancelled');
-CREATE TYPE event_type AS ENUM ('online', 'in_person');
-CREATE TYPE discussion_category AS ENUM ('general', 'help', 'success_story', 'tech');
+-- Create custom types (only if they don't exist)
+DO $$ BEGIN
+    CREATE TYPE user_role AS ENUM ('user', 'admin', 'moderator');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE campaign_status AS ENUM ('active', 'completed', 'paused', 'cancelled');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE event_type AS ENUM ('online', 'in_person');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE discussion_category AS ENUM ('general', 'help', 'success_story', 'tech');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- Users table (extends Supabase auth.users)
-CREATE TABLE profiles (
+CREATE TABLE IF NOT EXISTS profiles (
     id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
     username TEXT UNIQUE NOT NULL,
     full_name TEXT NOT NULL,
@@ -24,7 +43,7 @@ CREATE TABLE profiles (
 );
 
 -- Badges table
-CREATE TABLE badges (
+CREATE TABLE IF NOT EXISTS badges (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     name TEXT NOT NULL UNIQUE,
     description TEXT,
@@ -34,7 +53,7 @@ CREATE TABLE badges (
 );
 
 -- User badges junction table
-CREATE TABLE user_badges (
+CREATE TABLE IF NOT EXISTS user_badges (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     badge_id UUID REFERENCES badges(id) ON DELETE CASCADE,
@@ -43,7 +62,7 @@ CREATE TABLE user_badges (
 );
 
 -- Campaigns table
-CREATE TABLE campaigns (
+CREATE TABLE IF NOT EXISTS campaigns (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     title TEXT NOT NULL,
     description TEXT NOT NULL,
@@ -60,7 +79,7 @@ CREATE TABLE campaigns (
 );
 
 -- Campaign participants table
-CREATE TABLE campaign_participants (
+CREATE TABLE IF NOT EXISTS campaign_participants (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     campaign_id UUID REFERENCES campaigns(id) ON DELETE CASCADE,
     user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
@@ -70,7 +89,7 @@ CREATE TABLE campaign_participants (
 );
 
 -- Discussions table
-CREATE TABLE discussions (
+CREATE TABLE IF NOT EXISTS discussions (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     title TEXT NOT NULL,
     content TEXT NOT NULL,
@@ -83,7 +102,7 @@ CREATE TABLE discussions (
 );
 
 -- Comments table
-CREATE TABLE comments (
+CREATE TABLE IF NOT EXISTS comments (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     discussion_id UUID REFERENCES discussions(id) ON DELETE CASCADE,
     author_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
@@ -94,7 +113,7 @@ CREATE TABLE comments (
 );
 
 -- Events table
-CREATE TABLE events (
+CREATE TABLE IF NOT EXISTS events (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     title TEXT NOT NULL,
     description TEXT,
@@ -109,7 +128,7 @@ CREATE TABLE events (
 );
 
 -- Event attendees table
-CREATE TABLE event_attendees (
+CREATE TABLE IF NOT EXISTS event_attendees (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     event_id UUID REFERENCES events(id) ON DELETE CASCADE,
     user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
@@ -119,7 +138,7 @@ CREATE TABLE event_attendees (
 );
 
 -- Daily challenges table
-CREATE TABLE daily_challenges (
+CREATE TABLE IF NOT EXISTS daily_challenges (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     title TEXT NOT NULL,
     description TEXT NOT NULL,
@@ -130,7 +149,7 @@ CREATE TABLE daily_challenges (
 );
 
 -- User challenge progress table
-CREATE TABLE user_challenge_progress (
+CREATE TABLE IF NOT EXISTS user_challenge_progress (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     challenge_id UUID REFERENCES daily_challenges(id) ON DELETE CASCADE,
@@ -141,7 +160,7 @@ CREATE TABLE user_challenge_progress (
 );
 
 -- Activity log table for tracking user actions
-CREATE TABLE activity_log (
+CREATE TABLE IF NOT EXISTS activity_log (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     action_type TEXT NOT NULL,
@@ -158,7 +177,8 @@ INSERT INTO badges (name, description, icon, points_required) VALUES
 ('Forest Friend', 'Plant 10 trees', '🌳', 100),
 ('Green Warrior', 'Plant 50 trees', '🌲', 500),
 ('Eco Champion', 'Plant 100 trees', '🏆', 1000),
-('Environmental Hero', 'Plant 500 trees', '🌟', 5000);
+('Environmental Hero', 'Plant 500 trees', '🌟', 5000)
+ON CONFLICT (name) DO NOTHING;
 
 -- Enable Row Level Security
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
@@ -166,16 +186,57 @@ ALTER TABLE campaigns ENABLE ROW LEVEL SECURITY;
 ALTER TABLE discussions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE events ENABLE ROW LEVEL SECURITY;
 
--- Basic RLS policies
-CREATE POLICY "Public profiles are viewable by everyone" ON profiles FOR SELECT USING (true);
-CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
-CREATE POLICY "Users can insert own profile" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
+-- Basic RLS policies (only create if they don't exist)
+DO $$ BEGIN
+    CREATE POLICY "Public profiles are viewable by everyone" ON profiles FOR SELECT USING (true);
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE POLICY "Campaigns are viewable by everyone" ON campaigns FOR SELECT USING (true);
-CREATE POLICY "Authenticated users can create campaigns" ON campaigns FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+DO $$ BEGIN
+    CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE POLICY "Discussions are viewable by everyone" ON discussions FOR SELECT USING (true);
-CREATE POLICY "Authenticated users can create discussions" ON discussions FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+DO $$ BEGIN
+    CREATE POLICY "Users can insert own profile" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE POLICY "Events are viewable by everyone" ON events FOR SELECT USING (true);
-CREATE POLICY "Authenticated users can create events" ON events FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+DO $$ BEGIN
+    CREATE POLICY "Campaigns are viewable by everyone" ON campaigns FOR SELECT USING (true);
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE POLICY "Authenticated users can create campaigns" ON campaigns FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE POLICY "Discussions are viewable by everyone" ON discussions FOR SELECT USING (true);
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE POLICY "Authenticated users can create discussions" ON discussions FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE POLICY "Events are viewable by everyone" ON events FOR SELECT USING (true);
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE POLICY "Authenticated users can create events" ON events FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
