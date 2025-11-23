@@ -43,7 +43,7 @@ const Navbar: React.FC = () => {
               🌱
             </div>
             <span className="hidden sm:block text-xl font-bold text-gray-900 tracking-tight">
-              Maathai<span className="text-primary-600">Catalyst</span>
+              Green<span className="text-primary-600">Verse</span>
             </span>
           </Link>
         </div>

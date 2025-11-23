@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Discussion, User } from '../types';
 import { useAuth } from './AuthContext';
 import { useUsers } from './UserContext';
+import { supabase } from '../lib/supabase';
 
 interface Comment {
   id: string;
@@ -42,62 +43,77 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const { awardPoints, getUserById } = useUsers();
 
   useEffect(() => {
-    const saved = localStorage.getItem('discussions');
-    const savedComments = localStorage.getItem('comments');
-    const savedVotes = localStorage.getItem(`user_votes_${user?.id}`);
-    
-    if (saved) {
-      setDiscussions(JSON.parse(saved));
-    } else {
-      setDiscussions([]);
-    }
-    
-    if (savedComments) {
-      setComments(JSON.parse(savedComments));
-    }
-    
-    if (savedVotes) {
-      setUserVotes(JSON.parse(savedVotes));
-    }
-    
-    setLoading(false);
+    loadDiscussions();
   }, [user?.id]);
+
+  const loadDiscussions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('discussions')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      if (data) {
+        const formattedDiscussions = data.map((d: any) => ({
+          id: d.id,
+          title: d.title,
+          content: d.content,
+          category: d.category,
+          author: d.author_data || { id: d.author_id, username: 'User', fullName: 'User', avatarUrl: '', impactPoints: 0, badges: [], role: 'user' },
+          upvotes: d.upvotes || 0,
+          commentsCount: d.comments_count || 0,
+          postedAt: new Date(d.created_at).toLocaleDateString(),
+          reactions: [],
+          isAnonymous: d.is_anonymous || false,
+          realAuthorId: d.author_id,
+          tags: d.tags || [],
+          mediaUrls: d.media_urls || []
+        }));
+        setDiscussions(formattedDiscussions);
+      }
+    } catch (error) {
+      console.error('Error loading discussions:', error);
+      setDiscussions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const saveDiscussions = (newDiscussions: Discussion[]) => {
     setDiscussions(newDiscussions);
-    localStorage.setItem('discussions', JSON.stringify(newDiscussions));
   };
 
   const createDiscussion = async (discussionData: Omit<Discussion, 'id' | 'author' | 'upvotes' | 'commentsCount' | 'postedAt' | 'reactions' | 'realAuthorId'>) => {
     if (!user) return;
 
-    // Create anonymous user object if posting anonymously
-    const displayAuthor = discussionData.isAnonymous ? {
-      id: 'anonymous',
-      username: 'anonymous',
-      fullName: 'Anonymous User',
-      avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=anonymous&backgroundColor=gray',
-      impactPoints: 0,
-      badges: [],
-      role: 'user' as const
-    } : user;
+    try {
+      const { data, error } = await supabase
+        .from('discussions')
+        .insert({
+          title: discussionData.title,
+          content: discussionData.content,
+          category: discussionData.category,
+          author_id: user.id,
+          author_data: discussionData.isAnonymous ? null : user,
+          is_anonymous: discussionData.isAnonymous || false,
+          tags: discussionData.tags || [],
+          media_urls: discussionData.mediaUrls || [],
+          upvotes: 0,
+          comments_count: 0
+        })
+        .select()
+        .single();
 
-    const newDiscussion: Discussion = {
-      ...discussionData,
-      id: `d${Date.now()}`,
-      author: displayAuthor,
-      realAuthorId: user.id, // Always store real author for legal compliance
-      upvotes: 0,
-      commentsCount: 0,
-      postedAt: 'just now',
-      reactions: []
-    };
-
-    const newDiscussions = [newDiscussion, ...discussions];
-    saveDiscussions(newDiscussions);
-    
-    // Award points for creating discussion
-    awardPoints(user.id, 20, 'discussion_created');
+      if (error) throw error;
+      
+      await loadDiscussions();
+      awardPoints(user.id, 20, 'discussion_created');
+    } catch (error) {
+      console.error('Error creating discussion:', error);
+      throw error;
+    }
   };
 
   const voteDiscussion = async (discussionId: string, voteType: 'up' | 'down') => {

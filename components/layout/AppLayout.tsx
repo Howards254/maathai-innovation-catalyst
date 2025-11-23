@@ -23,7 +23,7 @@ const AppLayout: React.FC = () => {
                 <div className="w-8 h-8 bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
                   <span className="text-white font-bold text-lg">🌱</span>
                 </div>
-                <span className="font-bold text-gray-900 text-lg">Maathai Catalyst</span>
+                <span className="font-bold text-gray-900 text-lg">GreenVerse</span>
               </div>
               <div className="flex justify-center gap-6 text-sm text-gray-600">
                 <a href="/about" className="hover:text-green-600 transition-colors">About</a>
@@ -31,7 +31,7 @@ const AppLayout: React.FC = () => {
                 <a href="/terms" className="hover:text-green-600 transition-colors">Terms</a>
               </div>
               <p className="text-xs text-gray-500">
-                © {new Date().getFullYear()} Maathai Catalyst. Made with 💚 for the planet.
+                © {new Date().getFullYear()} GreenVerse. Made with 💚 for the planet.
               </p>
             </div>
           </footer>

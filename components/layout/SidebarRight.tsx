@@ -191,7 +191,7 @@ const SidebarRight: React.FC = () => {
           <Link to="/privacy" className="hover:underline">Privacy</Link>
           <Link to="/terms" className="hover:underline">Terms</Link>
         </div>
-        <p className="text-xs text-gray-400 mt-2">© {new Date().getFullYear()} Maathai Catalyst.</p>
+        <p className="text-xs text-gray-400 mt-2">© {new Date().getFullYear()} GreenVerse.</p>
       </div>
     </aside>
   );
