@@ -57,11 +57,8 @@ export const ActivityFeedProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user?.id && user.id !== 'user-1') {
-      loadActivities();
-      loadChallenges();
-      subscribeToActivities();
-    }
+    // Disabled to prevent ERR_INSUFFICIENT_RESOURCES
+    setLoading(false);
   }, [user]);
 
   const loadActivities = async () => {
