@@ -30,15 +30,40 @@ export const useUser = () => {
     // Try to get user from profiles table first, fallback to auth metadata
     const profileUser = users.find(u => u.id === authUser.id);
     
+    if (profileUser) {
+      return { user: profileUser, updateProfile };
+    }
+    
+    // Build clean user object from auth metadata
+    const username = typeof authUser.user_metadata?.username === 'string' 
+      ? authUser.user_metadata.username 
+      : (authUser.email ? authUser.email.split('@')[0] : 'user');
+    
+    const fullName = typeof authUser.user_metadata?.full_name === 'string'
+      ? authUser.user_metadata.full_name
+      : (authUser.email || 'User');
+    
+    const avatarUrl = typeof authUser.user_metadata?.avatar_url === 'string'
+      ? authUser.user_metadata.avatar_url
+      : `https://api.dicebear.com/7.x/avataaars/svg?seed=${authUser.id}`;
+    
+    const impactPoints = typeof authUser.user_metadata?.impact_points === 'number'
+      ? authUser.user_metadata.impact_points
+      : 0;
+    
+    const badges = Array.isArray(authUser.user_metadata?.badges)
+      ? authUser.user_metadata.badges.filter((b: any) => typeof b === 'string')
+      : [];
+    
     return {
-      user: profileUser || {
-        id: authUser.id,
-        username: authUser.user_metadata?.username || (authUser.email ? authUser.email.split('@')[0] : 'user'),
-        fullName: authUser.user_metadata?.full_name || authUser.email || 'User',
-        avatarUrl: authUser.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${authUser.id}`,
-        impactPoints: authUser.user_metadata?.impact_points || 0,
-        badges: authUser.user_metadata?.badges || [],
-        role: authUser.user_metadata?.role || 'user'
+      user: {
+        id: String(authUser.id),
+        username,
+        fullName,
+        avatarUrl,
+        impactPoints,
+        badges,
+        role: 'user' as const
       },
       updateProfile
     };
@@ -64,49 +89,39 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, username, full_name, avatar_url, impact_points, badges, role')
         .order('impact_points', { ascending: false });
       
       if (error) {
         console.log('Profiles table not found, using auth users only');
-        // If profiles table doesn't exist, create mock users for demo
-        const mockUsers = [
-          {
-            id: 'user-1',
-            username: 'eco_warrior',
-            fullName: 'Wangari Demo',
-            avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user-1',
-            impactPoints: 1250,
-            badges: ['Early Adopter', 'Tree Hugger'],
-            role: 'user'
-          },
-          {
-            id: 'user-2',
-            username: 'project_lead',
-            fullName: 'John Smith',
-            avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=user-2',
-            impactPoints: 2100,
-            badges: ['Early Adopter', 'Tree Hugger', 'Forest Guardian'],
-            role: 'user'
-          }
-        ];
-        setUsers(mockUsers);
+        setUsers([]);
         return;
       }
       
-      const formattedUsers = (data || []).map(profile => ({
-        id: profile.id,
-        username: profile.username || (profile.email ? profile.email.split('@')[0] : 'user'),
-        fullName: profile.full_name || profile.email || 'User',
-        avatarUrl: profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.id}`,
-        impactPoints: profile.impact_points || 0,
-        badges: profile.badges || [],
-        role: profile.role || 'user'
-      }));
+      const formattedUsers = (data || []).map(profile => {
+        // Ensure all values are primitives, not objects
+        const username = typeof profile.username === 'string' ? profile.username : 'user';
+        const fullName = typeof profile.full_name === 'string' ? profile.full_name : 'User';
+        const avatarUrl = typeof profile.avatar_url === 'string' ? profile.avatar_url : `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.id}`;
+        const impactPoints = typeof profile.impact_points === 'number' ? profile.impact_points : 0;
+        const badges = Array.isArray(profile.badges) ? profile.badges.filter(b => typeof b === 'string') : [];
+        const role = profile.role === 'admin' ? 'admin' : 'user';
+        
+        return {
+          id: String(profile.id),
+          username,
+          fullName,
+          avatarUrl,
+          impactPoints,
+          badges,
+          role
+        };
+      });
       
       setUsers(formattedUsers);
     } catch (error) {
       console.error('Error loading users:', error);
+      setUsers([]);
     }
   };
 
