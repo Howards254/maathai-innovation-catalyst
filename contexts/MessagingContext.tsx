@@ -53,14 +53,14 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (user?.id && user.id !== 'user-1') {
       loadConversations();
       subscribeToMessages();
     }
   }, [user]);
 
   const loadConversations = async () => {
-    if (!user) return;
+    if (!user?.id || user.id === 'user-1') return;
 
     try {
       const { data, error } = await supabase
@@ -95,7 +95,7 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const loadConversation = async (conversationId: string) => {
-    if (!user) return;
+    if (!user?.id || user.id === 'user-1') return;
 
     setLoading(true);
     try {
@@ -132,7 +132,7 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const sendMessage = async (recipientId: string, content: string, type: 'text' | 'image' | 'file' = 'text', mediaUrl?: string) => {
-    if (!user) return;
+    if (!user?.id || user.id === 'user-1') return;
 
     try {
       const { data, error } = await supabase
@@ -177,7 +177,7 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const subscribeToMessages = () => {
-    if (!user) return;
+    if (!user?.id || user.id === 'user-1') return;
 
     const channel = supabase
       .channel('messages')

@@ -93,7 +93,7 @@ export const LiveStreamProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const createStream = async (streamData: Partial<LiveStream>) => {
-    if (!user) return;
+    if (!user?.id || user.id === 'user-1') return;
 
     try {
       const streamKey = `stream_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -159,7 +159,7 @@ export const LiveStreamProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const joinStream = async (streamId: string) => {
-    if (!user) return;
+    if (!user?.id || user.id === 'user-1') return;
 
     try {
       // Add viewer record
@@ -185,7 +185,7 @@ export const LiveStreamProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const leaveStream = async (streamId: string) => {
-    if (!user) return;
+    if (!user?.id || user.id === 'user-1') return;
 
     try {
       await supabase
@@ -222,7 +222,7 @@ export const LiveStreamProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const sendChatMessage = async (streamId: string, message: string) => {
-    if (!user) return;
+    if (!user?.id || user.id === 'user-1') return;
 
     try {
       const { data, error } = await supabase
@@ -247,7 +247,7 @@ export const LiveStreamProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const sendReaction = async (streamId: string, emoji: string) => {
-    if (!user) return;
+    if (!user?.id || user.id === 'user-1') return;
 
     try {
       await supabase

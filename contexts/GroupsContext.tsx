@@ -59,7 +59,7 @@ export const GroupsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (user?.id && user.id !== 'user-1') {
       loadGroups();
       loadMyGroups();
     }
@@ -108,7 +108,7 @@ export const GroupsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const loadMyGroups = async () => {
-    if (!user) return;
+    if (!user?.id || user.id === 'user-1') return;
 
     try {
       const { data, error } = await supabase
@@ -134,7 +134,7 @@ export const GroupsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const createGroup = async (groupData: Partial<Group>) => {
-    if (!user) return;
+    if (!user?.id || user.id === 'user-1') return;
 
     try {
       const { data, error } = await supabase
@@ -165,7 +165,7 @@ export const GroupsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const joinGroup = async (groupId: string) => {
-    if (!user) return;
+    if (!user?.id || user.id === 'user-1') return;
 
     try {
       await supabase
@@ -190,7 +190,7 @@ export const GroupsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const leaveGroup = async (groupId: string) => {
-    if (!user) return;
+    if (!user?.id || user.id === 'user-1') return;
 
     try {
       await supabase
@@ -233,7 +233,7 @@ export const GroupsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const createGroupPost = async (groupId: string, postData: Partial<GroupPost>) => {
-    if (!user) return;
+    if (!user?.id || user.id === 'user-1') return;
 
     try {
       const { data, error } = await supabase

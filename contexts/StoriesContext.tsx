@@ -32,8 +32,10 @@ export const StoriesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    loadStories();
-  }, []);
+    if (user?.id && user.id !== 'user-1') {
+      loadStories();
+    }
+  }, [user]);
 
   const loadStories = async () => {
     setLoading(true);
@@ -56,7 +58,7 @@ export const StoriesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const createStory = async (storyData: Partial<Story>) => {
-    if (!user) return;
+    if (!user?.id || user.id === 'user-1') return;
 
     try {
       const { data, error } = await supabase

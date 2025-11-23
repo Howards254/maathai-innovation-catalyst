@@ -57,7 +57,7 @@ export const ActivityFeedProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (user?.id && user.id !== 'user-1') {
       loadActivities();
       loadChallenges();
       subscribeToActivities();
@@ -124,7 +124,7 @@ export const ActivityFeedProvider: React.FC<{ children: React.ReactNode }> = ({ 
   };
 
   const createActivity = async (activityData: Partial<ActivityItem>) => {
-    if (!user) return;
+    if (!user?.id || user.id === 'user-1') return;
 
     try {
       const { data, error } = await supabase
@@ -147,7 +147,7 @@ export const ActivityFeedProvider: React.FC<{ children: React.ReactNode }> = ({ 
   };
 
   const joinChallenge = async (challengeId: string) => {
-    if (!user) return;
+    if (!user?.id || user.id === 'user-1') return;
 
     try {
       await supabase
@@ -171,7 +171,7 @@ export const ActivityFeedProvider: React.FC<{ children: React.ReactNode }> = ({ 
   };
 
   const updateChallengeProgress = async (challengeId: string, progress: number) => {
-    if (!user) return;
+    if (!user?.id || user.id === 'user-1') return;
 
     try {
       const challenge = challenges.find(c => c.id === challengeId);

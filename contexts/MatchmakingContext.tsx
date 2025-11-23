@@ -66,14 +66,14 @@ export const MatchmakingProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (user?.id && user.id !== 'user-1') {
       loadMatches();
       loadTeams();
     }
   }, [user]);
 
   const loadMatches = async () => {
-    if (!user) return;
+    if (!user?.id || user.id === 'user-1') return;
 
     try {
       const { data, error } = await supabase
@@ -95,7 +95,7 @@ export const MatchmakingProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const findMatches = async (matchType?: string) => {
-    if (!user) return;
+    if (!user?.id || user.id === 'user-1') return;
 
     setLoading(true);
     try {
@@ -162,7 +162,7 @@ export const MatchmakingProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const createTeam = async (teamData: Partial<GreenTeam>) => {
-    if (!user) return;
+    if (!user?.id || user.id === 'user-1') return;
 
     try {
       const { data, error } = await supabase
@@ -196,7 +196,7 @@ export const MatchmakingProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const joinTeam = async (teamId: string) => {
-    if (!user) return;
+    if (!user?.id || user.id === 'user-1') return;
 
     try {
       await supabase
@@ -238,7 +238,7 @@ export const MatchmakingProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const updateMatchmakingPreferences = async (preferences: any) => {
-    if (!user) return;
+    if (!user?.id || user.id === 'user-1') return;
 
     try {
       await supabase
