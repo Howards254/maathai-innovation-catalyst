@@ -31,8 +31,6 @@ const DiscussionsFeed: React.FC = () => {
     }));
     setShowReactionPicker(null);
   };
-
-  const reactionEmojis = ['💚', '🌱', '🔥', '👏', '🎉'];
   
   const categories = ['All', 'General', 'Help', 'Success Story', 'Tech'];
   const filteredDiscussions = categoryFilter === 'All' 
