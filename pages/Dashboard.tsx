@@ -52,41 +52,6 @@ const Dashboard: React.FC = () => {
         </div>
 
         <div className="p-4 space-y-6">
-            
-            {/* Filter Tabs */}
-            <div className="flex bg-gray-100 rounded-lg p-1 w-fit">
-                <button 
-                  onClick={() => setFilter('hot')}
-                  className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
-                    filter === 'hot' 
-                      ? 'bg-white text-gray-900 shadow-sm' 
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  🔥 Hot
-                </button>
-                <button 
-                  onClick={() => setFilter('new')}
-                  className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
-                    filter === 'new' 
-                      ? 'bg-white text-gray-900 shadow-sm' 
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  ✨ New
-                </button>
-                <button 
-                  onClick={() => setFilter('top')}
-                  className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
-                    filter === 'top' 
-                      ? 'bg-white text-gray-900 shadow-sm' 
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  🏆 Top
-                </button>
-            </div>
-
             {/* Featured Campaigns */}
             <div>
                 <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -130,6 +95,40 @@ const Dashboard: React.FC = () => {
                 <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                   💬 Recent Discussions
                 </h2>
+                
+                {/* Filter Tabs */}
+                <div className="flex bg-gray-100 rounded-lg p-1 w-fit mb-4">
+                    <button 
+                      onClick={() => setFilter('hot')}
+                      className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
+                        filter === 'hot' 
+                          ? 'bg-white text-gray-900 shadow-sm' 
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      🔥 Hot
+                    </button>
+                    <button 
+                      onClick={() => setFilter('new')}
+                      className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
+                        filter === 'new' 
+                          ? 'bg-white text-gray-900 shadow-sm' 
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      ✨ New
+                    </button>
+                    <button 
+                      onClick={() => setFilter('top')}
+                      className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
+                        filter === 'top' 
+                          ? 'bg-white text-gray-900 shadow-sm' 
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      🏆 Top
+                    </button>
+                </div>
                 <div className="space-y-3">
                     {discussionsLoading ? (
                         <div className="text-center py-8">
