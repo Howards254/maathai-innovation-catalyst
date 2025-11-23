@@ -215,7 +215,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER update_follower_counts_trigger
-    AFTER INSERT OR DELETE ON follows
-    FOR EACH ROW
-    EXECUTE FUNCTION update_follower_counts();
+-- Only create trigger if follows table exists
+DO $$ BEGIN
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'follows') THEN
+        CREATE TRIGGER update_follower_counts_trigger
+            AFTER INSERT OR DELETE ON follows
+            FOR EACH ROW
+            EXECUTE FUNCTION update_follower_counts();
+    END IF;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
