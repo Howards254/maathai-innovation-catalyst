@@ -1,4 +1,4 @@
-# Deployment Guide - Maathai Innovation Catalyst
+# Deployment Guide - GreenVerse
 
 ## Production Deployment Options
 

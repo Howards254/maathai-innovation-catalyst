@@ -1,4 +1,4 @@
--- Complete Database Setup for Maathai Innovation Catalyst
+-- Complete Database Setup for GreenVerse
 -- Run this single script to set up everything
 
 -- Enable necessary extensions

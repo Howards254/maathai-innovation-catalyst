@@ -1,4 +1,4 @@
--- Maathai Innovation Catalyst Database Setup
+-- GreenVerse Database Setup
 -- Run this in your Supabase SQL Editor
 
 -- Enable necessary extensions

@@ -12,7 +12,7 @@ const Terms: React.FC = () => {
             <section>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Acceptance of Terms</h2>
               <p className="text-gray-700">
-                By accessing and using the Maathai Innovation Catalyst platform, you accept and agree 
+                By accessing and using the GreenVerse platform, you accept and agree 
                 to be bound by the terms and provision of this agreement.
               </p>
             </section>

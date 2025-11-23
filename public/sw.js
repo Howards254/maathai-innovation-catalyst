@@ -18,7 +18,7 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'Maathai Innovation Catalyst', options)
+    self.registration.showNotification(data.title || 'GreenVerse', options)
   );
 });
 

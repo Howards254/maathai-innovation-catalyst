@@ -27,7 +27,7 @@ const Landing = () => {
             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white font-bold border border-white/30">
               🌱
             </div>
-            <span className="text-lg sm:text-xl font-bold text-white hidden sm:block">Maathai Innovation Catalyst</span>
+            <span className="text-lg sm:text-xl font-bold text-white hidden sm:block">GreenVerse</span>
             <span className="text-lg font-bold text-white sm:hidden">MIC</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
@@ -255,7 +255,7 @@ const Landing = () => {
         <div className="max-w-4xl mx-auto px-4">
           <div className="flex items-center justify-center gap-2 mb-4">
             <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white font-bold">🌱</div>
-            <span className="text-lg font-bold text-white">Maathai Innovation Catalyst</span>
+            <span className="text-lg font-bold text-white">GreenVerse</span>
           </div>
           <p className="mb-4">Inspired by Wangari Maathai's legacy of environmental restoration and community empowerment.</p>
           <div className="flex justify-center gap-6 mb-6">
@@ -264,7 +264,7 @@ const Landing = () => {
             <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
             <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
           </div>
-          <p>© {new Date().getFullYear()} Maathai Innovation Catalyst. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} GreenVerse. All rights reserved.</p>
         </div>
       </footer>
     </div>

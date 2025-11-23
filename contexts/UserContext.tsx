@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types';
 import { useAuth } from './AuthContext';
-import { getUserAvatar } from '../utils/imageUtils';
+import { supabase } from '../lib/supabase';
 
 interface UserContextType {
   users: User[];
@@ -30,12 +30,12 @@ export const useUser = () => {
     return {
       user: {
         id: user.id,
-        username: user.email?.split('@')[0] || 'user',
+        username: user.user_metadata?.username || user.email?.split('@')[0] || 'user',
         fullName: user.user_metadata?.full_name || user.email || 'User',
-        avatarUrl: user.user_metadata?.avatar_url,
-        impactPoints: 0,
-        badges: [],
-        role: 'user'
+        avatarUrl: user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`,
+        impactPoints: user.user_metadata?.impact_points || 0,
+        badges: user.user_metadata?.badges || [],
+        role: user.user_metadata?.role || 'user'
       },
       updateProfile
     };
@@ -53,65 +53,72 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { user: currentUser } = useAuth();
 
   useEffect(() => {
-    // Initialize with mock users
-    const mockUsers: User[] = [
-      {
-        id: 'user-1',
-        username: 'eco_warrior',
-        fullName: 'Wangari Demo',
-        avatarUrl: getUserAvatar('user-1'),
-        impactPoints: 1250,
-        badges: ['Early Adopter', 'Tree Hugger'],
-        role: 'admin'
-      },
-      {
-        id: 'user-2',
-        username: 'green_thumb',
-        fullName: 'John Planter',
-        avatarUrl: getUserAvatar('user-2'),
-        impactPoints: 2100,
-        badges: ['Early Adopter', 'Tree Hugger', 'Forest Guardian'],
-        role: 'user'
-      },
-      {
-        id: 'user-3',
-        username: 'nature_lover',
-        fullName: 'Sarah Green',
-        avatarUrl: getUserAvatar('user-3'),
-        impactPoints: 890,
-        badges: ['Early Adopter'],
-        role: 'user'
-      }
-    ];
-
-    const saved = localStorage.getItem('users');
-    if (saved) {
-      setUsers(JSON.parse(saved));
-    } else {
-      setUsers(mockUsers);
-      localStorage.setItem('users', JSON.stringify(mockUsers));
-    }
+    // Load users from Supabase profiles table
+    loadUsers();
   }, []);
+
+  const loadUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('impact_points', { ascending: false });
+      
+      if (error) throw error;
+      
+      const formattedUsers = (data || []).map(profile => ({
+        id: profile.id,
+        username: profile.username || profile.email?.split('@')[0] || 'user',
+        fullName: profile.full_name || profile.email || 'User',
+        avatarUrl: profile.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.id}`,
+        impactPoints: profile.impact_points || 0,
+        badges: profile.badges || [],
+        role: profile.role || 'user'
+      }));
+      
+      setUsers(formattedUsers);
+    } catch (error) {
+      console.error('Error loading users:', error);
+    }
+  };
 
   const saveUsers = (newUsers: User[]) => {
     setUsers(newUsers);
-    localStorage.setItem('users', JSON.stringify(newUsers));
   };
 
   const updateProfile = async (updates: Partial<User>) => {
     if (!currentUser) return;
     
-    const newUsers = users.map(user =>
-      user.id === currentUser.id ? { ...user, ...updates } : user
-    );
-    saveUsers(newUsers);
+    // Update Supabase user metadata
+    const { error } = await supabase.auth.updateUser({
+      data: {
+        ...currentUser.user_metadata,
+        full_name: updates.fullName,
+        username: updates.username,
+        impact_points: updates.impactPoints,
+        badges: updates.badges,
+        role: updates.role
+      }
+    });
+    
+    if (error) {
+      console.error('Error updating profile:', error);
+      throw error;
+    }
   };
 
-  const awardPoints = (userId: string, points: number, action: string) => {
-    const newUsers = users.map(user => {
-      if (user.id === userId) {
-        const newPoints = user.impactPoints + points;
-        const newBadges = [...user.badges];
+  const awardPoints = async (userId: string, points: number, action: string) => {
+    try {
+      // Update points in Supabase
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('impact_points, badges')
+        .eq('id', userId)
+        .single();
+      
+      if (profile) {
+        const newPoints = (profile.impact_points || 0) + points;
+        const newBadges = [...(profile.badges || [])];
         
         // Award badges based on points
         if (newPoints >= 100 && !newBadges.includes('Tree Hugger')) {
@@ -130,40 +137,25 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           newBadges.push('Environmental Champion');
         }
         
-        return { ...user, impactPoints: newPoints, badges: newBadges };
+        await supabase
+          .from('profiles')
+          .update({ 
+            impact_points: newPoints, 
+            badges: newBadges 
+          })
+          .eq('id', userId);
+        
+        // Reload users
+        loadUsers();
       }
-      return user;
-    });
-    
-    saveUsers(newUsers);
-    
-    // Update gamification challenges based on action
-    updateChallengeProgress(action, userId);
-    
-    console.log(`Awarded ${points} points to user ${userId} for ${action}`);
+    } catch (error) {
+      console.error('Error awarding points:', error);
+    }
   };
   
-  const updateChallengeProgress = (action: string, userId: string) => {
-    // This would integrate with GamificationContext
-    // For now, we'll store challenge updates in localStorage
-    const challengeUpdates = JSON.parse(localStorage.getItem(`challenge_updates_${userId}`) || '{}');
-    
-    switch (action) {
-      case 'tree_planting':
-        challengeUpdates['daily-trees'] = (challengeUpdates['daily-trees'] || 0) + 1;
-        challengeUpdates['milestone-100-trees'] = (challengeUpdates['milestone-100-trees'] || 0) + 1;
-        break;
-      case 'discussion_created':
-      case 'comment_created':
-        challengeUpdates['daily-discussion'] = (challengeUpdates['daily-discussion'] || 0) + 1;
-        challengeUpdates['milestone-10-discussions'] = (challengeUpdates['milestone-10-discussions'] || 0) + 1;
-        break;
-      case 'discussion_voted':
-        challengeUpdates['daily-vote'] = (challengeUpdates['daily-vote'] || 0) + 1;
-        break;
-    }
-    
-    localStorage.setItem(`challenge_updates_${userId}`, JSON.stringify(challengeUpdates));
+  const updateChallengeProgress = async (action: string, userId: string) => {
+    // This would integrate with a proper challenge tracking system
+    console.log(`Challenge progress updated for ${userId}: ${action}`);
   };
 
   const getLeaderboard = () => {

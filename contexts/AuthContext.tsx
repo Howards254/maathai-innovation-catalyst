@@ -1,14 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User } from '../types';
-import { getUserAvatar } from '../utils/imageUtils';
-import { migrateExistingData } from '../utils/dataMigration';
+import { supabase } from '../lib/supabase';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 interface AuthContextType {
-  user: User | null;
+  user: SupabaseUser | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string, username: string) => Promise<void>;
-  signOut: () => void;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,94 +21,62 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Run data migration once
-    const migrationRun = localStorage.getItem('migration_v5_completed');
-    if (!migrationRun) {
-      migrateExistingData();
-      localStorage.setItem('migration_v5_completed', 'true');
-    }
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
 
-    // Check for existing session
-    const savedUser = localStorage.getItem('auth_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setLoading(false);
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const signIn = async (email: string, password: string) => {
     setLoading(true);
-    
-    // Check stored users
-    const storedUsers = JSON.parse(localStorage.getItem('registered_users') || '[]');
-    const foundUser = storedUsers.find((u: any) => u.email === email && u.password === password);
-    
-    if (foundUser) {
-      const { password: _, ...userWithoutPassword } = foundUser;
-      setUser(userWithoutPassword);
-      localStorage.setItem('auth_user', JSON.stringify(userWithoutPassword));
-    } else if (email === 'demo@example.com' && password === 'password') {
-      // Demo user fallback
-      const mockUser: User = {
-        id: 'user-1',
-        username: 'eco_warrior',
-        fullName: 'Wangari Demo',
-        avatarUrl: getUserAvatar('user-1'),
-        impactPoints: 1250,
-        badges: ['Early Adopter', 'Tree Hugger'],
-        role: 'admin'
-      };
-      setUser(mockUser);
-      localStorage.setItem('auth_user', JSON.stringify(mockUser));
-    } else {
-      throw new Error('Invalid credentials');
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
+    } catch (error) {
+      setLoading(false);
+      throw error;
     }
-    
-    setLoading(false);
   };
 
   const signUp = async (email: string, password: string, fullName: string, username: string) => {
     setLoading(true);
-    
-    // Check if user already exists
-    const storedUsers = JSON.parse(localStorage.getItem('registered_users') || '[]');
-    const existingUser = storedUsers.find((u: any) => u.email === email || u.username === username);
-    
-    if (existingUser) {
-      throw new Error('User with this email or username already exists');
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            username: username,
+          }
+        }
+      });
+      if (error) throw error;
+    } catch (error) {
+      setLoading(false);
+      throw error;
     }
-    
-    const userId = `user-${Date.now()}`;
-    const newUser = {
-      id: userId,
-      email,
-      password,
-      username,
-      fullName,
-      avatarUrl: getUserAvatar(userId),
-      impactPoints: 0,
-      badges: ['Early Adopter'],
-      role: 'user' as const
-    };
-    
-    // Store user credentials
-    storedUsers.push(newUser);
-    localStorage.setItem('registered_users', JSON.stringify(storedUsers));
-    
-    // Set current user (without password)
-    const { password: _, ...userWithoutPassword } = newUser;
-    setUser(userWithoutPassword);
-    localStorage.setItem('auth_user', JSON.stringify(userWithoutPassword));
-    setLoading(false);
   };
 
-  const signOut = () => {
-    setUser(null);
-    localStorage.removeItem('auth_user');
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
   };
 
   const value = {

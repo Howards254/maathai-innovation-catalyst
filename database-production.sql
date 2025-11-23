@@ -1,4 +1,4 @@
--- Maathai Innovation Catalyst - PRODUCTION Database Setup
+-- GreenVerse - PRODUCTION Database Setup
 -- Clean database without test data for deployment
 
 -- Enable necessary extensions
