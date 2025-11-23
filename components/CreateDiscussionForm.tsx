@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useDiscussions } from '../contexts/DiscussionContext';
+import { Image, Video, Smile, X } from 'lucide-react';
 
 interface CreateDiscussionFormProps {
   onClose: () => void;
@@ -9,17 +10,58 @@ const CreateDiscussionForm: React.FC<CreateDiscussionFormProps> = ({ onClose }) 
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    category: 'General' as 'General' | 'Help' | 'Success Story' | 'Tech'
+    category: 'General' as 'General' | 'Help' | 'Success Story' | 'Tech',
+    tags: ''
   });
+  const [mediaFiles, setMediaFiles] = useState<File[]>([]);
+  const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { createDiscussion } = useDiscussions();
+
+  const emojis = ['🌱', '🌳', '🌿', '♻️', '🌍', '💚', '✨', '🎉', '👏', '💪', '🔥', '❤️', '😊', '🤔', '👍', '🙌'];
+
+  const handleMediaSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length + mediaFiles.length > 4) {
+      alert('Maximum 4 media files allowed');
+      return;
+    }
+
+    setMediaFiles([...mediaFiles, ...files]);
+    
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setMediaPreviews(prev => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeMedia = (index: number) => {
+    setMediaFiles(mediaFiles.filter((_, i) => i !== index));
+    setMediaPreviews(mediaPreviews.filter((_, i) => i !== index));
+  };
+
+  const insertEmoji = (emoji: string) => {
+    setFormData({...formData, content: formData.content + emoji});
+    setShowEmojiPicker(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      await createDiscussion(formData);
+      const tagsArray = formData.tags.split(',').map(t => t.trim()).filter(Boolean);
+      await createDiscussion({
+        ...formData,
+        tags: tagsArray,
+        mediaUrls: mediaPreviews,
+        mediaType: mediaFiles[0]?.type.startsWith('video') ? 'video' : 'image'
+      });
       onClose();
     } catch (error) {
       console.error('Failed to create discussion:', error);
@@ -87,14 +129,91 @@ const CreateDiscussionForm: React.FC<CreateDiscussionFormProps> = ({ onClose }) 
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-3">Content</label>
-              <textarea
-                value={formData.content}
-                onChange={(e) => setFormData({...formData, content: e.target.value})}
-                rows={6}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors resize-none"
-                placeholder="Share your thoughts, ask questions, or tell your story..."
-                required
+              <div className="relative">
+                <textarea
+                  value={formData.content}
+                  onChange={(e) => setFormData({...formData, content: e.target.value})}
+                  rows={6}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors resize-none"
+                  placeholder="Share your thoughts, ask questions, or tell your story..."
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  className="absolute bottom-3 right-3 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <Smile className="w-5 h-5" />
+                </button>
+                {showEmojiPicker && (
+                  <div className="absolute bottom-14 right-3 bg-white border border-gray-200 rounded-xl shadow-lg p-3 grid grid-cols-8 gap-2 z-10">
+                    {emojis.map((emoji, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => insertEmoji(emoji)}
+                        className="text-2xl hover:bg-gray-100 rounded p-1 transition-colors"
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Media Upload */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-3">Media (Optional)</label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,video/*"
+                multiple
+                onChange={handleMediaSelect}
+                className="hidden"
               />
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center gap-2 px-4 py-2 border-2 border-dashed border-gray-300 rounded-xl hover:border-green-500 hover:bg-green-50 transition-colors text-gray-600 hover:text-green-600"
+                >
+                  <Image className="w-5 h-5" />
+                  <span className="font-medium">Add Photos/Videos</span>
+                </button>
+                <span className="text-sm text-gray-500 self-center">Up to 4 files</span>
+              </div>
+              
+              {mediaPreviews.length > 0 && (
+                <div className="grid grid-cols-2 gap-3 mt-4">
+                  {mediaPreviews.map((preview, index) => (
+                    <div key={index} className="relative group">
+                      <img src={preview} alt="Preview" className="w-full h-32 object-cover rounded-xl" />
+                      <button
+                        type="button"
+                        onClick={() => removeMedia(index)}
+                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Tags */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-3">Tags (Optional)</label>
+              <input
+                type="text"
+                value={formData.tags}
+                onChange={(e) => setFormData({...formData, tags: e.target.value})}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
+                placeholder="e.g., reforestation, climate-action, sustainability"
+              />
+              <p className="text-xs text-gray-500 mt-2">Separate tags with commas</p>
             </div>
 
             <div className="flex gap-4 pt-4">

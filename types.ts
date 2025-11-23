@@ -72,6 +72,14 @@ export interface Discussion {
   commentsCount: number;
   postedAt: string;
   category: 'General' | 'Help' | 'Success Story' | 'Tech';
+  mediaUrls?: string[];
+  mediaType?: 'image' | 'video';
+  reactions?: {
+    type: string;
+    count: number;
+    users: string[];
+  }[];
+  tags?: string[];
 }
 
 export interface Event {

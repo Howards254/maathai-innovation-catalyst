@@ -15,7 +15,7 @@ interface DiscussionContextType {
   discussions: Discussion[];
   comments: Comment[];
   loading: boolean;
-  createDiscussion: (discussion: Omit<Discussion, 'id' | 'author' | 'upvotes' | 'commentsCount' | 'postedAt'>) => Promise<void>;
+  createDiscussion: (discussion: Omit<Discussion, 'id' | 'author' | 'upvotes' | 'commentsCount' | 'postedAt' | 'reactions'>) => Promise<void>;
   voteDiscussion: (discussionId: string, voteType: 'up' | 'down') => Promise<void>;
   addComment: (discussionId: string, content: string) => Promise<void>;
   getDiscussion: (id: string) => Discussion | undefined;
@@ -68,7 +68,7 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     localStorage.setItem('discussions', JSON.stringify(newDiscussions));
   };
 
-  const createDiscussion = async (discussionData: Omit<Discussion, 'id' | 'author' | 'upvotes' | 'commentsCount' | 'postedAt'>) => {
+  const createDiscussion = async (discussionData: Omit<Discussion, 'id' | 'author' | 'upvotes' | 'commentsCount' | 'postedAt' | 'reactions'>) => {
     if (!user) return;
 
     const newDiscussion: Discussion = {
@@ -77,7 +77,8 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       author: user,
       upvotes: 0,
       commentsCount: 0,
-      postedAt: 'just now'
+      postedAt: 'just now',
+      reactions: []
     };
 
     const newDiscussions = [newDiscussion, ...discussions];

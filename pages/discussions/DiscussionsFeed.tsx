@@ -2,13 +2,19 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useDiscussions } from '../../contexts/DiscussionContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useUser } from '../../contexts/UserContext';
 import CreateDiscussionForm from '../../components/CreateDiscussionForm';
+import { Heart, MessageCircle, Share2, Play } from 'lucide-react';
 
 const DiscussionsFeed: React.FC = () => {
   const { discussions, loading, voteDiscussion, getUserVote } = useDiscussions();
-  const { user } = useAuth();
+  const { user: authUser } = useAuth();
+  const { user } = useUser();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string>('All');
+  const [reactions, setReactions] = useState<Record<string, string>>({});
+
+  const reactionEmojis = ['💚', '🌱', '🔥', '👏', '🎉'];
   
   const categories = ['All', 'General', 'Help', 'Success Story', 'Tech'];
   const filteredDiscussions = categoryFilter === 'All' 
@@ -93,38 +99,125 @@ const DiscussionsFeed: React.FC = () => {
         </div>
       </div>
       
+      {/* Create Post Bar */}
+      <div className="bg-white border-b border-gray-200 px-4 py-4">
+        <div className="flex items-center gap-3">
+          <img src={user?.avatarUrl || 'https://picsum.photos/200'} alt="User" className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-100" />
+          <button
+            onClick={() => setShowCreateForm(true)}
+            className="flex-1 bg-gray-100 hover:bg-white border border-gray-200 hover:border-green-300 rounded-full px-4 py-3 text-sm text-left text-gray-500 transition-all cursor-pointer"
+          >
+            What's on your mind about the environment?
+          </button>
+        </div>
+      </div>
+
       <div className="px-4 py-6 space-y-4">
-        {filteredDiscussions.map(post => (
+        {filteredDiscussions.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
+            <div className="text-6xl mb-4">🌱</div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">No discussions yet</h3>
+            <p className="text-gray-500 mb-4">Be the first to start a conversation!</p>
+            <button
+              onClick={() => setShowCreateForm(true)}
+              className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg transition-all"
+            >
+              Create First Post
+            </button>
+          </div>
+        ) : (
+          filteredDiscussions.map(post => (
            <div key={post.id} className="bg-white rounded-xl border border-gray-200 hover:border-green-200 hover:shadow-md transition-all overflow-hidden">
              <div className="p-6">
                {/* Header */}
                <div className="flex items-start gap-3 mb-4">
-                 <img 
-                   src={post.author?.avatarUrl || 'https://picsum.photos/200'} 
-                   alt={post.author?.username} 
-                   className="w-12 h-12 rounded-full ring-2 ring-gray-100" 
-                 />
+                 <Link to={`/app/profile/${post.author?.username}`}>
+                   <img 
+                     src={post.author?.avatarUrl || 'https://picsum.photos/200'} 
+                     alt={post.author?.username} 
+                     className="w-12 h-12 rounded-full ring-2 ring-gray-100 hover:ring-green-300 transition-all" 
+                   />
+                 </Link>
                  <div className="flex-1">
                    <div className="flex items-center gap-2 mb-1">
-                     <span className="font-semibold text-gray-900">@{post.author?.username}</span>
-                     <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
-                       {post.category}
-                     </span>
-                     <span className="text-sm text-gray-500">• {post.postedAt}</span>
+                     <Link to={`/app/profile/${post.author?.username}`} className="font-semibold text-gray-900 hover:text-green-600 transition-colors">
+                       {post.author?.fullName}
+                     </Link>
+                     <span className="text-gray-500 text-sm">@{post.author?.username}</span>
+                     <span className="text-sm text-gray-400">• {post.postedAt}</span>
                    </div>
+                   <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
+                     {post.category}
+                   </span>
                  </div>
                </div>
                
                {/* Content */}
-               <Link to={`/app/discussions/${post.id}`} className="block group">
-                 <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-green-600 transition-colors">
-                   {post.title}
-                 </h3>
-                 <p className="text-gray-700 mb-4 line-clamp-3">{post.content}</p>
-               </Link>
+               <div className="mb-4">
+                 <Link to={`/app/discussions/${post.id}`} className="block group">
+                   <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-green-600 transition-colors">
+                     {post.title}
+                   </h3>
+                   <p className="text-gray-700 mb-4 whitespace-pre-wrap">{post.content}</p>
+                 </Link>
+                 
+                 {/* Media Grid */}
+                 {post.mediaUrls && post.mediaUrls.length > 0 && (
+                   <div className={`grid gap-2 mb-4 ${
+                     post.mediaUrls.length === 1 ? 'grid-cols-1' :
+                     post.mediaUrls.length === 2 ? 'grid-cols-2' :
+                     'grid-cols-2'
+                   }`}>
+                     {post.mediaUrls.map((url, index) => (
+                       <div key={index} className="relative group cursor-pointer rounded-xl overflow-hidden">
+                         {post.mediaType === 'video' ? (
+                           <div className="relative">
+                             <video src={url} className="w-full h-64 object-cover" />
+                             <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center group-hover:bg-opacity-30 transition-all">
+                               <div className="w-12 h-12 bg-white bg-opacity-90 rounded-full flex items-center justify-center">
+                                 <Play className="w-6 h-6 text-gray-800 ml-1" />
+                               </div>
+                             </div>
+                           </div>
+                         ) : (
+                           <img src={url} alt="Post media" className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300" />
+                         )}
+                       </div>
+                     ))}
+                   </div>
+                 )}
+                 
+                 {/* Tags */}
+                 {post.tags && post.tags.length > 0 && (
+                   <div className="flex flex-wrap gap-2 mb-4">
+                     {post.tags.map((tag, index) => (
+                       <span key={index} className="text-green-600 text-sm hover:text-green-700 cursor-pointer">
+                         #{tag}
+                       </span>
+                     ))}
+                   </div>
+                 )}
+               </div>
+               
+               {/* Reactions Bar */}
+               <div className="flex items-center gap-2 mb-4 pb-4 border-b border-gray-100">
+                 {reactionEmojis.map((emoji, index) => (
+                   <button
+                     key={index}
+                     onClick={() => setReactions({...reactions, [post.id]: emoji})}
+                     className={`px-3 py-1.5 rounded-full text-lg transition-all ${
+                       reactions[post.id] === emoji
+                         ? 'bg-green-100 scale-110'
+                         : 'hover:bg-gray-100'
+                     }`}
+                   >
+                     {emoji}
+                   </button>
+                 ))}
+               </div>
                
                {/* Actions */}
-               <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+               <div className="flex items-center justify-between">
                  <div className="flex items-center gap-6">
                    <div className="flex items-center gap-2">
                      <button 
@@ -177,7 +270,8 @@ const DiscussionsFeed: React.FC = () => {
                </div>
              </div>
            </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
