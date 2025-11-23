@@ -58,6 +58,9 @@ CREATE TABLE IF NOT EXISTS activity_feed (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Add is_public column if it doesn't exist (for existing activity_feed tables)
+ALTER TABLE activity_feed ADD COLUMN IF NOT EXISTS is_public BOOLEAN DEFAULT TRUE;
+
 -- Live Challenges
 CREATE TABLE IF NOT EXISTS live_challenges (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -134,7 +137,14 @@ CREATE INDEX IF NOT EXISTS idx_live_streams_status ON live_streams(is_live, sche
 CREATE INDEX IF NOT EXISTS idx_stream_viewers_active ON stream_viewers(stream_id, left_at) WHERE left_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_live_chat_stream ON live_chat_messages(stream_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_activity_feed_user ON activity_feed(user_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_activity_feed_public ON activity_feed(is_public, created_at DESC) WHERE is_public = true;
+
+-- Only create is_public index if column exists
+DO $$ BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'activity_feed' AND column_name = 'is_public') THEN
+        CREATE INDEX IF NOT EXISTS idx_activity_feed_public ON activity_feed(is_public, created_at DESC) WHERE is_public = true;
+    END IF;
+END $$;
+
 CREATE INDEX IF NOT EXISTS idx_live_challenges_active ON live_challenges(is_active, end_time) WHERE is_active = true;
 CREATE INDEX IF NOT EXISTS idx_challenge_participants_user ON challenge_participants(user_id, completed_at);
 CREATE INDEX IF NOT EXISTS idx_notification_queue_pending ON notification_queue(scheduled_for, is_sent) WHERE is_sent = false;
@@ -255,13 +265,25 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Create triggers for activity feed
-CREATE TRIGGER create_tree_activity_trigger
-    AFTER INSERT ON tree_submissions
-    FOR EACH ROW
-    EXECUTE FUNCTION create_activity_entry();
+-- Create triggers for activity feed (only if tables exist)
+DO $$ BEGIN
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'tree_submissions') THEN
+        CREATE TRIGGER create_tree_activity_trigger
+            AFTER INSERT ON tree_submissions
+            FOR EACH ROW
+            EXECUTE FUNCTION create_activity_entry();
+    END IF;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TRIGGER create_story_activity_trigger
-    AFTER INSERT ON stories
-    FOR EACH ROW
-    EXECUTE FUNCTION create_activity_entry();
+DO $$ BEGIN
+    IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'stories') THEN
+        CREATE TRIGGER create_story_activity_trigger
+            AFTER INSERT ON stories
+            FOR EACH ROW
+            EXECUTE FUNCTION create_activity_entry();
+    END IF;
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
