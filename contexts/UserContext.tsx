@@ -23,10 +23,10 @@ export const useUsers = () => {
 
 export const useUser = () => {
   const { user } = useAuth();
-  const { users, updateProfile } = useUsers();
+  const { updateProfile } = useUsers();
   
-  // In production, use the authenticated user directly
-  if (user && !users.find(u => u.id === user.id)) {
+  // Always use the authenticated user from Supabase
+  if (user) {
     return {
       user: {
         id: user.id,
@@ -41,10 +41,9 @@ export const useUser = () => {
     };
   }
   
-  const currentUser = users.find(u => u.id === user?.id);
-  
+  // Return null if no authenticated user
   return {
-    user: currentUser,
+    user: null,
     updateProfile
   };
 };
