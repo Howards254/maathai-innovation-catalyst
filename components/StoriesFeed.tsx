@@ -179,7 +179,7 @@ const StoriesFeed = ({ feedType = 'all' }: StoriesFeedProps) => {
                 {story.media_type === 'video' ? (
                   <div className="relative">
                     <img
-                      src={getVideoThumbnail(story.media_url.split('/').pop()?.split('.')[0] || '')}
+                      src={getVideoThumbnail(story.media_url && typeof story.media_url === 'string' ? (story.media_url.split('/').pop()?.split('.')[0] || '') : '')}
                       alt={story.title}
                       className="w-full h-96 object-cover"
                     />
@@ -196,7 +196,7 @@ const StoriesFeed = ({ feedType = 'all' }: StoriesFeedProps) => {
                   </div>
                 ) : (
                   <img
-                    src={getOptimizedUrl(story.media_url.split('/').pop()?.split('.')[0] || '', { width: 800, height: 600 })}
+                    src={getOptimizedUrl(story.media_url && typeof story.media_url === 'string' ? (story.media_url.split('/').pop()?.split('.')[0] || '') : '', { width: 800, height: 600 })}
                     alt={story.title}
                     className="w-full h-96 object-cover"
                   />
