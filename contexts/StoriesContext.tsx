@@ -32,9 +32,7 @@ export const StoriesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user?.id && user.id !== 'user-1') {
-      loadStories();
-    }
+    // Stories feature disabled - no loading
   }, [user]);
 
   const loadStories = async () => {
