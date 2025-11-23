@@ -1,42 +1,105 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { useUsers } from '../../contexts/UserContext';
+import { useUser, useUsers } from '../../contexts/UserContext';
+import { supabase } from '../../lib/supabase';
 
 const ProfileEdit: React.FC = () => {
-  const { user } = useAuth();
+  const { user: authUser } = useAuth();
+  const { user } = useUser();
   const { updateProfile } = useUsers();
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
-    fullName: user?.fullName || '',
-    username: user?.username || '',
+    fullName: '',
+    username: '',
     bio: '',
     location: '',
     website: ''
   });
   
   const [loading, setLoading] = useState(false);
+  const [usernameError, setUsernameError] = useState('');
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        fullName: user.fullName || '',
+        username: user.username || '',
+        bio: '',
+        location: '',
+        website: ''
+      });
+    }
+  }, [user]);
+
+  const checkUsernameAvailability = async (username: string) => {
+    if (username === user?.username) return true; // Same username is OK
+    if (!username || username.length < 3) return false;
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', username)
+        .single();
+      
+      return !data; // Available if no data found
+    } catch (error) {
+      return true; // Assume available if profiles table doesn't exist
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate username
+    if (formData.username.length < 3) {
+      setUsernameError('Username must be at least 3 characters long');
+      return;
+    }
+
+    if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
+      setUsernameError('Username can only contain letters, numbers, and underscores');
+      return;
+    }
+
     setLoading(true);
+    setUsernameError('');
     
     try {
+      // Check username availability if changed
+      if (formData.username !== user?.username) {
+        const isAvailable = await checkUsernameAvailability(formData.username);
+        if (!isAvailable) {
+          setUsernameError('Username is already taken');
+          setLoading(false);
+          return;
+        }
+      }
+
       await updateProfile(formData);
-      navigate(`/app/profile/${user?.username}`);
+      alert('Profile updated successfully!');
+      navigate(`/app/profile/${formData.username}`);
     } catch (error) {
       console.error('Failed to update profile:', error);
+      alert('Failed to update profile. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
+    const { name, value } = e.target;
+    
+    // Clean username input
+    if (name === 'username') {
+      const cleanValue = value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+      setFormData(prev => ({ ...prev, [name]: cleanValue }));
+      setUsernameError('');
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   return (
@@ -81,9 +144,16 @@ const ProfileEdit: React.FC = () => {
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent ${
+                  usernameError ? 'border-red-500' : 'border-gray-300'
+                }`}
                 required
+                minLength={3}
               />
+              {usernameError && (
+                <p className="text-xs text-red-500 mt-1">{usernameError}</p>
+              )}
+              <p className="text-xs text-gray-500 mt-1">Letters, numbers, and underscores only</p>
             </div>
           </div>
 

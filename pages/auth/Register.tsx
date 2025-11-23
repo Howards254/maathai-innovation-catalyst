@@ -14,6 +14,7 @@ const Register: React.FC = () => {
     password: '',
     confirmPassword: '',
     fullName: '',
+    username: '',
     locationCity: '',
     locationCountry: '',
     experienceLevel: 'beginner',
@@ -76,6 +77,22 @@ const Register: React.FC = () => {
     setFormData(prev => ({ ...prev, [field]: newArray }));
   };
 
+  const checkUsernameAvailability = async (username: string) => {
+    if (!username || username.length < 3) return false;
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', username)
+        .single();
+      
+      return !data; // Available if no data found
+    } catch (error) {
+      return true; // Assume available if profiles table doesn't exist
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
@@ -83,9 +100,28 @@ const Register: React.FC = () => {
       return;
     }
 
+    // Validate username
+    if (formData.username.length < 3) {
+      alert('Username must be at least 3 characters long');
+      return;
+    }
+
+    if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
+      alert('Username can only contain letters, numbers, and underscores');
+      return;
+    }
+
     setLoading(true);
     try {
-      await signUp(formData.email, formData.password, formData.fullName, formData.fullName.toLowerCase().replace(/\s+/g, '_'));
+      // Check username availability
+      const isAvailable = await checkUsernameAvailability(formData.username);
+      if (!isAvailable) {
+        alert('Username is already taken. Please choose another one.');
+        setLoading(false);
+        return;
+      }
+
+      await signUp(formData.email, formData.password, formData.fullName, formData.username);
       
       // Show success message for email confirmation
       alert('Registration successful! Please check your email to confirm your account.');
@@ -102,7 +138,7 @@ const Register: React.FC = () => {
 
   const isStepValid = () => {
     switch (currentStep) {
-      case 1: return formData.email && formData.password && formData.confirmPassword && formData.fullName;
+      case 1: return formData.email && formData.password && formData.confirmPassword && formData.fullName && formData.username;
       case 2: return formData.locationCity && formData.locationCountry;
       case 3: return formData.causes.length > 0;
       case 4: return formData.skills.length > 0 && formData.activities.length > 0;
@@ -146,6 +182,19 @@ const Register: React.FC = () => {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   required
                 />
+                
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Username (e.g., eco_warrior)"
+                    value={formData.username}
+                    onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    required
+                    minLength={3}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Letters, numbers, and underscores only. Min 3 characters.</p>
+                </div>
                 
                 <input
                   type="email"
