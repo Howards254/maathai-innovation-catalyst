@@ -25,6 +25,22 @@ export const useUser = () => {
   const { user } = useAuth();
   const { users, updateProfile } = useUsers();
   
+  // In production, use the authenticated user directly
+  if (user && !users.find(u => u.id === user.id)) {
+    return {
+      user: {
+        id: user.id,
+        username: user.email?.split('@')[0] || 'user',
+        fullName: user.user_metadata?.full_name || user.email || 'User',
+        avatarUrl: user.user_metadata?.avatar_url,
+        impactPoints: 0,
+        badges: [],
+        role: 'user'
+      },
+      updateProfile
+    };
+  }
+  
   const currentUser = users.find(u => u.id === user?.id);
   
   return {
