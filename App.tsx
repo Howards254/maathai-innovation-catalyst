@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
+import { clearOldDataOnce } from './utils/clearStorage';
 import { AuthProvider } from './contexts/AuthContext';
 import { CampaignProvider } from './contexts/CampaignContext';
 import { UserProvider } from './contexts/UserContext';
@@ -64,6 +65,11 @@ const Placeholder = ({ title }: { title: string }) => (
 );
 
 const App: React.FC = () => {
+  // Clear old mock data on first run
+  useEffect(() => {
+    clearOldDataOnce();
+  }, []);
+
   return (
     <ErrorBoundary>
       <AuthProvider>

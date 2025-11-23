@@ -45,39 +45,17 @@ export const InnovationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const { awardPoints } = useUsers();
 
   useEffect(() => {
-    const mockInnovations: Innovation[] = [
-      {
-        id: 'i1',
-        title: 'Bamboo Fiber Building Materials',
-        description: 'Revolutionary bamboo-based construction materials that replace traditional wood in building applications.',
-        category: 'Wood-Free Products',
-        fundingGoal: 50000,
-        currentFunding: 12500,
-        imageUrl: 'https://images.unsplash.com/photo-1518837695005-2083093ee35b',
-        creatorId: 'user-2',
-        creatorName: 'John Planter',
-        status: 'approved',
-        createdAt: '2024-01-15T10:00:00Z',
-        updatedAt: '2024-01-20T14:30:00Z',
-        tags: ['Bamboo', 'Construction', 'Sustainable'],
-        contactEmail: 'john@example.com'
-      }
-    ];
-
     const saved = localStorage.getItem('innovations');
     const savedSettings = localStorage.getItem('innovation_hub_settings');
     
     if (saved) {
       setInnovations(JSON.parse(saved));
     } else {
-      setInnovations(mockInnovations);
-      localStorage.setItem('innovations', JSON.stringify(mockInnovations));
+      setInnovations([]);
     }
 
     if (savedSettings) {
       setHubSettings(JSON.parse(savedSettings));
-    } else {
-      localStorage.setItem('innovation_hub_settings', JSON.stringify(hubSettings));
     }
     
     setLoading(false);
