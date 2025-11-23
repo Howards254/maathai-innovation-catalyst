@@ -131,19 +131,36 @@ const DiscussionsFeed: React.FC = () => {
              <div className="p-6">
                {/* Header */}
                <div className="flex items-start gap-3 mb-4">
-                 <Link to={`/app/profile/${post.author?.username}`}>
-                   <img 
-                     src={post.author?.avatarUrl || 'https://picsum.photos/200'} 
-                     alt={post.author?.username} 
-                     className="w-12 h-12 rounded-full ring-2 ring-gray-100 hover:ring-green-300 transition-all" 
-                   />
-                 </Link>
+                 {post.isAnonymous ? (
+                   <div className="w-12 h-12 rounded-full ring-2 ring-gray-300 bg-gray-100 flex items-center justify-center">
+                     <span className="text-2xl">🕶️</span>
+                   </div>
+                 ) : (
+                   <Link to={`/app/profile/${post.author?.username}`}>
+                     <img 
+                       src={post.author?.avatarUrl || 'https://picsum.photos/200'} 
+                       alt={post.author?.username} 
+                       className="w-12 h-12 rounded-full ring-2 ring-gray-100 hover:ring-green-300 transition-all" 
+                     />
+                   </Link>
+                 )}
                  <div className="flex-1">
                    <div className="flex items-center gap-2 mb-1">
-                     <Link to={`/app/profile/${post.author?.username}`} className="font-semibold text-gray-900 hover:text-green-600 transition-colors">
-                       {post.author?.fullName}
-                     </Link>
-                     <span className="text-gray-500 text-sm">@{post.author?.username}</span>
+                     {post.isAnonymous ? (
+                       <>
+                         <span className="font-semibold text-gray-700">Anonymous User</span>
+                         <span className="bg-amber-100 text-amber-800 text-xs font-medium px-2 py-1 rounded-full">
+                           🔒 Anonymous
+                         </span>
+                       </>
+                     ) : (
+                       <>
+                         <Link to={`/app/profile/${post.author?.username}`} className="font-semibold text-gray-900 hover:text-green-600 transition-colors">
+                           {post.author?.fullName}
+                         </Link>
+                         <span className="text-gray-500 text-sm">@{post.author?.username}</span>
+                       </>
+                     )}
                      <span className="text-sm text-gray-400">• {post.postedAt}</span>
                    </div>
                    <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">

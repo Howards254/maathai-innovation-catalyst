@@ -68,13 +68,25 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     localStorage.setItem('discussions', JSON.stringify(newDiscussions));
   };
 
-  const createDiscussion = async (discussionData: Omit<Discussion, 'id' | 'author' | 'upvotes' | 'commentsCount' | 'postedAt' | 'reactions'>) => {
+  const createDiscussion = async (discussionData: Omit<Discussion, 'id' | 'author' | 'upvotes' | 'commentsCount' | 'postedAt' | 'reactions' | 'realAuthorId'>) => {
     if (!user) return;
+
+    // Create anonymous user object if posting anonymously
+    const displayAuthor = discussionData.isAnonymous ? {
+      id: 'anonymous',
+      username: 'anonymous',
+      fullName: 'Anonymous User',
+      avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=anonymous&backgroundColor=gray',
+      impactPoints: 0,
+      badges: [],
+      role: 'user' as const
+    } : user;
 
     const newDiscussion: Discussion = {
       ...discussionData,
       id: `d${Date.now()}`,
-      author: user,
+      author: displayAuthor,
+      realAuthorId: user.id, // Always store real author for legal compliance
       upvotes: 0,
       commentsCount: 0,
       postedAt: 'just now',

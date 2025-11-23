@@ -11,7 +11,8 @@ const CreateDiscussionForm: React.FC<CreateDiscussionFormProps> = ({ onClose }) 
     title: '',
     content: '',
     category: 'General' as 'General' | 'Help' | 'Success Story' | 'Tech',
-    tags: ''
+    tags: '',
+    isAnonymous: false
   });
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
@@ -214,6 +215,30 @@ const CreateDiscussionForm: React.FC<CreateDiscussionFormProps> = ({ onClose }) 
                 placeholder="e.g., reforestation, climate-action, sustainability"
               />
               <p className="text-xs text-gray-500 mt-2">Separate tags with commas</p>
+            </div>
+
+            {/* Anonymous Posting */}
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  id="anonymous"
+                  checked={formData.isAnonymous}
+                  onChange={(e) => setFormData({...formData, isAnonymous: e.target.checked})}
+                  className="mt-1 w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                />
+                <div className="flex-1">
+                  <label htmlFor="anonymous" className="font-semibold text-gray-900 cursor-pointer flex items-center gap-2">
+                    🕶️ Post Anonymously
+                  </label>
+                  <p className="text-xs text-gray-600 mt-1">
+                    Your identity will be hidden from the public. This helps protect whistleblowers reporting environmental violations.
+                  </p>
+                  <p className="text-xs text-amber-700 mt-2 font-medium">
+                    ⚠️ Note: Your identity is stored securely for legal compliance and can be accessed by administrators if required by law.
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="flex gap-4 pt-4">

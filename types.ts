@@ -80,6 +80,8 @@ export interface Discussion {
     users: string[];
   }[];
   tags?: string[];
+  isAnonymous?: boolean;
+  realAuthorId?: string; // Stored for legal compliance, not displayed
 }
 
 export interface Event {
