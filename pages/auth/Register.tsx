@@ -85,34 +85,11 @@ const Register: React.FC = () => {
 
     setLoading(true);
     try {
-      const { user } = await signUp(formData.email, formData.password, {
-        full_name: formData.fullName,
-        location_city: formData.locationCity,
-        location_country: formData.locationCountry,
-        experience_level: formData.experienceLevel,
-        availability: formData.availability,
-        looking_for: formData.lookingFor,
-        max_distance_km: formData.maxDistance
-      });
+      await signUp(formData.email, formData.password, formData.fullName, formData.fullName.toLowerCase().replace(/\s+/g, '_'));
       
-      if (user) {
-        // Add user preferences
-        const userCauses = formData.causes.map(cause => ({ user_id: user.id, cause }));
-        const userSkills = formData.skills.map(skill => ({ user_id: user.id, skill }));
-        const userActivities = formData.activities.map(activity => ({ user_id: user.id, activity }));
-        
-        await Promise.all([
-          supabase.from('user_causes').insert(userCauses),
-          supabase.from('user_skills').insert(userSkills),
-          supabase.from('user_activities').insert(userActivities),
-          supabase.from('matchmaking_preferences').insert({
-            user_id: user.id,
-            match_for: formData.lookingFor,
-            is_active: true
-          })
-        ]);
-      }
-      navigate('/app/dashboard');
+      // Show success message for email confirmation
+      alert('Registration successful! Please check your email to confirm your account.');
+      navigate('/login');
     } catch (error: any) {
       alert(error.message);
     } finally {
