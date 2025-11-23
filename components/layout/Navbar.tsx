@@ -171,12 +171,20 @@ const Navbar: React.FC = () => {
             {showDropdown && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 z-50">
                 <Link 
-                  to={`/app/profile/${user?.username}`} 
-                  className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-t-xl transition-colors"
+                  to={`/app/profile/${user?.username || 'me'}`} 
+                  className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   onClick={() => setShowDropdown(false)}
                 >
-                  View Profile
+                  👤 View Profile
                 </Link>
+                <Link 
+                  to={`/app/profile/${user?.username || 'me'}/edit`} 
+                  className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  onClick={() => setShowDropdown(false)}
+                >
+                  ✏️ Edit Profile
+                </Link>
+                <div className="border-t border-gray-100"></div>
                 <button 
                   onClick={() => {
                     signOut();
@@ -184,7 +192,7 @@ const Navbar: React.FC = () => {
                   }}
                   className="block w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-b-xl transition-colors"
                 >
-                  Sign Out
+                  🚪 Sign Out
                 </button>
               </div>
             )}
@@ -239,6 +247,13 @@ const Navbar: React.FC = () => {
             {/* Mobile Actions */}
             <div className="pt-4 border-t border-gray-200 space-y-2">
               <Link
+                to={`/app/profile/${user?.username || 'me'}`}
+                className="block w-full text-center border border-gray-300 text-gray-700 px-4 py-3 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                👤 View Profile
+              </Link>
+              <Link
                 to="/app/campaigns/create"
                 className="block w-full text-center bg-gradient-to-r from-primary-600 to-green-600 text-white px-4 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-200"
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -249,7 +264,7 @@ const Navbar: React.FC = () => {
                 onClick={() => { signOut(); setIsMobileMenuOpen(false); }}
                 className="block w-full text-center px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
               >
-                Sign Out
+                🚪 Sign Out
               </button>
             </div>
           </div>
