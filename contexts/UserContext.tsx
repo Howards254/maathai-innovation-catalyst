@@ -23,7 +23,11 @@ export const useUsers = () => {
 
 export const useUser = () => {
   const { user: authUser } = useAuth();
-  const { updateProfile, users } = useUsers();
+  const context = useContext(UserContext);
+  if (!context) {
+    throw new Error('useUser must be used within UserProvider');
+  }
+  const { updateProfile, users } = context;
   
   // Always use the authenticated user from Supabase
   if (authUser) {
