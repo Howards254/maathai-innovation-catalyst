@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { TreePine, Users, Heart, Award, Globe2, MessageCircle, Camera, UserPlus, Zap, Calendar, Sparkles } from 'lucide-react';
+import { TreePine, Users, Heart, Award, Globe2, MessageCircle, Camera, UserPlus, Zap, Calendar, Sparkles, Target } from 'lucide-react';
 
 const About = () => {
   return (
@@ -116,7 +116,7 @@ const About = () => {
             
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-yellow-100 rounded-2xl mb-6">
-                <Target className="text-yellow-600" size={32} />
+                <Zap className="text-yellow-600" size={32} />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-4">Innovation & Impact</h3>
               <p className="text-gray-600">
