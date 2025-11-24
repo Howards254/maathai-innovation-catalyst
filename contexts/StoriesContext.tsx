@@ -55,7 +55,7 @@ export const StoriesProvider: React.FC<{ children: React.ReactNode }> = ({ child
           *,
           author:profiles!stories_author_id_fkey(id, full_name, username, avatar_url),
           reactions:story_reactions(id, user_id, reaction_type),
-          comments:story_comments(id, user_id, content)
+          comments:story_comments(id, author_id, content)
         `)
         .order('created_at', { ascending: false });
 

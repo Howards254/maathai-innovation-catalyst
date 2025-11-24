@@ -36,12 +36,14 @@ CREATE TABLE IF NOT EXISTS story_reactions (
   UNIQUE(story_id, user_id)
 );
 
--- 4. Create story comments table
+-- 4. Create story comments table (matches existing schema)
 CREATE TABLE IF NOT EXISTS story_comments (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  story_id UUID REFERENCES stories(id) ON DELETE CASCADE NOT NULL,
-  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  story_id UUID REFERENCES stories(id) ON DELETE CASCADE,
+  author_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   content TEXT NOT NULL,
+  parent_id UUID REFERENCES story_comments(id) ON DELETE CASCADE,
+  mentions UUID[],
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -81,6 +83,6 @@ DROP POLICY IF EXISTS "Users can create story comments" ON story_comments;
 DROP POLICY IF EXISTS "Users can update own story comments" ON story_comments;
 DROP POLICY IF EXISTS "Users can delete own story comments" ON story_comments;
 CREATE POLICY "Anyone can view story comments" ON story_comments FOR SELECT USING (true);
-CREATE POLICY "Users can create story comments" ON story_comments FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update own story comments" ON story_comments FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Users can delete own story comments" ON story_comments FOR DELETE USING (auth.uid() = user_id);
+CREATE POLICY "Users can create story comments" ON story_comments FOR INSERT WITH CHECK (auth.uid() = author_id);
+CREATE POLICY "Users can update own story comments" ON story_comments FOR UPDATE USING (auth.uid() = author_id);
+CREATE POLICY "Users can delete own story comments" ON story_comments FOR DELETE USING (auth.uid() = author_id);
