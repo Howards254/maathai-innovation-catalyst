@@ -11,6 +11,14 @@ CREATE TABLE IF NOT EXISTS conversations (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Add updated_at if table already exists
+DO $$ 
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='conversations' AND column_name='updated_at') THEN
+    ALTER TABLE conversations ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+  END IF;
+END $$;
+
 -- 2. Create conversation_participants table
 CREATE TABLE IF NOT EXISTS conversation_participants (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
