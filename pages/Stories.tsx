@@ -109,10 +109,20 @@ const Stories: React.FC = () => {
         {/* Header */}
         <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/60 to-transparent">
           <div className="flex items-center justify-between p-4">
-            <h1 className="text-white font-bold text-lg flex items-center gap-2">
-              <Camera className="w-5 h-5" />
-              Impact Stories
-            </h1>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => window.history.back()}
+                className="text-white hover:bg-white/10 p-2 rounded-full transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <h1 className="text-white font-bold text-lg flex items-center gap-2">
+                <Camera className="w-5 h-5" />
+                Impact Stories
+              </h1>
+            </div>
             <button
               onClick={() => setShowCreateModal(true)}
               className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-full font-medium hover:bg-green-700 transition-colors"
