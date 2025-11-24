@@ -83,7 +83,9 @@ const Messages: React.FC = () => {
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Conversations Sidebar */}
-      <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
+      <div className={`${
+        activeConversation ? 'hidden md:flex' : 'flex'
+      } w-full md:w-80 bg-white border-r border-gray-200 flex-col`}>
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-xl font-bold text-gray-900">Messages</h1>
@@ -143,12 +145,23 @@ const Messages: React.FC = () => {
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 flex flex-col">
+      <div className={`${
+        activeConversation ? 'flex' : 'hidden md:flex'
+      } flex-1 flex-col`}>
         {activeConversation ? (
           <>
             {/* Chat Header */}
             <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between">
               <div className="flex items-center space-x-3">
+                {/* Back button for mobile */}
+                <button
+                  onClick={() => loadConversation(null)}
+                  className="md:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
                 <img
                   src={getConvAvatar(conversations.find(c => c.id === activeConversation)!)}
                   alt={getConvName(conversations.find(c => c.id === activeConversation)!)}
@@ -178,19 +191,26 @@ const Messages: React.FC = () => {
                   const isOwn = message.sender_id === user?.id;
                   return (
                     <div key={message.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                        isOwn ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-900'
+                      {!isOwn && (
+                        <img
+                          src={getConvAvatar(conversations.find(c => c.id === activeConversation)!)}
+                          alt=""
+                          className="w-7 h-7 rounded-full mr-2 flex-shrink-0 md:hidden"
+                        />
+                      )}
+                      <div className={`max-w-[75%] md:max-w-xs lg:max-w-md px-3 md:px-4 py-2 rounded-2xl ${
+                        isOwn ? 'bg-green-500 text-white rounded-br-sm' : 'bg-gray-200 text-gray-900 rounded-bl-sm'
                       }`}>
-                        {message.content && <p>{message.content}</p>}
+                        {message.content && <p className="text-sm md:text-base break-words">{message.content}</p>}
                         {message.media_urls?.length > 0 && (
                           <div className="grid grid-cols-2 gap-1 mt-2">
                             {message.media_urls.map((url, i) => (
-                              <img key={i} src={url} alt="" className="rounded" />
+                              <img key={i} src={url} alt="" className="rounded max-w-full" />
                             ))}
                           </div>
                         )}
                         <p className={`text-xs mt-1 ${isOwn ? 'text-green-100' : 'text-gray-500'}`}>
-                          {new Date(message.created_at).toLocaleTimeString()}
+                          {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
                     </div>
@@ -201,7 +221,7 @@ const Messages: React.FC = () => {
             </div>
 
             {/* Message Input */}
-            <div className="bg-white border-t border-gray-200 p-4">
+            <div className="bg-white border-t border-gray-200 p-3 md:p-4">
               <form onSubmit={handleSendMessage} className="flex items-center space-x-2">
                 <label className="cursor-pointer p-2 text-gray-500 hover:text-gray-700">
                   <Image className="w-5 h-5" />
@@ -211,14 +231,14 @@ const Messages: React.FC = () => {
                   type="text"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Type a message..."
+                  placeholder="Message..."
                   disabled={uploading}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm md:text-base"
                 />
                 <button
                   type="submit"
                   disabled={!newMessage.trim() || uploading}
-                  className="p-2 bg-green-500 text-white rounded-full hover:bg-green-600 disabled:opacity-50"
+                  className="p-2 bg-green-500 text-white rounded-full hover:bg-green-600 disabled:opacity-50 flex-shrink-0"
                 >
                   <Send className="w-5 h-5" />
                 </button>
@@ -238,8 +258,8 @@ const Messages: React.FC = () => {
 
       {/* New Chat Modal */}
       {showNewChat && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 max-h-96 overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-4 md:p-6 w-full max-w-md max-h-[80vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold">Start New Chat</h3>
               <button onClick={() => setShowNewChat(false)} className="text-gray-500 hover:text-gray-700">
