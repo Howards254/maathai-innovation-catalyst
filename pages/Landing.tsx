@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { TreePine, Users, TrendingUp, Heart, Sparkles, ArrowRight, Zap, Target, Globe } from 'lucide-react';
+import { TreePine, Users, Heart, Sparkles, ArrowRight, Zap, MessageCircle, Camera, UserPlus, Globe2, Award, Calendar } from 'lucide-react';
 
 const Landing = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -61,13 +61,35 @@ const Landing = () => {
         </div>
 
         {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-green-900/90 via-green-800/85 to-emerald-900/90" />
+        <div className="absolute inset-0 bg-gradient-to-br from-green-900/95 via-emerald-900/90 to-teal-900/95" />
         
-        {/* Animated Blobs */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl animate-blob" />
-          <div className="absolute top-40 right-10 w-72 h-72 bg-emerald-400 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000" />
-          <div className="absolute bottom-20 left-1/2 w-72 h-72 bg-teal-400 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000" />
+        {/* Animated Floating Elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-green-400/20 rounded-full mix-blend-screen filter blur-3xl animate-blob" />
+          <div className="absolute top-40 right-10 w-96 h-96 bg-emerald-400/20 rounded-full mix-blend-screen filter blur-3xl animate-blob animation-delay-2000" />
+          <div className="absolute bottom-20 left-1/2 w-80 h-80 bg-teal-400/20 rounded-full mix-blend-screen filter blur-3xl animate-blob animation-delay-4000" />
+          
+          {/* Floating Icons */}
+          <div className="absolute top-1/4 left-1/4 animate-float">
+            <div className="w-12 h-12 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+              <TreePine className="w-6 h-6 text-green-300" />
+            </div>
+          </div>
+          <div className="absolute top-1/3 right-1/4 animate-float animation-delay-1000">
+            <div className="w-12 h-12 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+              <MessageCircle className="w-6 h-6 text-blue-300" />
+            </div>
+          </div>
+          <div className="absolute bottom-1/3 left-1/3 animate-float animation-delay-2000">
+            <div className="w-12 h-12 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+              <Camera className="w-6 h-6 text-purple-300" />
+            </div>
+          </div>
+          <div className="absolute bottom-1/4 right-1/3 animate-float animation-delay-3000">
+            <div className="w-12 h-12 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+              <UserPlus className="w-6 h-6 text-pink-300" />
+            </div>
+          </div>
         </div>
 
         <div className="relative z-10 text-center px-4 max-w-5xl mx-auto">
@@ -117,111 +139,157 @@ const Landing = () => {
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white to-transparent" />
       </section>
 
-      {/* How It Works */}
+      {/* Social Features Showcase */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">How We Create Impact</h2>
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 rounded-full mb-4">
+            <Sparkles className="w-4 h-4 text-green-600" />
+            <span className="text-sm font-semibold text-green-700">Social Environmental Platform</span>
+          </div>
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">Connect. Share. Impact.</h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Every action counts in our mission to restore the planet.
+            A social platform designed for environmental action with features you love
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="group relative bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
-            <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="group relative bg-gradient-to-br from-green-500 to-emerald-600 p-8 rounded-3xl text-white hover:scale-105 transition-all duration-300 shadow-xl">
+            <div className="absolute inset-0 bg-black/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
             <div className="relative">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl mb-6 group-hover:scale-110 transition-transform">
-                <TreePine className="text-white" size={32} />
+              <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4">
+                <TreePine className="w-7 h-7" />
               </div>
-              <h3 className="text-2xl font-bold mb-4 text-gray-900">Plant & Track Trees</h3>
-              <p className="text-gray-600 mb-6">
-                Join campaigns, plant trees, and track your environmental impact with our gamified system.
-              </p>
-              <Link to="/app/campaigns" className="inline-flex items-center text-green-600 font-medium group-hover:gap-2 transition-all">
-                Start Planting <ArrowRight className="ml-1 w-4 h-4" />
+              <h3 className="text-2xl font-bold mb-3">Plant Trees</h3>
+              <p className="text-green-50 mb-4">Join campaigns and track your environmental impact with gamification</p>
+              <Link to="/app/campaigns" className="inline-flex items-center font-semibold group-hover:gap-2 transition-all">
+                Explore <ArrowRight className="ml-1 w-4 h-4" />
               </Link>
             </div>
           </div>
 
-          <div className="group relative bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="group relative bg-gradient-to-br from-blue-500 to-indigo-600 p-8 rounded-3xl text-white hover:scale-105 transition-all duration-300 shadow-xl">
+            <div className="absolute inset-0 bg-black/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
             <div className="relative">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl mb-6 group-hover:scale-110 transition-transform">
-                <Users className="text-white" size={32} />
+              <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4">
+                <MessageCircle className="w-7 h-7" />
               </div>
-              <h3 className="text-2xl font-bold mb-4 text-gray-900">Build Community</h3>
-              <p className="text-gray-600 mb-6">
-                Connect with like-minded individuals, share knowledge, and organize local environmental events.
-              </p>
-              <Link to="/app/discussions" className="inline-flex items-center text-blue-600 font-medium group-hover:gap-2 transition-all">
-                Join Discussions <ArrowRight className="ml-1 w-4 h-4" />
+              <h3 className="text-2xl font-bold mb-3">Direct Messaging</h3>
+              <p className="text-blue-50 mb-4">Chat with friends, share media, and coordinate environmental actions</p>
+              <Link to="/app/messages" className="inline-flex items-center font-semibold group-hover:gap-2 transition-all">
+                Message <ArrowRight className="ml-1 w-4 h-4" />
               </Link>
             </div>
           </div>
 
-          <div className="group relative bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
-            <div className="absolute inset-0 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="group relative bg-gradient-to-br from-purple-500 to-pink-600 p-8 rounded-3xl text-white hover:scale-105 transition-all duration-300 shadow-xl">
+            <div className="absolute inset-0 bg-black/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
             <div className="relative">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl mb-6 group-hover:scale-110 transition-transform">
-                <Zap className="text-white" size={32} />
+              <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4">
+                <Camera className="w-7 h-7" />
               </div>
-              <h3 className="text-2xl font-bold mb-4 text-gray-900">Innovate Solutions</h3>
-              <p className="text-gray-600 mb-6">
-                Submit environmental innovations, earn badges, and compete on the global leaderboard.
-              </p>
-              <Link to="/app/innovation" className="inline-flex items-center text-yellow-600 font-medium group-hover:gap-2 transition-all">
-                Innovate Now <ArrowRight className="ml-1 w-4 h-4" />
+              <h3 className="text-2xl font-bold mb-3">Stories & Reels</h3>
+              <p className="text-purple-50 mb-4">Share your environmental journey with TikTok-style stories</p>
+              <Link to="/app/stories" className="inline-flex items-center font-semibold group-hover:gap-2 transition-all">
+                Create <ArrowRight className="ml-1 w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+
+          <div className="group relative bg-gradient-to-br from-pink-500 to-rose-600 p-8 rounded-3xl text-white hover:scale-105 transition-all duration-300 shadow-xl">
+            <div className="absolute inset-0 bg-black/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="relative">
+              <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4">
+                <UserPlus className="w-7 h-7" />
+              </div>
+              <h3 className="text-2xl font-bold mb-3">Green Matchmaking</h3>
+              <p className="text-pink-50 mb-4">Find eco-conscious friends based on shared interests and goals</p>
+              <Link to="/app/matchmaking" className="inline-flex items-center font-semibold group-hover:gap-2 transition-all">
+                Match <ArrowRight className="ml-1 w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+
+          <div className="group relative bg-gradient-to-br from-yellow-500 to-orange-600 p-8 rounded-3xl text-white hover:scale-105 transition-all duration-300 shadow-xl">
+            <div className="absolute inset-0 bg-black/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="relative">
+              <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4">
+                <Award className="w-7 h-7" />
+              </div>
+              <h3 className="text-2xl font-bold mb-3">Badges & Rewards</h3>
+              <p className="text-yellow-50 mb-4">Earn points, unlock achievements, and climb the leaderboard</p>
+              <Link to="/app/leaderboard" className="inline-flex items-center font-semibold group-hover:gap-2 transition-all">
+                Compete <ArrowRight className="ml-1 w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+
+          <div className="group relative bg-gradient-to-br from-teal-500 to-cyan-600 p-8 rounded-3xl text-white hover:scale-105 transition-all duration-300 shadow-xl">
+            <div className="absolute inset-0 bg-black/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="relative">
+              <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-4">
+                <Calendar className="w-7 h-7" />
+              </div>
+              <h3 className="text-2xl font-bold mb-3">Events & Meetups</h3>
+              <p className="text-teal-50 mb-4">Organize and join local environmental events in your area</p>
+              <Link to="/app/events" className="inline-flex items-center font-semibold group-hover:gap-2 transition-all">
+                Join <ArrowRight className="ml-1 w-4 h-4" />
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Impact Stats */}
-      <section className="py-24 bg-gradient-to-b from-gray-50 to-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Impact Stats with Animation */}
+      <section className="relative py-24 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-green-50/30 to-emerald-50/50" />
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute top-10 left-10 w-64 h-64 bg-green-300 rounded-full mix-blend-multiply filter blur-3xl animate-blob" />
+          <div className="absolute bottom-10 right-10 w-64 h-64 bg-emerald-300 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000" />
+        </div>
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4 text-gray-900">Our Global Impact</h2>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">Our Global Impact</h2>
             <p className="text-lg text-gray-600">Together, we're making a measurable difference</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div className="text-center group">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
-                <TreePine className="text-green-600" size={32} />
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-3xl mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all shadow-lg">
+                <TreePine className="text-white" size={36} />
               </div>
-              <h2 className="text-4xl md:text-5xl font-bold text-green-800 mb-2">1.2M+</h2>
-              <p className="text-gray-600 font-medium">Trees Planted</p>
+              <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-2">1.2M+</h2>
+              <p className="text-gray-600 font-semibold">Trees Planted</p>
             </div>
             <div className="text-center group">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
-                <Users className="text-blue-600" size={32} />
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all shadow-lg">
+                <Users className="text-white" size={36} />
               </div>
-              <h2 className="text-4xl md:text-5xl font-bold text-green-800 mb-2">50K+</h2>
-              <p className="text-gray-600 font-medium">Active Members</p>
+              <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">50K+</h2>
+              <p className="text-gray-600 font-semibold">Active Members</p>
             </div>
             <div className="text-center group">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
-                <Target className="text-emerald-600" size={32} />
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-600 rounded-3xl mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all shadow-lg">
+                <Zap className="text-white" size={36} />
               </div>
-              <h2 className="text-4xl md:text-5xl font-bold text-green-800 mb-2">850+</h2>
-              <p className="text-gray-600 font-medium">Active Campaigns</p>
+              <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">850+</h2>
+              <p className="text-gray-600 font-semibold">Active Campaigns</p>
             </div>
             <div className="text-center group">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
-                <Globe className="text-green-600" size={32} />
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-3xl mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all shadow-lg">
+                <Globe2 className="text-white" size={36} />
               </div>
-              <h2 className="text-4xl md:text-5xl font-bold text-green-800 mb-2">120+</h2>
-              <p className="text-gray-600 font-medium">Countries</p>
+              <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent mb-2">120+</h2>
+              <p className="text-gray-600 font-semibold">Countries</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="relative bg-gradient-to-br from-green-800 via-green-700 to-emerald-800 text-white py-24 overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 right-10 w-96 h-96 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl animate-blob" />
-          <div className="absolute bottom-10 left-10 w-96 h-96 bg-emerald-400 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000" />
+      <section className="relative bg-gradient-to-br from-green-600 via-emerald-600 to-teal-600 text-white py-24 overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-10 right-10 w-96 h-96 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-blob" />
+          <div className="absolute bottom-10 left-10 w-96 h-96 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-blob animation-delay-2000" />
         </div>
         
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

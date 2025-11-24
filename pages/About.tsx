@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { TreePine, Users, Target, Heart, Award, Globe } from 'lucide-react';
+import { TreePine, Users, Heart, Award, Globe2, MessageCircle, Camera, UserPlus, Zap, Calendar, Sparkles } from 'lucide-react';
 
 const About = () => {
   return (
@@ -25,14 +25,22 @@ const About = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-green-50 to-emerald-50 py-20">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h1 className="text-3xl sm:text-5xl font-bold text-gray-900 mb-6">
-            About Our <span className="text-green-600">Mission</span>
+      <section className="relative bg-gradient-to-br from-green-600 via-emerald-600 to-teal-600 py-32 overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-10 left-10 w-96 h-96 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-blob" />
+          <div className="absolute bottom-10 right-10 w-96 h-96 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-blob animation-delay-2000" />
+        </div>
+        <div className="relative max-w-4xl mx-auto px-4 text-center text-white">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full mb-6">
+            <Sparkles className="w-4 h-4" />
+            <span className="text-sm font-semibold">Our Story</span>
+          </div>
+          <h1 className="text-4xl sm:text-6xl font-bold mb-6">
+            About Our <span className="text-green-200">Mission</span>
           </h1>
-          <p className="text-lg sm:text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Inspired by Nobel Peace Prize winner Wangari Maathai, we're building a global community 
-            dedicated to environmental restoration through tree planting, innovation, and collective action.
+          <p className="text-lg sm:text-xl text-green-50 mb-8 max-w-3xl mx-auto">
+            Inspired by Nobel Peace Prize winner Wangari Maathai, we're building a social platform 
+            for environmental restoration through community, innovation, and collective action.
           </p>
         </div>
       </section>
@@ -123,73 +131,61 @@ const About = () => {
       <section className="py-20">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">How We Make a Difference</h2>
-            <p className="text-lg text-gray-600">Comprehensive tools for environmental action</p>
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 rounded-full mb-4">
+              <Sparkles className="w-4 h-4 text-green-600" />
+              <span className="text-sm font-semibold text-green-700">Platform Features</span>
+            </div>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Social Tools for Environmental Action</h2>
+            <p className="text-lg text-gray-600">Everything you need to make an impact</p>
           </div>
           
-          <div className="grid md:grid-cols-2 gap-12">
-            <div className="space-y-8">
-              <div className="flex gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                  <TreePine className="text-green-600" size={24} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Tree Planting Campaigns</h3>
-                  <p className="text-gray-600">Join or create campaigns to plant trees in your community and track your environmental impact.</p>
-                </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="group bg-gradient-to-br from-green-500 to-emerald-600 p-6 rounded-2xl text-white hover:scale-105 transition-all shadow-lg">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4">
+                <TreePine size={24} />
               </div>
-              
-              <div className="flex gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <Users className="text-blue-600" size={24} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Community Discussions</h3>
-                  <p className="text-gray-600">Share knowledge, ask questions, and connect with environmental enthusiasts worldwide.</p>
-                </div>
-              </div>
-              
-              <div className="flex gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                  <Globe className="text-purple-600" size={24} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Local Events</h3>
-                  <p className="text-gray-600">Organize and participate in environmental events in your area to build local impact.</p>
-                </div>
-              </div>
+              <h3 className="text-xl font-bold mb-2">Tree Campaigns</h3>
+              <p className="text-green-50 text-sm">Create and join tree planting campaigns with progress tracking</p>
             </div>
             
-            <div className="space-y-8">
-              <div className="flex gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
-                  <Award className="text-yellow-600" size={24} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Gamification System</h3>
-                  <p className="text-gray-600">Earn points, unlock badges, and compete on leaderboards to stay motivated in your environmental journey.</p>
-                </div>
+            <div className="group bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-2xl text-white hover:scale-105 transition-all shadow-lg">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4">
+                <MessageCircle size={24} />
               </div>
-              
-              <div className="flex gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
-                  <Target className="text-emerald-600" size={24} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Innovation Hub</h3>
-                  <p className="text-gray-600">Submit environmental innovations and solutions to address global sustainability challenges.</p>
-                </div>
+              <h3 className="text-xl font-bold mb-2">Direct Messaging</h3>
+              <p className="text-blue-50 text-sm">Chat with friends and share environmental updates</p>
+            </div>
+            
+            <div className="group bg-gradient-to-br from-purple-500 to-pink-600 p-6 rounded-2xl text-white hover:scale-105 transition-all shadow-lg">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4">
+                <Camera size={24} />
               </div>
-              
-              <div className="flex gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
-                  <Heart className="text-red-600" size={24} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">AI Assistant</h3>
-                  <p className="text-gray-600">Get personalized environmental advice and tree species recommendations from our AI assistant.</p>
-                </div>
+              <h3 className="text-xl font-bold mb-2">Stories & Reels</h3>
+              <p className="text-purple-50 text-sm">Share your journey with TikTok-style stories</p>
+            </div>
+            
+            <div className="group bg-gradient-to-br from-pink-500 to-rose-600 p-6 rounded-2xl text-white hover:scale-105 transition-all shadow-lg">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4">
+                <UserPlus size={24} />
               </div>
+              <h3 className="text-xl font-bold mb-2">Green Matchmaking</h3>
+              <p className="text-pink-50 text-sm">Find eco-conscious friends with shared interests</p>
+            </div>
+            
+            <div className="group bg-gradient-to-br from-yellow-500 to-orange-600 p-6 rounded-2xl text-white hover:scale-105 transition-all shadow-lg">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4">
+                <Award size={24} />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Badges & Rewards</h3>
+              <p className="text-yellow-50 text-sm">Earn achievements and climb the leaderboard</p>
+            </div>
+            
+            <div className="group bg-gradient-to-br from-teal-500 to-cyan-600 p-6 rounded-2xl text-white hover:scale-105 transition-all shadow-lg">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mb-4">
+                <Calendar size={24} />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Events & Meetups</h3>
+              <p className="text-teal-50 text-sm">Organize local environmental events</p>
             </div>
           </div>
         </div>

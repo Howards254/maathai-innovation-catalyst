@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Phone, MapPin, Send, MessageCircle, Users, TreePine } from 'lucide-react';
+import { Mail, Send, MessageCircle, Users, TreePine, Sparkles, Heart, Globe2 } from 'lucide-react';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -49,13 +49,21 @@ const Contact = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-green-50 to-emerald-50 py-20">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h1 className="text-3xl sm:text-5xl font-bold text-gray-900 mb-6">
-            Get in <span className="text-green-600">Touch</span>
+      <section className="relative bg-gradient-to-br from-green-600 via-emerald-600 to-teal-600 py-32 overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-10 left-10 w-96 h-96 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-blob" />
+          <div className="absolute bottom-10 right-10 w-96 h-96 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-blob animation-delay-2000" />
+        </div>
+        <div className="relative max-w-4xl mx-auto px-4 text-center text-white">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full mb-6">
+            <Heart className="w-4 h-4" />
+            <span className="text-sm font-semibold">We're Here to Help</span>
+          </div>
+          <h1 className="text-4xl sm:text-6xl font-bold mb-6">
+            Get in <span className="text-green-200">Touch</span>
           </h1>
-          <p className="text-lg sm:text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Have questions about our platform? Want to partner with us? We'd love to hear from you 
+          <p className="text-lg sm:text-xl text-green-50 mb-8 max-w-3xl mx-auto">
+            Have questions? Want to partner with us? We'd love to hear from you 
             and help you join our environmental restoration mission.
           </p>
         </div>
@@ -228,15 +236,25 @@ const Contact = () => {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-4xl mx-auto px-4">
+      <section className="relative py-20 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-green-50/30 to-emerald-50/50" />
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute top-10 left-10 w-64 h-64 bg-green-300 rounded-full mix-blend-multiply filter blur-3xl animate-blob" />
+          <div className="absolute bottom-10 right-10 w-64 h-64 bg-emerald-300 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000" />
+        </div>
+        
+        <div className="relative max-w-4xl mx-auto px-4">
           <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full mb-4 shadow-sm">
+              <Sparkles className="w-4 h-4 text-green-600" />
+              <span className="text-sm font-semibold text-green-700">FAQ</span>
+            </div>
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
             <p className="text-lg text-gray-600">Quick answers to common questions</p>
           </div>
           
-          <div className="space-y-6">
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <div className="space-y-4">
+            <div className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-white hover:shadow-xl transition-all">
               <h3 className="text-xl font-bold text-gray-900 mb-3">How do I start a tree planting campaign?</h3>
               <p className="text-gray-600">
                 Simply create an account, navigate to the campaigns section, and click "Create Campaign." 
@@ -244,7 +262,7 @@ const Contact = () => {
               </p>
             </div>
             
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-white hover:shadow-xl transition-all">
               <h3 className="text-xl font-bold text-gray-900 mb-3">Is the platform free to use?</h3>
               <p className="text-gray-600">
                 Yes! Our platform is completely free for individuals and communities. We believe environmental 
@@ -252,7 +270,7 @@ const Contact = () => {
               </p>
             </div>
             
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-white hover:shadow-xl transition-all">
               <h3 className="text-xl font-bold text-gray-900 mb-3">How do I track my environmental impact?</h3>
               <p className="text-gray-600">
                 Every tree you plant, event you attend, and discussion you participate in earns impact points. 
@@ -260,7 +278,7 @@ const Contact = () => {
               </p>
             </div>
             
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-white hover:shadow-xl transition-all">
               <h3 className="text-xl font-bold text-gray-900 mb-3">Can organizations partner with you?</h3>
               <p className="text-gray-600">
                 Absolutely! We welcome partnerships with environmental organizations, schools, and businesses. 
@@ -272,18 +290,24 @@ const Contact = () => {
       </section>
 
       {/* Call to Action */}
-      <section className="py-20 bg-gradient-to-br from-green-600 to-emerald-600 text-white">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-2xl mb-6">
-            <TreePine className="text-white" size={32} />
+      <section className="relative py-20 bg-gradient-to-br from-green-600 via-emerald-600 to-teal-600 text-white overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-10 right-10 w-96 h-96 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-blob" />
+          <div className="absolute bottom-10 left-10 w-96 h-96 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-blob animation-delay-2000" />
+        </div>
+        
+        <div className="relative max-w-4xl mx-auto px-4 text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-sm rounded-3xl mb-6">
+            <Globe2 className="text-white" size={40} />
           </div>
-          <h2 className="text-4xl font-bold mb-6">Ready to Make a Difference?</h2>
+          <h2 className="text-4xl md:text-5xl font-bold mb-6">Ready to Make a Difference?</h2>
           <p className="text-xl mb-8 text-green-100">
             Join thousands of environmental champions already making an impact on our platform.
           </p>
           <Link to="/register" className="inline-block">
-            <button className="px-8 py-4 bg-white text-green-600 rounded-xl font-semibold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300">
+            <button className="group px-8 py-4 bg-white text-green-600 rounded-xl font-semibold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center gap-2 mx-auto">
               Start Your Journey Today
+              <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform" />
             </button>
           </Link>
         </div>
