@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Lock, Eye, EyeOff, Leaf, Home, Check } from 'lucide-react';
 import { showToast } from '../../utils/toast';
 
 const ResetPassword: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -14,17 +15,80 @@ const ResetPassword: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong' | null>(null);
+  const [validToken, setValidToken] = useState(false);
+  const [checkingToken, setCheckingToken] = useState(true);
 
-  // Check if we have access to the hash fragment with the access token
+  // Check if we have a valid reset token
   useEffect(() => {
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const accessToken = hashParams.get('access_token');
+    const checkToken = async () => {
+      try {
+        // Get the full hash fragment from URL
+        const hashFragment = window.location.hash.substring(1);
+        
+        console.log('Password reset - Initial check:', { 
+          fullUrl: window.location.href,
+          hash: window.location.hash,
+          hashFragment: hashFragment
+        });
+        
+        if (!hashFragment) {
+          setError('Invalid or expired reset link. Please request a new password reset.');
+          showToast.error('Invalid or expired reset link. Please request a new password reset.');
+          setValidToken(false);
+          setCheckingToken(false);
+          return;
+        }
+        
+        // Parse hash parameters
+        const hashParams = new URLSearchParams(hashFragment);
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        const type = hashParams.get('type');
+        
+        console.log('Password reset - Parsed tokens:', { 
+          hasAccessToken: !!accessToken, 
+          hasRefreshToken: !!refreshToken,
+          type: type
+        });
+        
+        if (!accessToken || type !== 'recovery') {
+          setError('Invalid or expired reset link. Please request a new password reset.');
+          showToast.error('Invalid or expired reset link. Please request a new password reset.');
+          setValidToken(false);
+          setCheckingToken(false);
+          return;
+        }
+        
+        // Exchange the token for a session
+        console.log('Exchanging token for session...');
+        const { data, error: sessionError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken || ''
+        });
+        
+        if (sessionError || !data.session) {
+          console.error('Session exchange error:', sessionError);
+          setError('Unable to establish session. The reset link may have expired.');
+          showToast.error('Unable to establish session. Please request a new reset link.');
+          setValidToken(false);
+        } else {
+          console.log('Valid reset token - session established successfully');
+          setValidToken(true);
+          // Clear the hash from URL for security
+          window.history.replaceState(null, '', window.location.pathname);
+        }
+      } catch (err) {
+        console.error('Error during token validation:', err);
+        setError('An error occurred while validating the reset link.');
+        showToast.error('An error occurred while validating the reset link.');
+        setValidToken(false);
+      } finally {
+        setCheckingToken(false);
+      }
+    };
     
-    if (!accessToken) {
-      setError('Invalid or expired reset link. Please request a new password reset.');
-      showToast.error('Invalid or expired reset link. Please request a new password reset.');
-    }
-  }, []);
+    checkToken();
+  }, [location]);
 
   // Password strength checker
   useEffect(() => {
@@ -72,13 +136,16 @@ const ResetPassword: React.FC = () => {
       
       if (error) throw error;
       
-      setSuccess(true);
-      showToast.success('Password reset successfully!');
+      // Sign out after password reset to ensure clean state
+      await supabase.auth.signOut();
       
-      // Redirect to login after 3 seconds
+      setSuccess(true);
+      showToast.success('Password reset successfully! Please login with your new password.');
+      
+      // Redirect to login after 2 seconds
       setTimeout(() => {
         navigate('/login');
-      }, 3000);
+      }, 2000);
     } catch (error: any) {
       const errorMessage = error.message || 'Failed to update password. Please try again.';
       setError(errorMessage);
@@ -118,7 +185,17 @@ const ResetPassword: React.FC = () => {
         </div>
 
         <div className="p-8">
-          {success ? (
+          {checkingToken ? (
+            <div className="text-center space-y-6">
+              <div className="flex justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+              </div>
+              <h2 className="text-xl font-semibold text-gray-800">Verifying Reset Link...</h2>
+              <p className="text-gray-600">
+                Please wait while we validate your password reset link.
+              </p>
+            </div>
+          ) : success ? (
             <div className="text-center space-y-6">
               <div className="flex justify-center">
                 <div className="bg-emerald-100 rounded-full p-3">
@@ -127,13 +204,34 @@ const ResetPassword: React.FC = () => {
               </div>
               <h2 className="text-xl font-semibold text-gray-800">Password Updated!</h2>
               <p className="text-gray-600">
-                Your password has been successfully reset. You'll be redirected to the login page shortly.
+                Your password has been successfully reset. Redirecting to login page...
               </p>
               <Link
                 to="/login"
                 className="block w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white py-3 px-4 rounded-lg font-medium hover:from-emerald-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-all"
               >
                 Go to Login
+              </Link>
+            </div>
+          ) : !validToken ? (
+            <div className="text-center space-y-6">
+              <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                <h2 className="text-lg font-medium text-red-700 mb-2">Invalid Reset Link</h2>
+                <p className="text-red-600">
+                  This password reset link is invalid or has expired. Please request a new one.
+                </p>
+              </div>
+              <Link
+                to="/forgot-password"
+                className="block w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white py-3 px-4 rounded-lg font-medium hover:from-emerald-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 transition-all"
+              >
+                Request New Reset Link
+              </Link>
+              <Link
+                to="/login"
+                className="text-emerald-600 hover:text-emerald-700 font-medium"
+              >
+                Back to Login
               </Link>
             </div>
           ) : (

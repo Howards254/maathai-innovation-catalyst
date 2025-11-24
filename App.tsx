@@ -28,6 +28,8 @@ import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
+import DebugResetPassword from './pages/auth/DebugResetPassword';
+import DebugResetUrl from './pages/auth/DebugResetUrl';
 import AuthCallback from './pages/auth/Callback';
 import Dashboard from './pages/Dashboard';
 import CampaignList from './pages/campaigns/CampaignList';
@@ -123,6 +125,8 @@ const App: React.FC = () => {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/debug-reset-password" element={<DebugResetPassword />} />
+        <Route path="/debug-reset-url" element={<DebugResetUrl />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />

@@ -186,9 +186,10 @@ const Navbar: React.FC = () => {
                 </Link>
                 <div className="border-t border-gray-100"></div>
                 <button 
-                  onClick={() => {
-                    signOut();
+                  onClick={async () => {
                     setShowDropdown(false);
+                    await signOut();
+                    navigate('/login');
                   }}
                   className="block w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-b-xl transition-colors"
                 >

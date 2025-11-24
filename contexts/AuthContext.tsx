@@ -78,22 +78,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      // Clear local state immediately for instant feedback
+      setUser(null);
+      setLoading(false);
+      
+      // Sign out from Supabase in the background
+      supabase.auth.signOut().then(({ error }) => {
+        if (error) {
+          console.error('Supabase signout error:', error);
+        }
+      });
+      
       showToast.success('Logged out successfully');
     } catch (error: any) {
+      console.error('Sign out error:', error);
       showToast.error(error?.message || 'Failed to sign out');
-      throw error;
     }
   };
 
   const resetPassword = async (email: string) => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + '/#/reset-password',
+        redirectTo: `${window.location.origin}/reset-password`,
       });
       if (error) throw error;
+      console.log('Password reset email sent successfully to:', email);
     } catch (error) {
+      console.error('Password reset error:', error);
       throw error;
     }
   };
