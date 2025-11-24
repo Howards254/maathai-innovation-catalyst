@@ -28,7 +28,7 @@ Inspired by Nobel Peace Prize winner Wangari Maathai's Green Belt Movement, Gree
 <div align="center">
 
 ### Landing Page - Modern & Engaging
-![Landing Page](https://via.placeholder.com/800x400/10b981/ffffff?text=Landing+Page+with+Animated+Carousel)
+![Landing Page](https://drive.google.com/file/d/15BYeZIROrQzrILSluJqa2FEK2JBNN9Bo/view?usp=drive_link)
 
 ### Social Features - Connect & Share
 <table>
