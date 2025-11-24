@@ -103,3 +103,48 @@ CREATE POLICY "Anyone can view story comments" ON story_comments FOR SELECT USIN
 CREATE POLICY "Users can create story comments" ON story_comments FOR INSERT WITH CHECK (auth.uid() = author_id);
 CREATE POLICY "Users can update own story comments" ON story_comments FOR UPDATE USING (auth.uid() = author_id);
 CREATE POLICY "Users can delete own story comments" ON story_comments FOR DELETE USING (auth.uid() = author_id);
+
+-- 10. Fix triggers - Drop old triggers that use user_id
+DROP TRIGGER IF EXISTS create_activity_feed_on_story ON stories;
+DROP TRIGGER IF EXISTS story_activity_trigger ON stories;
+DROP TRIGGER IF EXISTS log_story_activity ON stories;
+DROP FUNCTION IF EXISTS create_story_activity() CASCADE;
+DROP FUNCTION IF EXISTS log_story_activity() CASCADE;
+
+-- 11. Create correct trigger function that uses author_id
+CREATE OR REPLACE FUNCTION create_story_activity()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Only insert if activity_feed table exists
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name='activity_feed') THEN
+    INSERT INTO activity_feed (
+      user_id,
+      activity_type,
+      title,
+      description,
+      metadata,
+      points_earned,
+      is_public
+    ) VALUES (
+      NEW.author_id,
+      'story_posted',
+      NEW.title,
+      NEW.description,
+      jsonb_build_object(
+        'story_id', NEW.id,
+        'media_type', NEW.media_type,
+        'story_type', NEW.story_type
+      ),
+      10,
+      TRUE
+    );
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 12. Create the trigger
+CREATE TRIGGER create_activity_feed_on_story
+  AFTER INSERT ON stories
+  FOR EACH ROW
+  EXECUTE FUNCTION create_story_activity();
