@@ -41,7 +41,7 @@ interface MessagingContextType {
   startDirectChat: (userId: string) => Promise<string>;
   createGroupChat: (name: string, userIds: string[]) => Promise<string>;
   sendMessage: (conversationId: string, content: string, mediaUrls?: string[]) => Promise<void>;
-  loadConversation: (conversationId: string) => Promise<void>;
+  loadConversation: (conversationId: string | null) => Promise<void>;
   markAsRead: (conversationId: string) => Promise<void>;
   setActiveConversation: (id: string | null) => void;
 }
@@ -131,7 +131,13 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
-  const loadConversation = async (conversationId: string) => {
+  const loadConversation = async (conversationId: string | null) => {
+    if (!conversationId) {
+      setActiveConversation(null);
+      setMessages([]);
+      return;
+    }
+    
     if (!user) return;
 
     setLoading(true);
@@ -156,13 +162,18 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (!user) return '';
 
     try {
-      const { data } = await supabase.rpc('get_or_create_conversation', {
+      const { data, error } = await supabase.rpc('get_or_create_conversation', {
         user1_id: user.id,
         user2_id: userId
       });
 
+      if (error) throw error;
+
       await loadConversations();
-      return data;
+      if (data) {
+        await loadConversation(data);
+      }
+      return data || '';
     } catch (error) {
       console.error('Error starting chat:', error);
       return '';

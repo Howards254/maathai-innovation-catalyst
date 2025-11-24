@@ -56,10 +56,10 @@ const Messages: React.FC = () => {
   };
 
   const handleStartChat = async (friendId: string) => {
+    setShowNewChat(false);
     const convId = await startDirectChat(friendId);
-    if (convId) {
-      await loadConversation(convId);
-      setShowNewChat(false);
+    if (!convId) {
+      alert('Failed to start chat. Please try again.');
     }
   };
 
