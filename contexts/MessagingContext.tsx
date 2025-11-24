@@ -1,15 +1,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { useUser } from './UserContext';
+import { useAuth } from './AuthContext';
 
 interface Message {
   id: string;
+  conversation_id: string;
   sender_id: string;
-  recipient_id: string;
   content: string;
-  message_type: 'text' | 'image' | 'file';
-  media_url?: string;
-  is_read: boolean;
+  media_urls?: string[];
+  media_type?: string;
+  reply_to?: string;
+  is_deleted: boolean;
   created_at: string;
   sender?: {
     id: string;
@@ -20,15 +21,13 @@ interface Message {
 
 interface Conversation {
   id: string;
-  participant_1: string;
-  participant_2: string;
-  last_message_id?: string;
-  last_activity: string;
-  other_user?: {
-    id: string;
-    full_name: string;
-    avatar_url?: string;
-  };
+  is_group: boolean;
+  name?: string;
+  avatar_url?: string;
+  created_by: string;
+  updated_at: string;
+  participants?: any[];
+  last_message?: Message;
   unread_count?: number;
 }
 
@@ -37,93 +36,88 @@ interface MessagingContextType {
   messages: Message[];
   activeConversation: string | null;
   loading: boolean;
-  sendMessage: (recipientId: string, content: string, type?: 'text' | 'image' | 'file', mediaUrl?: string) => Promise<void>;
+  startDirectChat: (userId: string) => Promise<string>;
+  createGroupChat: (name: string, userIds: string[]) => Promise<string>;
+  sendMessage: (conversationId: string, content: string, mediaUrls?: string[]) => Promise<void>;
   loadConversation: (conversationId: string) => Promise<void>;
-  markAsRead: (messageId: string) => Promise<void>;
+  markAsRead: (conversationId: string) => Promise<void>;
   setActiveConversation: (id: string | null) => void;
 }
 
 const MessagingContext = createContext<MessagingContextType | undefined>(undefined);
 
 export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [activeConversation, setActiveConversation] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user?.id && user.id !== 'user-1') {
+    if (user) {
       loadConversations();
-      subscribeToMessages();
+      const unsub = subscribeToMessages();
+      return unsub;
     }
   }, [user]);
 
   const loadConversations = async () => {
-    if (!user?.id || user.id === 'user-1') return;
+    if (!user) return;
 
     try {
-      const { data, error } = await supabase
+      const { data: participations } = await supabase
+        .from('conversation_participants')
+        .select('conversation_id, unread_count, last_read_at')
+        .eq('user_id', user.id);
+
+      if (!participations?.length) return;
+
+      const convIds = participations.map(p => p.conversation_id);
+      const { data: convs } = await supabase
         .from('conversations')
-        .select(`
-          *,
-          other_user:profiles!conversations_participant_2_fkey(id, full_name, avatar_url)
-        `)
-        .eq('participant_1', user.id)
-        .order('last_activity', { ascending: false });
+        .select('*')
+        .in('id', convIds)
+        .order('updated_at', { ascending: false });
 
-      if (error) throw error;
+      const enriched = await Promise.all((convs || []).map(async (conv) => {
+        const { data: parts } = await supabase
+          .from('conversation_participants')
+          .select('user_id, profiles(id, full_name, avatar_url)')
+          .eq('conversation_id', conv.id);
 
-      // Get unread counts
-      const conversationsWithUnread = await Promise.all(
-        (data || []).map(async (conv) => {
-          const { count } = await supabase
-            .from('messages')
-            .select('*', { count: 'exact', head: true })
-            .eq('sender_id', conv.participant_2)
-            .eq('recipient_id', user.id)
-            .eq('is_read', false);
+        const { data: lastMsg } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('conversation_id', conv.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
 
-          return { ...conv, unread_count: count || 0 };
-        })
-      );
+        const unread = participations.find(p => p.conversation_id === conv.id)?.unread_count || 0;
 
-      setConversations(conversationsWithUnread);
+        return { ...conv, participants: parts, last_message: lastMsg, unread_count: unread };
+      }));
+
+      setConversations(enriched);
     } catch (error) {
       console.error('Error loading conversations:', error);
     }
   };
 
   const loadConversation = async (conversationId: string) => {
-    if (!user?.id || user.id === 'user-1') return;
+    if (!user) return;
 
     setLoading(true);
     try {
-      const conversation = conversations.find(c => c.id === conversationId);
-      if (!conversation) return;
-
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('messages')
-        .select(`
-          *,
-          sender:profiles!messages_sender_id_fkey(id, full_name, avatar_url)
-        `)
-        .or(`and(sender_id.eq.${user.id},recipient_id.eq.${conversation.participant_2}),and(sender_id.eq.${conversation.participant_2},recipient_id.eq.${user.id})`)
+        .select('*, sender:profiles!messages_sender_id_fkey(id, full_name, avatar_url)')
+        .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
-
-      if (error) throw error;
 
       setMessages(data || []);
       setActiveConversation(conversationId);
-
-      // Mark messages as read
-      await supabase
-        .from('messages')
-        .update({ is_read: true })
-        .eq('sender_id', conversation.participant_2)
-        .eq('recipient_id', user.id)
-        .eq('is_read', false);
-
+      await markAsRead(conversationId);
     } catch (error) {
       console.error('Error loading conversation:', error);
     } finally {
@@ -131,69 +125,101 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
-  const sendMessage = async (recipientId: string, content: string, type: 'text' | 'image' | 'file' = 'text', mediaUrl?: string) => {
-    if (!user?.id || user.id === 'user-1') return;
+  const startDirectChat = async (userId: string) => {
+    if (!user) return '';
 
     try {
-      const { data, error } = await supabase
-        .from('messages')
-        .insert({
-          sender_id: user.id,
-          recipient_id: recipientId,
-          content,
-          message_type: type,
-          media_url: mediaUrl
-        })
-        .select(`
-          *,
-          sender:profiles!messages_sender_id_fkey(id, full_name, avatar_url)
-        `)
+      const { data } = await supabase.rpc('get_or_create_conversation', {
+        user1_id: user.id,
+        user2_id: userId
+      });
+
+      await loadConversations();
+      return data;
+    } catch (error) {
+      console.error('Error starting chat:', error);
+      return '';
+    }
+  };
+
+  const createGroupChat = async (name: string, userIds: string[]) => {
+    if (!user) return '';
+
+    try {
+      const { data: conv } = await supabase
+        .from('conversations')
+        .insert({ is_group: true, name, created_by: user.id })
+        .select()
         .single();
 
-      if (error) throw error;
+      if (conv) {
+        const participants = [user.id, ...userIds].map(uid => ({
+          conversation_id: conv.id,
+          user_id: uid,
+          is_admin: uid === user.id
+        }));
 
-      setMessages(prev => [...prev, data]);
-      await loadConversations(); // Refresh conversations list
+        await supabase.from('conversation_participants').insert(participants);
+        await loadConversations();
+        return conv.id;
+      }
+      return '';
+    } catch (error) {
+      console.error('Error creating group:', error);
+      return '';
+    }
+  };
+
+  const sendMessage = async (conversationId: string, content: string, mediaUrls?: string[]) => {
+    if (!user) return;
+
+    try {
+      const { data } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: conversationId,
+          sender_id: user.id,
+          content,
+          media_urls: mediaUrls,
+          media_type: mediaUrls?.length ? 'image' : undefined
+        })
+        .select('*, sender:profiles!messages_sender_id_fkey(id, full_name, avatar_url)')
+        .single();
+
+      if (data) setMessages(prev => [...prev, data]);
     } catch (error) {
       console.error('Error sending message:', error);
     }
   };
 
-  const markAsRead = async (messageId: string) => {
+  const markAsRead = async (conversationId: string) => {
+    if (!user) return;
+
     try {
       await supabase
-        .from('messages')
-        .update({ is_read: true })
-        .eq('id', messageId);
+        .from('conversation_participants')
+        .update({ last_read_at: new Date().toISOString(), unread_count: 0 })
+        .eq('conversation_id', conversationId)
+        .eq('user_id', user.id);
 
-      setMessages(prev => 
-        prev.map(msg => 
-          msg.id === messageId ? { ...msg, is_read: true } : msg
-        )
-      );
+      await loadConversations();
     } catch (error) {
-      console.error('Error marking message as read:', error);
+      console.error('Error marking as read:', error);
     }
   };
 
   const subscribeToMessages = () => {
-    if (!user?.id || user.id === 'user-1') return;
+    if (!user) return () => {};
 
     const channel = supabase
       .channel('messages')
       .on('postgres_changes', 
-        { 
-          event: 'INSERT', 
-          schema: 'public', 
-          table: 'messages',
-          filter: `recipient_id=eq.${user.id}`
-        }, 
+        { event: 'INSERT', schema: 'public', table: 'messages' }, 
         (payload) => {
-          // Add new message if it's for active conversation
-          if (activeConversation) {
-            setMessages(prev => [...prev, payload.new as Message]);
+          const msg = payload.new as Message;
+          if (msg.conversation_id === activeConversation) {
+            setMessages(prev => [...prev, msg]);
           }
-          // Refresh conversations list
           loadConversations();
         }
       )
@@ -210,6 +236,8 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       messages,
       activeConversation,
       loading,
+      startDirectChat,
+      createGroupChat,
       sendMessage,
       loadConversation,
       markAsRead,

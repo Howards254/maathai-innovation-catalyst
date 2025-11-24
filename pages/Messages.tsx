@@ -1,34 +1,99 @@
-import React, { useState } from 'react';
-import { MessageCircle, Send, Search, Phone, Video, MoreVertical } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { MessageCircle, Send, Search, Image, Users, X } from 'lucide-react';
 import { useMessaging } from '../contexts/MessagingContext';
-import { formatDistanceToNow } from 'date-fns';
+import { useAuth } from '../contexts/AuthContext';
+import { useFollow } from '../contexts/FollowContext';
+import { uploadMedia } from '../lib/uploadMedia';
 
 const Messages: React.FC = () => {
-  const { conversations, messages, activeConversation, loading, sendMessage, loadConversation } = useMessaging();
+  const { user } = useAuth();
+  const { conversations, messages, activeConversation, loading, sendMessage, loadConversation, startDirectChat } = useMessaging();
+  const { getFriends } = useFollow();
   const [newMessage, setNewMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [showNewChat, setShowNewChat] = useState(false);
+  const [friends, setFriends] = useState<any[]>([]);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (user) loadFriends();
+  }, [user]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const loadFriends = async () => {
+    if (!user) return;
+    const data = await getFriends(user.id);
+    setFriends(data);
+  };
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !activeConversation) return;
 
-    const conversation = conversations.find(c => c.id === activeConversation);
-    if (conversation?.other_user) {
-      await sendMessage(conversation.other_user.id, newMessage.trim());
-      setNewMessage('');
+    await sendMessage(activeConversation, newMessage.trim());
+    setNewMessage('');
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files?.length || !activeConversation) return;
+
+    setUploading(true);
+    try {
+      const urls = await Promise.all(
+        Array.from(files).map(file => uploadMedia(file, 'messages'))
+      );
+      await sendMessage(activeConversation, '', urls);
+    } catch (error) {
+      console.error('Upload failed:', error);
+    } finally {
+      setUploading(false);
     }
   };
 
-  const filteredConversations = conversations.filter(conv =>
-    conv.other_user?.full_name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleStartChat = async (friendId: string) => {
+    const convId = await startDirectChat(friendId);
+    if (convId) {
+      await loadConversation(convId);
+      setShowNewChat(false);
+    }
+  };
+
+  const getConvName = (conv: any) => {
+    if (conv.is_group) return conv.name || 'Group Chat';
+    const otherUser = conv.participants?.find((p: any) => p.user_id !== user?.id);
+    return otherUser?.profiles?.full_name || 'User';
+  };
+
+  const getConvAvatar = (conv: any) => {
+    if (conv.is_group) return conv.avatar_url || 'https://via.placeholder.com/48';
+    const otherUser = conv.participants?.find((p: any) => p.user_id !== user?.id);
+    return otherUser?.profiles?.avatar_url || 'https://via.placeholder.com/48';
+  };
+
+  const filteredConversations = conversations.filter(conv => {
+    const name = getConvName(conv);
+    return name.toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Conversations Sidebar */}
       <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
         <div className="p-4 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-gray-900 mb-4">Messages</h1>
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-xl font-bold text-gray-900">Messages</h1>
+            <button
+              onClick={() => setShowNewChat(true)}
+              className="p-2 bg-green-600 text-white rounded-full hover:bg-green-700"
+            >
+              <Users className="w-5 h-5" />
+            </button>
+          </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
@@ -36,7 +101,7 @@ const Messages: React.FC = () => {
               placeholder="Search conversations..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
           </div>
         </div>
@@ -47,28 +112,28 @@ const Messages: React.FC = () => {
               key={conversation.id}
               onClick={() => loadConversation(conversation.id)}
               className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
-                activeConversation === conversation.id ? 'bg-emerald-50 border-emerald-200' : ''
+                activeConversation === conversation.id ? 'bg-green-50 border-green-200' : ''
               }`}
             >
               <div className="flex items-center space-x-3">
                 <div className="relative">
                   <img
-                    src={conversation.other_user?.avatar_url || `https://ui-avatars.com/api/?name=${conversation.other_user?.full_name}&background=10b981&color=fff`}
-                    alt={conversation.other_user?.full_name}
+                    src={getConvAvatar(conversation)}
+                    alt={getConvName(conversation)}
                     className="w-12 h-12 rounded-full object-cover"
                   />
-                  {conversation.unread_count && conversation.unread_count > 0 && (
-                    <div className="absolute -top-1 -right-1 bg-emerald-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {conversation.unread_count > 0 && (
+                    <div className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                       {conversation.unread_count}
                     </div>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-gray-900 truncate">
-                    {conversation.other_user?.full_name}
+                    {getConvName(conversation)}
                   </p>
-                  <p className="text-sm text-gray-500">
-                    {formatDistanceToNow(new Date(conversation.last_activity), { addSuffix: true })}
+                  <p className="text-sm text-gray-500 truncate">
+                    {conversation.last_message?.content || 'No messages yet'}
                   </p>
                 </div>
               </div>
@@ -85,28 +150,20 @@ const Messages: React.FC = () => {
             <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <img
-                  src={conversations.find(c => c.id === activeConversation)?.other_user?.avatar_url || 
-                       `https://ui-avatars.com/api/?name=${conversations.find(c => c.id === activeConversation)?.other_user?.full_name}&background=10b981&color=fff`}
-                  alt="User"
+                  src={getConvAvatar(conversations.find(c => c.id === activeConversation)!)}
+                  alt={getConvName(conversations.find(c => c.id === activeConversation)!)}
                   className="w-10 h-10 rounded-full object-cover"
                 />
                 <div>
                   <h2 className="font-semibold text-gray-900">
-                    {conversations.find(c => c.id === activeConversation)?.other_user?.full_name}
+                    {getConvName(conversations.find(c => c.id === activeConversation)!)}
                   </h2>
-                  <p className="text-sm text-gray-500">Active now</p>
+                  <p className="text-sm text-gray-500">
+                    {conversations.find(c => c.id === activeConversation)?.is_group 
+                      ? `${conversations.find(c => c.id === activeConversation)?.participants?.length} members`
+                      : 'Active now'}
+                  </p>
                 </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full">
-                  <Phone className="w-5 h-5" />
-                </button>
-                <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full">
-                  <Video className="w-5 h-5" />
-                </button>
-                <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full">
-                  <MoreVertical className="w-5 h-5" />
-                </button>
               </div>
             </div>
 
@@ -114,49 +171,54 @@ const Messages: React.FC = () => {
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {loading ? (
                 <div className="flex justify-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
                 </div>
               ) : (
-                messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${message.sender_id === conversations.find(c => c.id === activeConversation)?.other_user?.id ? 'justify-start' : 'justify-end'}`}
-                  >
-                    <div
-                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                        message.sender_id === conversations.find(c => c.id === activeConversation)?.other_user?.id
-                          ? 'bg-gray-200 text-gray-900'
-                          : 'bg-emerald-500 text-white'
-                      }`}
-                    >
-                      <p>{message.content}</p>
-                      <p className={`text-xs mt-1 ${
-                        message.sender_id === conversations.find(c => c.id === activeConversation)?.other_user?.id
-                          ? 'text-gray-500'
-                          : 'text-emerald-100'
+                messages.map((message) => {
+                  const isOwn = message.sender_id === user?.id;
+                  return (
+                    <div key={message.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                        isOwn ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-900'
                       }`}>
-                        {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
-                      </p>
+                        {message.content && <p>{message.content}</p>}
+                        {message.media_urls?.length > 0 && (
+                          <div className="grid grid-cols-2 gap-1 mt-2">
+                            {message.media_urls.map((url, i) => (
+                              <img key={i} src={url} alt="" className="rounded" />
+                            ))}
+                          </div>
+                        )}
+                        <p className={`text-xs mt-1 ${isOwn ? 'text-green-100' : 'text-gray-500'}`}>
+                          {new Date(message.created_at).toLocaleTimeString()}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
+              <div ref={messagesEndRef} />
             </div>
 
             {/* Message Input */}
             <div className="bg-white border-t border-gray-200 p-4">
               <form onSubmit={handleSendMessage} className="flex items-center space-x-2">
+                <label className="cursor-pointer p-2 text-gray-500 hover:text-gray-700">
+                  <Image className="w-5 h-5" />
+                  <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="hidden" />
+                </label>
                 <input
                   type="text"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type a message..."
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  disabled={uploading}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
                 <button
                   type="submit"
-                  disabled={!newMessage.trim()}
-                  className="p-2 bg-emerald-500 text-white rounded-full hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={!newMessage.trim() || uploading}
+                  className="p-2 bg-green-500 text-white rounded-full hover:bg-green-600 disabled:opacity-50"
                 >
                   <Send className="w-5 h-5" />
                 </button>
@@ -173,6 +235,35 @@ const Messages: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* New Chat Modal */}
+      {showNewChat && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 max-h-96 overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold">Start New Chat</h3>
+              <button onClick={() => setShowNewChat(false)} className="text-gray-500 hover:text-gray-700">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-2">
+              {friends.map(friend => (
+                <button
+                  key={friend.id}
+                  onClick={() => handleStartChat(friend.id)}
+                  className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg"
+                >
+                  <img src={friend.avatar_url || 'https://via.placeholder.com/40'} alt="" className="w-10 h-10 rounded-full" />
+                  <span className="font-medium">{friend.full_name}</span>
+                </button>
+              ))}
+              {friends.length === 0 && (
+                <p className="text-center text-gray-500 py-4">No friends yet. Follow users to start chatting!</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
