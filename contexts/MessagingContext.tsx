@@ -60,14 +60,20 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       loadConversations();
       setOnlineStatus(true);
       startHeartbeat();
-      const unsub = subscribeToMessages();
-      return () => {
+    }
+    return () => {
+      if (user) {
         setOnlineStatus(false);
         stopHeartbeat();
-        unsub();
-      };
-    }
+      }
+    };
   }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    const unsub = subscribeToMessages();
+    return () => unsub();
+  }, [user, activeConversation]);
 
   const setOnlineStatus = async (online: boolean) => {
     if (!user) return;
@@ -253,10 +259,20 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       .channel('messages')
       .on('postgres_changes', 
         { event: 'INSERT', schema: 'public', table: 'messages' }, 
-        (payload) => {
+        async (payload) => {
           const msg = payload.new as Message;
+          
+          // Load sender info
+          const { data: sender } = await supabase
+            .from('profiles')
+            .select('id, full_name, avatar_url')
+            .eq('id', msg.sender_id)
+            .single();
+          
+          const enrichedMsg = { ...msg, sender };
+          
           if (msg.conversation_id === activeConversation) {
-            setMessages(prev => [...prev, msg]);
+            setMessages(prev => [...prev, enrichedMsg]);
           }
           loadConversations();
         }

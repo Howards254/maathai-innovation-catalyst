@@ -83,7 +83,7 @@ const Messages: React.FC = () => {
   });
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-[calc(100vh-4rem)] md:h-screen bg-gray-50">
       {/* Conversations Sidebar */}
       <div className={`${
         activeConversation ? 'hidden md:flex' : 'flex'
@@ -149,7 +149,7 @@ const Messages: React.FC = () => {
       {/* Chat Area */}
       <div className={`${
         activeConversation ? 'flex' : 'hidden md:flex'
-      } flex-1 flex-col`}>
+      } flex-1 flex-col h-full`}>
         {activeConversation ? (
           <>
             {/* Chat Header */}
@@ -190,7 +190,7 @@ const Messages: React.FC = () => {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-20 md:pb-4">
               {loading ? (
                 <div className="flex justify-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
