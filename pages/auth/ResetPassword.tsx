@@ -28,10 +28,36 @@ const ResetPassword: React.FC = () => {
         console.log('Password reset - Initial check:', { 
           fullUrl: window.location.href,
           hash: window.location.hash,
-          hashFragment: hashFragment
+          hashFragment: hashFragment,
+          pathname: window.location.pathname
         });
         
+        // Give Supabase client time to auto-detect and process the session from URL
+        // The detectSessionInUrl: true config means Supabase handles this automatically
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Check if Supabase has already established a session from the URL
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        console.log('Password reset - Session check:', { 
+          hasSession: !!session,
+          sessionError: sessionError,
+          user: session?.user?.email
+        });
+        
+        if (session && session.user) {
+          // Session was successfully established by Supabase from the URL hash
+          console.log('Valid reset token - session established by Supabase');
+          setValidToken(true);
+          // Clear the hash from URL for security
+          window.history.replaceState(null, '', window.location.pathname);
+          setCheckingToken(false);
+          return;
+        }
+        
+        // If no session, check if we have hash parameters to manually process
         if (!hashFragment) {
+          console.error('No hash fragment found in URL');
           setError('Invalid or expired reset link. Please request a new password reset.');
           showToast.error('Invalid or expired reset link. Please request a new password reset.');
           setValidToken(false);
@@ -39,19 +65,34 @@ const ResetPassword: React.FC = () => {
           return;
         }
         
-        // Parse hash parameters
+        // Parse hash parameters manually as fallback
         const hashParams = new URLSearchParams(hashFragment);
         const accessToken = hashParams.get('access_token');
         const refreshToken = hashParams.get('refresh_token');
         const type = hashParams.get('type');
+        const errorCode = hashParams.get('error');
+        const errorDescription = hashParams.get('error_description');
         
         console.log('Password reset - Parsed tokens:', { 
           hasAccessToken: !!accessToken, 
           hasRefreshToken: !!refreshToken,
-          type: type
+          type: type,
+          error: errorCode,
+          errorDescription: errorDescription
         });
         
+        // Check for errors in the URL
+        if (errorCode) {
+          console.error('Error in reset URL:', errorCode, errorDescription);
+          setError(errorDescription || 'An error occurred with the reset link.');
+          showToast.error(errorDescription || 'Invalid reset link.');
+          setValidToken(false);
+          setCheckingToken(false);
+          return;
+        }
+        
         if (!accessToken || type !== 'recovery') {
+          console.error('Invalid token or type:', { accessToken: !!accessToken, type });
           setError('Invalid or expired reset link. Please request a new password reset.');
           showToast.error('Invalid or expired reset link. Please request a new password reset.');
           setValidToken(false);
@@ -59,20 +100,20 @@ const ResetPassword: React.FC = () => {
           return;
         }
         
-        // Exchange the token for a session
-        console.log('Exchanging token for session...');
-        const { data, error: sessionError } = await supabase.auth.setSession({
+        // Manually exchange the token for a session as fallback
+        console.log('Manually exchanging token for session...');
+        const { data, error: exchangeError } = await supabase.auth.setSession({
           access_token: accessToken,
           refresh_token: refreshToken || ''
         });
         
-        if (sessionError || !data.session) {
-          console.error('Session exchange error:', sessionError);
+        if (exchangeError || !data.session) {
+          console.error('Session exchange error:', exchangeError);
           setError('Unable to establish session. The reset link may have expired.');
           showToast.error('Unable to establish session. Please request a new reset link.');
           setValidToken(false);
         } else {
-          console.log('Valid reset token - session established successfully');
+          console.log('Valid reset token - session established manually');
           setValidToken(true);
           // Clear the hash from URL for security
           window.history.replaceState(null, '', window.location.pathname);
@@ -136,16 +177,12 @@ const ResetPassword: React.FC = () => {
       
       if (error) throw error;
       
-      // Sign out after password reset to ensure clean state
-      await supabase.auth.signOut();
-      
       setSuccess(true);
-      showToast.success('Password reset successfully! Please login with your new password.');
+      showToast.success('Password reset successfully! Redirecting to login...');
       
-      // Redirect to login after 2 seconds
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
+      // Sign out and redirect immediately
+      await supabase.auth.signOut();
+      navigate('/login');
     } catch (error: any) {
       const errorMessage = error.message || 'Failed to update password. Please try again.';
       setError(errorMessage);
@@ -192,7 +229,7 @@ const ResetPassword: React.FC = () => {
               </div>
               <h2 className="text-xl font-semibold text-gray-800">Verifying Reset Link...</h2>
               <p className="text-gray-600">
-                Please wait while we validate your password reset link.
+                Validating your password reset link...
               </p>
             </div>
           ) : success ? (
