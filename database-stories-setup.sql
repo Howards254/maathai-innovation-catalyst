@@ -21,8 +21,19 @@ CREATE TABLE IF NOT EXISTS stories (
 -- 2. Add missing columns if they don't exist
 DO $$ 
 BEGIN
+  -- Add file_size to stories if missing
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='stories' AND column_name='file_size') THEN
     ALTER TABLE stories ADD COLUMN file_size INTEGER;
+  END IF;
+  
+  -- Add title and description to activity_feed if missing (for triggers)
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name='activity_feed') THEN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='activity_feed' AND column_name='title') THEN
+      ALTER TABLE activity_feed ADD COLUMN title VARCHAR(200);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='activity_feed' AND column_name='description') THEN
+      ALTER TABLE activity_feed ADD COLUMN description TEXT;
+    END IF;
   END IF;
 END $$;
 
