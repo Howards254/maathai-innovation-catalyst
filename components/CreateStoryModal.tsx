@@ -79,7 +79,8 @@ const CreateStoryModal = ({ isOpen, onClose }: CreateStoryModalProps) => {
         description: description.trim() || undefined,
         media_url: mediaUrl,
         media_type: file.type.startsWith('video/') ? 'video' : 'image',
-        duration: file.type.startsWith('video/') ? undefined : undefined, // Will be set by Cloudinary
+        duration: file.type.startsWith('video/') ? undefined : undefined,
+        file_size: file.size,
         story_type: storyType,
         location: location.trim() || undefined,
         tags: tagsArray.length > 0 ? tagsArray : undefined

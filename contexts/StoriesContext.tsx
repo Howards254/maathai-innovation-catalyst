@@ -4,7 +4,7 @@ import { useUser } from './UserContext';
 
 interface Story {
   id: string;
-  user_id: string;
+  author_id: string;
   title: string;
   description?: string;
   media_url: string;
@@ -13,7 +13,8 @@ interface Story {
   story_type: 'tree_planting' | 'campaign_progress' | 'event' | 'education' | 'cleanup' | 'general';
   location?: string;
   tags?: string[];
-  view_count: number;
+  views_count: number;
+  file_size?: number;
   created_at: string;
   author?: {
     id: string;
@@ -52,7 +53,7 @@ export const StoriesProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .from('stories')
         .select(`
           *,
-          author:profiles!stories_user_id_fkey(id, full_name, username, avatar_url),
+          author:profiles!stories_author_id_fkey(id, full_name, username, avatar_url),
           reactions:story_reactions(id, user_id, reaction_type),
           comments:story_comments(id, user_id, content)
         `)
@@ -75,19 +76,20 @@ export const StoriesProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const { data, error } = await supabase
         .from('stories')
         .insert({
-          user_id: user.id,
+          author_id: user.id,
           title: storyData.title,
           description: storyData.description,
           media_url: storyData.media_url,
           media_type: storyData.media_type,
           duration: storyData.duration,
+          file_size: storyData.file_size,
           story_type: storyData.story_type || 'general',
           location: storyData.location,
           tags: storyData.tags
         })
         .select(`
           *,
-          author:profiles!stories_user_id_fkey(id, full_name, username, avatar_url)
+          author:profiles!stories_author_id_fkey(id, full_name, username, avatar_url)
         `)
         .single();
 
