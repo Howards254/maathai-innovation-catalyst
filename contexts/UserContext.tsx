@@ -51,9 +51,7 @@ export const useUser = () => {
       ? authUser.user_metadata.impact_points
       : 0;
     
-    const badges = Array.isArray(authUser.user_metadata?.badges)
-      ? authUser.user_metadata.badges.filter((b: any) => typeof b === 'string')
-      : [];
+    const badges: string[] = [];
     
     return {
       user: {
@@ -89,7 +87,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, username, full_name, avatar_url, impact_points, badges, role')
+        .select('id, username, full_name, avatar_url, impact_points, role')
         .order('impact_points', { ascending: false });
       
       if (error) {
@@ -104,7 +102,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const fullName = typeof profile.full_name === 'string' ? profile.full_name : 'User';
         const avatarUrl = typeof profile.avatar_url === 'string' ? profile.avatar_url : `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.id}`;
         const impactPoints = typeof profile.impact_points === 'number' ? profile.impact_points : 0;
-        const badges = Array.isArray(profile.badges) ? profile.badges.filter(b => typeof b === 'string') : [];
+        const badges: string[] = [];
         const role = profile.role === 'admin' ? 'admin' : 'user';
         
         return {
@@ -155,7 +153,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           username: updates.username,
           full_name: updates.fullName,
           impact_points: updates.impactPoints,
-          badges: updates.badges,
           role: updates.role
         });
         
@@ -172,37 +169,16 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Try to update points in Supabase profiles table
       const { data: profile } = await supabase
         .from('profiles')
-        .select('impact_points, badges')
+        .select('impact_points')
         .eq('id', userId)
         .single();
       
       if (profile) {
         const newPoints = (profile.impact_points || 0) + points;
-        const newBadges = [...(profile.badges || [])];
-        
-        // Award badges based on points
-        if (newPoints >= 100 && !newBadges.includes('Tree Hugger')) {
-          newBadges.push('Tree Hugger');
-        }
-        if (newPoints >= 500 && !newBadges.includes('Forest Guardian')) {
-          newBadges.push('Forest Guardian');
-        }
-        if (newPoints >= 1000 && !newBadges.includes('Eco Warrior')) {
-          newBadges.push('Eco Warrior');
-        }
-        if (newPoints >= 2000 && !newBadges.includes('Planet Protector')) {
-          newBadges.push('Planet Protector');
-        }
-        if (newPoints >= 5000 && !newBadges.includes('Environmental Champion')) {
-          newBadges.push('Environmental Champion');
-        }
         
         await supabase
           .from('profiles')
-          .update({ 
-            impact_points: newPoints, 
-            badges: newBadges 
-          })
+          .update({ impact_points: newPoints })
           .eq('id', userId);
         
         // Reload users
@@ -212,31 +188,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (userId === currentUser?.id) {
           const currentPoints = currentUser.user_metadata?.impact_points || 0;
           const newPoints = currentPoints + points;
-          const currentBadges = currentUser.user_metadata?.badges || [];
-          const newBadges = [...currentBadges];
-          
-          // Award badges based on points
-          if (newPoints >= 100 && !newBadges.includes('Tree Hugger')) {
-            newBadges.push('Tree Hugger');
-          }
-          if (newPoints >= 500 && !newBadges.includes('Forest Guardian')) {
-            newBadges.push('Forest Guardian');
-          }
-          if (newPoints >= 1000 && !newBadges.includes('Eco Warrior')) {
-            newBadges.push('Eco Warrior');
-          }
-          if (newPoints >= 2000 && !newBadges.includes('Planet Protector')) {
-            newBadges.push('Planet Protector');
-          }
-          if (newPoints >= 5000 && !newBadges.includes('Environmental Champion')) {
-            newBadges.push('Environmental Champion');
-          }
           
           await supabase.auth.updateUser({
             data: {
               ...currentUser.user_metadata,
-              impact_points: newPoints,
-              badges: newBadges
+              impact_points: newPoints
             }
           });
         }
