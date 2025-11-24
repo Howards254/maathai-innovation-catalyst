@@ -28,7 +28,6 @@ Inspired by Nobel Peace Prize winner Wangari Maathai's Green Belt Movement, Gree
 ### 🌐 **Social Features** - *Connect with Purpose*
 
 #### 💬 Direct Messaging
-- **Instagram/Facebook-style chat interface**
 - Real-time messaging with friends
 - Media sharing (images, videos)
 - Online status indicators
@@ -36,7 +35,6 @@ Inspired by Nobel Peace Prize winner Wangari Maathai's Green Belt Movement, Gree
 - Group conversations support
 
 #### 📷 Stories & Reels
-- **TikTok-inspired vertical stories**
 - Share your environmental journey
 - 24-hour story expiration
 - Reactions and comments
