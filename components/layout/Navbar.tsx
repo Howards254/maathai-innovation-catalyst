@@ -33,7 +33,7 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-gray-200/50 shadow-sm">
+    <nav className="fixed top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-gray-200/50 shadow-md transition-shadow duration-300">
       <div className="flex items-center justify-between h-16 px-4 mx-auto max-w-[1800px]">
         
         {/* Left: Logo */}

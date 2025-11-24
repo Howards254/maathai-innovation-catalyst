@@ -11,7 +11,7 @@ const AppLayout: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="flex">
+      <div className="flex pt-16">
         <SidebarLeft />
         <main className="flex-1 min-w-0 bg-white lg:border-x border-gray-200 min-h-[calc(100vh-4rem)] relative">
           <Outlet />

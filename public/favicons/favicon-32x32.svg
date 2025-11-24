@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 512 512" fill="none">
+  <!-- Background Circle -->
+  <circle cx="256" cy="256" r="248" fill="#10b981" />
+  <circle cx="256" cy="256" r="220" fill="#059669" />
+  
+  <!-- Tree Trunk -->
+  <path d="M256 400V280" stroke="white" stroke-width="24" stroke-linecap="round" />
+  
+  <!-- Tree Leaves -->
+  <path d="M256 280C256 280 200 220 200 180C200 140 230 120 256 120C282 120 312 140 312 180C312 220 256 280 256 280Z" fill="white" />
+  
+  <!-- Small Leaves -->
+  <circle cx="210" cy="200" r="20" fill="#d1fae5" />
+  <circle cx="290" cy="190" r="18" fill="#d1fae5" />
+  <circle cx="256" cy="150" r="22" fill="#d1fae5" />
+  
+  <!-- Ground -->
+  <path d="M180 400H332" stroke="white" stroke-width="16" stroke-linecap="round" />
+  
+  <!-- Small Plants -->
+  <path d="M200 400C200 380 210 370 220 370C230 370 240 380 240 400" stroke="#d1fae5" stroke-width="8" stroke-linecap="round" />
+  <path d="M272 400C272 380 282 370 292 370C302 370 312 380 312 400" stroke="#d1fae5" stroke-width="8" stroke-linecap="round" />
+</svg>

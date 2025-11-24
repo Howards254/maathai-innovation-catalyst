@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
-import { ChevronRight, ChevronLeft, User, MapPin, Heart, Briefcase, Users, CheckCircle } from 'lucide-react';
+import { ChevronRight, ChevronLeft, User, MapPin, Heart, Briefcase, Users, CheckCircle, Home } from 'lucide-react';
 
 const Register: React.FC = () => {
   const { signUp } = useAuth();
@@ -149,13 +149,23 @@ const Register: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-green-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative">
         {/* Progress Bar */}
         <div className="bg-emerald-500 h-2">
           <div 
             className="bg-emerald-600 h-full transition-all duration-300"
             style={{ width: `${(currentStep / 5) * 100}%` }}
           />
+        </div>
+        <div className="absolute top-4 left-4 z-10">
+          <Link 
+            to="/" 
+            className="flex items-center gap-1 bg-white/90 hover:bg-white text-emerald-700 hover:text-emerald-800 px-3 py-1.5 rounded-full transition-all shadow-sm border border-emerald-100"
+            aria-label="Back to home page"
+          >
+            <Home className="w-4 h-4" />
+            <span className="text-sm font-medium">Home</span>
+          </Link>
         </div>
 
         <div className="p-8">

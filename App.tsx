@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
+import ScrollToTop from './components/ScrollToTop';
 import ErrorBoundary from './components/ErrorBoundary';
 import { clearOldDataOnce } from './utils/clearStorage';
 import { AuthProvider } from './contexts/AuthContext';
@@ -86,7 +87,8 @@ const App: React.FC = () => {
                           <ActivityFeedProvider>
                             <MatchmakingProvider>
                 <HashRouter>
-      <Routes>
+                  <ScrollToTop />
+                  <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
