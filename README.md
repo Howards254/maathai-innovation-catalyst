@@ -330,35 +330,35 @@ GreenVerse modernizes Maathai's vision for the digital age:
 
 ## 🚀 Future Roadmap
 
-### Phase 1: Enhanced Social Features (Q2 2024)
+### Phase 1: Enhanced Social Features
 - [ ] Video calls for campaign planning
 - [ ] Live streaming environmental events
 - [ ] Group video rooms
 - [ ] Voice messages in chat
 - [ ] Story highlights and archives
 
-### Phase 2: Advanced Gamification (Q3 2024)
+### Phase 2: Advanced Gamification
 - [ ] Team challenges and competitions
 - [ ] Seasonal campaigns with special rewards
 - [ ] NFT badges for major milestones
 - [ ] Cryptocurrency rewards for impact
 - [ ] Corporate sponsorship integration
 
-### Phase 3: AI & Analytics (Q4 2024)
+### Phase 3: AI & Analytics
 - [ ] AI-powered tree species recommendations
 - [ ] Satellite imagery for verification
 - [ ] Carbon footprint calculator
 - [ ] Predictive analytics for campaign success
 - [ ] Personalized environmental tips
 
-### Phase 4: Global Expansion (2025)
+### Phase 4: Global Expansion
 - [ ] Multi-language support (10+ languages)
 - [ ] Local currency integration
 - [ ] Regional campaign templates
 - [ ] Government partnership portal
 - [ ] Mobile apps (iOS & Android)
 
-### Phase 5: Marketplace & Economy (2025)
+### Phase 5: Marketplace & Economy
 - [ ] Tree seedling marketplace
 - [ ] Carbon credit trading
 - [ ] Eco-product marketplace
