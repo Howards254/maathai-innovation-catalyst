@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Bell } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCampaigns } from '../../contexts/CampaignContext';
 import { useDiscussions } from '../../contexts/DiscussionContext';
 import { useUsers, useUser } from '../../contexts/UserContext';
+import { useNotifications } from '../../contexts/NotificationContext';
 
 const Navbar: React.FC = () => {
   const { signOut } = useAuth();
@@ -15,6 +17,8 @@ const Navbar: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const navigate = useNavigate();
 
   const searchResults = searchQuery.length > 2 ? {
@@ -163,6 +167,78 @@ const Navbar: React.FC = () => {
           <Link to="/app/campaigns/create" className="hidden md:flex items-center justify-center w-9 h-9 text-gray-500 hover:bg-gray-100 rounded-xl transition-colors">
              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
           </Link>
+
+          {/* Notification Bell - Desktop */}
+          <div className="hidden md:block relative">
+            <button
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+            >
+              <Bell className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+
+            {/* Notifications Dropdown */}
+            {showNotifications && (
+              <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto">
+                <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                  <h3 className="font-bold text-gray-900">Notifications</h3>
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={markAllAsRead}
+                      className="text-xs text-primary-600 hover:text-primary-700"
+                    >
+                      Mark all read
+                    </button>
+                  )}
+                </div>
+                {notifications.length === 0 ? (
+                  <div className="p-8 text-center text-gray-500">
+                    <Bell className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <p>No notifications yet</p>
+                  </div>
+                ) : (
+                  notifications.map(notif => (
+                    <div
+                      key={notif.id}
+                      onClick={() => {
+                        markAsRead(notif.id);
+                        if (notif.link) navigate(notif.link);
+                        setShowNotifications(false);
+                      }}
+                      className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${
+                        !notif.is_read ? 'bg-blue-50' : ''
+                      }`}
+                    >
+                      <div className="flex gap-3">
+                        {notif.from_user && (
+                          <img
+                            src={notif.from_user.avatar_url}
+                            alt=""
+                            className="w-10 h-10 rounded-full"
+                          />
+                        )}
+                        <div className="flex-1">
+                          <p className="font-medium text-sm text-gray-900">{notif.title}</p>
+                          <p className="text-sm text-gray-600">{notif.message}</p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            {new Date(notif.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        {!notif.is_read && (
+                          <div className="w-2 h-2 bg-blue-500 rounded-full mt-2" />
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
 
           {/* User Dropdown Trigger - Desktop */}
           <div className="hidden md:block relative">

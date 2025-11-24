@@ -16,6 +16,7 @@ import { LiveStreamProvider } from './contexts/LiveStreamContext';
 import { ActivityFeedProvider } from './contexts/ActivityFeedContext';
 import { MatchmakingProvider } from './contexts/MatchmakingContext';
 import { FollowProvider } from './contexts/FollowContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Layouts
@@ -74,7 +75,8 @@ const App: React.FC = () => {
   return (
     <ErrorBoundary>
       <AuthProvider>
-      <UserProvider>
+        <NotificationProvider>
+          <UserProvider>
         <DiscussionProvider>
           <EventProvider>
             <GamificationProvider>
@@ -165,7 +167,8 @@ const App: React.FC = () => {
             </GamificationProvider>
           </EventProvider>
         </DiscussionProvider>
-      </UserProvider>
+          </UserProvider>
+        </NotificationProvider>
       </AuthProvider>
     </ErrorBoundary>
   );
