@@ -64,12 +64,14 @@ const Messages: React.FC = () => {
   };
 
   const getConvName = (conv: any) => {
+    if (!conv) return 'User';
     if (conv.is_group) return conv.name || 'Group Chat';
     const otherUser = conv.participants?.find((p: any) => p.user_id !== user?.id);
     return otherUser?.profiles?.full_name || 'User';
   };
 
   const getConvAvatar = (conv: any) => {
+    if (!conv) return 'https://via.placeholder.com/48';
     if (conv.is_group) return conv.avatar_url || 'https://via.placeholder.com/48';
     const otherUser = conv.participants?.find((p: any) => p.user_id !== user?.id);
     return otherUser?.profiles?.avatar_url || 'https://via.placeholder.com/48';
@@ -162,21 +164,28 @@ const Messages: React.FC = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
-                <img
-                  src={getConvAvatar(conversations.find(c => c.id === activeConversation)!)}
-                  alt={getConvName(conversations.find(c => c.id === activeConversation)!)}
-                  className="w-10 h-10 rounded-full object-cover"
-                />
-                <div>
-                  <h2 className="font-semibold text-gray-900">
-                    {getConvName(conversations.find(c => c.id === activeConversation)!)}
-                  </h2>
-                  <p className="text-sm text-gray-500">
-                    {conversations.find(c => c.id === activeConversation)?.is_group 
-                      ? `${conversations.find(c => c.id === activeConversation)?.participants?.length} members`
-                      : 'Active now'}
-                  </p>
-                </div>
+                {(() => {
+                  const activeConv = conversations.find(c => c.id === activeConversation);
+                  return (
+                    <>
+                      <img
+                        src={getConvAvatar(activeConv)}
+                        alt={getConvName(activeConv)}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                      <div>
+                        <h2 className="font-semibold text-gray-900">
+                          {getConvName(activeConv)}
+                        </h2>
+                        <p className="text-sm text-gray-500">
+                          {activeConv?.is_group 
+                            ? `${activeConv?.participants?.length || 0} members`
+                            : 'Active now'}
+                        </p>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             </div>
 
@@ -189,11 +198,12 @@ const Messages: React.FC = () => {
               ) : (
                 messages.map((message) => {
                   const isOwn = message.sender_id === user?.id;
+                  const activeConv = conversations.find(c => c.id === activeConversation);
                   return (
                     <div key={message.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
                       {!isOwn && (
                         <img
-                          src={getConvAvatar(conversations.find(c => c.id === activeConversation)!)}
+                          src={getConvAvatar(activeConv)}
                           alt=""
                           className="w-7 h-7 rounded-full mr-2 flex-shrink-0 md:hidden"
                         />
