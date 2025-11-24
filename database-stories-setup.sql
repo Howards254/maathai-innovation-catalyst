@@ -26,13 +26,19 @@ BEGIN
     ALTER TABLE stories ADD COLUMN file_size INTEGER;
   END IF;
   
-  -- Add title and description to activity_feed if missing (for triggers)
+  -- Add missing columns to activity_feed if it exists (for triggers)
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name='activity_feed') THEN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='activity_feed' AND column_name='title') THEN
       ALTER TABLE activity_feed ADD COLUMN title VARCHAR(200);
     END IF;
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='activity_feed' AND column_name='description') THEN
       ALTER TABLE activity_feed ADD COLUMN description TEXT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='activity_feed' AND column_name='points_earned') THEN
+      ALTER TABLE activity_feed ADD COLUMN points_earned INTEGER DEFAULT 0;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='activity_feed' AND column_name='is_public') THEN
+      ALTER TABLE activity_feed ADD COLUMN is_public BOOLEAN DEFAULT TRUE;
     END IF;
   END IF;
 END $$;
