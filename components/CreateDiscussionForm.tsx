@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useDiscussions } from '../contexts/DiscussionContext';
 import { Image, Video, Smile, X } from 'lucide-react';
+import { uploadDiscussionMedia } from '../lib/uploadMedia';
 
 interface CreateDiscussionFormProps {
   onClose: () => void;
@@ -57,15 +58,24 @@ const CreateDiscussionForm: React.FC<CreateDiscussionFormProps> = ({ onClose }) 
 
     try {
       const tagsArray = formData.tags.split(',').map(t => t.trim()).filter(Boolean);
+      
+      // Upload media files to Supabase Storage
+      const uploadedUrls: string[] = [];
+      for (const file of mediaFiles) {
+        const url = await uploadDiscussionMedia(file);
+        uploadedUrls.push(url);
+      }
+      
       await createDiscussion({
         ...formData,
         tags: tagsArray,
-        mediaUrls: mediaPreviews,
+        mediaUrls: uploadedUrls,
         mediaType: mediaFiles[0]?.type.startsWith('video') ? 'video' : 'image'
       });
       onClose();
     } catch (error) {
       console.error('Failed to create discussion:', error);
+      alert('Failed to create discussion. Please try again.');
     } finally {
       setLoading(false);
     }

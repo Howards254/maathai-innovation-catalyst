@@ -87,8 +87,9 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             reactions: [],
             isAnonymous: d.is_anonymous || false,
             realAuthorId: d.author_id,
-            tags: [],
-            mediaUrls: []
+            tags: d.tags || [],
+            mediaUrls: d.media_urls || [],
+            mediaType: d.media_type || null
           };
         });
         setDiscussions(formattedDiscussions);
@@ -116,7 +117,10 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           content: discussionData.content,
           category: discussionData.category,
           author_id: user.id,
-          is_anonymous: discussionData.isAnonymous || false
+          is_anonymous: discussionData.isAnonymous || false,
+          media_urls: discussionData.mediaUrls || [],
+          media_type: discussionData.mediaType || null,
+          tags: discussionData.tags || []
         })
         .select()
         .single();

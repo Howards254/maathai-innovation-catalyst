@@ -67,10 +67,13 @@ export const MatchmakingProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   useEffect(() => {
     if (user?.id && user.id !== 'user-1') {
-      loadMatches();
-      loadTeams();
+      const timer = setTimeout(() => {
+        loadMatches();
+        loadTeams();
+      }, 500);
+      return () => clearTimeout(timer);
     }
-  }, [user]);
+  }, [user?.id]);
 
   const loadMatches = async () => {
     if (!user?.id || user.id === 'user-1') return;
@@ -87,7 +90,10 @@ export const MatchmakingProvider: React.FC<{ children: React.ReactNode }> = ({ c
         .eq('user_id', user.id)
         .order('compatibility_score', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading matches:', error);
+        return;
+      }
       setMatches(data || []);
     } catch (error) {
       console.error('Error loading matches:', error);
@@ -230,7 +236,10 @@ export const MatchmakingProvider: React.FC<{ children: React.ReactNode }> = ({ c
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading teams:', error);
+        return;
+      }
       setTeams(data || []);
     } catch (error) {
       console.error('Error loading teams:', error);
