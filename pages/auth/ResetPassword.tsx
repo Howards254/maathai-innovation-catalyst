@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Lock, Eye, EyeOff, Leaf, Home, Check } from 'lucide-react';
+import { showToast } from '../../utils/toast';
 
 const ResetPassword: React.FC = () => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ const ResetPassword: React.FC = () => {
     
     if (!accessToken) {
       setError('Invalid or expired reset link. Please request a new password reset.');
+      showToast.error('Invalid or expired reset link. Please request a new password reset.');
     }
   }, []);
 
@@ -52,12 +54,14 @@ const ResetPassword: React.FC = () => {
     // Validate passwords match
     if (password !== confirmPassword) {
       setError('Passwords do not match');
+      showToast.error('Passwords do not match');
       return;
     }
 
     // Validate password strength
     if (passwordStrength === 'weak') {
       setError('Please choose a stronger password');
+      showToast.warning('Please choose a stronger password');
       return;
     }
 
@@ -69,13 +73,16 @@ const ResetPassword: React.FC = () => {
       if (error) throw error;
       
       setSuccess(true);
+      showToast.success('Password reset successfully!');
       
       // Redirect to login after 3 seconds
       setTimeout(() => {
         navigate('/login');
       }, 3000);
     } catch (error: any) {
-      setError(error.message || 'Failed to update password. Please try again.');
+      const errorMessage = error.message || 'Failed to update password. Please try again.';
+      setError(errorMessage);
+      showToast.error(errorMessage);
     } finally {
       setLoading(false);
     }

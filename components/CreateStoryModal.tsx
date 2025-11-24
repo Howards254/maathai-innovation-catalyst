@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { X, Upload, Camera, Video, Image, MapPin, Hash } from 'lucide-react';
 import { uploadStoryMedia } from '../lib/cloudinaryClient';
 import { useStories } from '../contexts/StoriesContext';
+import { showToast } from '../utils/toast';
 
 interface CreateStoryModalProps {
   isOpen: boolean;
@@ -36,14 +37,14 @@ const CreateStoryModal = ({ isOpen, onClose }: CreateStoryModalProps) => {
 
     // Validate file size (10MB)
     if (selectedFile.size > 10 * 1024 * 1024) {
-      alert('File size must be less than 10MB');
+      showToast.error('File size must be less than 10MB');
       return;
     }
 
     // Validate file type
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/webm', 'video/quicktime'];
     if (!allowedTypes.includes(selectedFile.type)) {
-      alert('Only images (JPEG, PNG, WebP) and videos (MP4, WebM, MOV) are allowed');
+      showToast.error('Only images (JPEG, PNG, WebP) and videos (MP4, WebM, MOV) are allowed');
       return;
     }
 
@@ -86,13 +87,14 @@ const CreateStoryModal = ({ isOpen, onClose }: CreateStoryModalProps) => {
       });
 
       setUploadProgress(100);
+      showToast.success('Story created successfully!');
       
       // Reset form and close
       resetForm();
       onClose();
     } catch (error) {
       console.error('Error creating story:', error);
-      alert(error instanceof Error ? error.message : 'Failed to create story');
+      showToast.error(error instanceof Error ? error.message : 'Failed to create story');
     } finally {
       setUploading(false);
       setUploadProgress(0);

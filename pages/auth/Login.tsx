@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Mail, Lock, Eye, EyeOff, Leaf, Home } from 'lucide-react';
+import { showToast } from '../../utils/toast';
 
 const Login: React.FC = () => {
   const { signIn } = useAuth();
@@ -19,9 +20,10 @@ const Login: React.FC = () => {
     
     try {
       await signIn(formData.email, formData.password);
+      showToast.success('Login successful! Welcome back.');
       navigate('/app/dashboard');
     } catch (error: any) {
-      alert(error.message);
+      showToast.error(error.message || 'Invalid email or password');
     } finally {
       setLoading(false);
     }

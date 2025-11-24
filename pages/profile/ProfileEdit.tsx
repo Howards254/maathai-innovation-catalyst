@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useUser, useUsers } from '../../contexts/UserContext';
 import { supabase } from '../../lib/supabase';
+import { showToast } from '../../utils/toast';
 
 const ProfileEdit: React.FC = () => {
   const { user: authUser } = useAuth();
@@ -65,11 +66,13 @@ const ProfileEdit: React.FC = () => {
     // Validate username
     if (formData.username.length < 3) {
       setUsernameError('Username must be at least 3 characters long');
+      showToast.error('Username must be at least 3 characters long');
       return;
     }
 
     if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
       setUsernameError('Username can only contain letters, numbers, and underscores');
+      showToast.error('Username can only contain letters, numbers, and underscores');
       return;
     }
 
@@ -82,17 +85,18 @@ const ProfileEdit: React.FC = () => {
         const isAvailable = await checkUsernameAvailability(formData.username);
         if (!isAvailable) {
           setUsernameError('Username is already taken');
+          showToast.error('Username is already taken');
           setLoading(false);
           return;
         }
       }
 
       await updateProfile(formData);
-      alert('Profile updated successfully!');
+      showToast.success('Profile updated successfully!');
       navigate(`/app/profile/${formData.username}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to update profile:', error);
-      alert('Failed to update profile. Please try again.');
+      showToast.error(error?.message || 'Failed to update profile. Please try again.');
     } finally {
       setLoading(false);
     }

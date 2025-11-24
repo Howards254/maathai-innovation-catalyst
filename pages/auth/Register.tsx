@@ -2,13 +2,16 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
-import { ChevronRight, ChevronLeft, User, MapPin, Heart, Briefcase, Users, CheckCircle, Home } from 'lucide-react';
+import { ChevronRight, ChevronLeft, User, MapPin, Heart, Briefcase, Users, CheckCircle, Home, Eye, EyeOff } from 'lucide-react';
+import { showToast } from '../../utils/toast';
 
 const Register: React.FC = () => {
   const { signUp } = useAuth();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -96,18 +99,18 @@ const Register: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match');
+      showToast.error('Passwords do not match');
       return;
     }
 
     // Validate username
     if (formData.username.length < 3) {
-      alert('Username must be at least 3 characters long');
+      showToast.error('Username must be at least 3 characters long');
       return;
     }
 
     if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
-      alert('Username can only contain letters, numbers, and underscores');
+      showToast.error('Username can only contain letters, numbers, and underscores');
       return;
     }
 
@@ -116,7 +119,7 @@ const Register: React.FC = () => {
       // Check username availability
       const isAvailable = await checkUsernameAvailability(formData.username);
       if (!isAvailable) {
-        alert('Username is already taken. Please choose another one.');
+        showToast.error('Username is already taken. Please choose another one.');
         setLoading(false);
         return;
       }
@@ -124,10 +127,10 @@ const Register: React.FC = () => {
       await signUp(formData.email, formData.password, formData.fullName, formData.username);
       
       // Show success message for email confirmation
-      alert('Registration successful! Please check your email to confirm your account.');
+      showToast.success('Account created successfully! Please check your email for verification.');
       navigate('/login');
     } catch (error: any) {
-      alert(error.message);
+      showToast.error(error.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -215,23 +218,43 @@ const Register: React.FC = () => {
                   required
                 />
                 
-                <input
-                  type="password"
-                  placeholder="Password"
-                  value={formData.password}
-                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Password"
+                    value={formData.password}
+                    onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
                 
-                <input
-                  type="password"
-                  placeholder="Confirm Password"
-                  value={formData.confirmPassword}
-                  onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    placeholder="Confirm Password"
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
               </div>
             )}
 

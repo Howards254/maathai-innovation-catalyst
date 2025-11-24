@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Mail, Home, Leaf, ArrowLeft } from 'lucide-react';
+import { showToast } from '../../utils/toast';
 
 const ForgotPassword: React.FC = () => {
   const { resetPassword } = useAuth();
@@ -18,8 +19,11 @@ const ForgotPassword: React.FC = () => {
     try {
       await resetPassword(email);
       setEmailSent(true);
+      showToast.success('Password reset link sent to your email');
     } catch (error: any) {
-      setError(error.message || 'An error occurred while sending the reset email');
+      const errorMessage = error.message || 'An error occurred while sending the reset email';
+      setError(errorMessage);
+      showToast.error(errorMessage);
     } finally {
       setLoading(false);
     }

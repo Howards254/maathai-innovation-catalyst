@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCampaigns } from '../../contexts/CampaignContext';
+import { showToast } from '../../utils/toast';
 
 const CreateCampaign: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -35,9 +36,12 @@ const CreateCampaign: React.FC = () => {
       };
       
       await createCampaign(campaignData);
+      showToast.success('Campaign created successfully!');
       navigate('/app/campaigns');
-    } catch (err) {
-      setError('Failed to create campaign. Please try again.');
+    } catch (err: any) {
+      const errorMessage = err?.message || 'Failed to create campaign. Please try again.';
+      setError(errorMessage);
+      showToast.error(errorMessage);
     } finally {
       setLoading(false);
     }

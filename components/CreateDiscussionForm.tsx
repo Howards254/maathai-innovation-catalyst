@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useDiscussions } from '../contexts/DiscussionContext';
 import { Image, Video, Smile, X } from 'lucide-react';
+import { showToast } from '../utils/toast';
 
 interface CreateDiscussionFormProps {
   onClose: () => void;
@@ -26,7 +27,7 @@ const CreateDiscussionForm: React.FC<CreateDiscussionFormProps> = ({ onClose }) 
   const handleMediaSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length + mediaFiles.length > 4) {
-      alert('Maximum 4 media files allowed');
+      showToast.warning('Maximum 4 media files allowed');
       return;
     }
 
@@ -63,9 +64,11 @@ const CreateDiscussionForm: React.FC<CreateDiscussionFormProps> = ({ onClose }) 
         mediaUrls: mediaPreviews,
         mediaType: mediaFiles[0]?.type.startsWith('video') ? 'video' : 'image'
       });
+      showToast.success('Discussion post created successfully!');
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create discussion:', error);
+      showToast.error(error?.message || 'Failed to create discussion. Please try again.');
     } finally {
       setLoading(false);
     }

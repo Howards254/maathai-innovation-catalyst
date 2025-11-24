@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEvents } from '../../contexts/EventContext';
+import { showToast } from '../../utils/toast';
 
 const CreateEvent: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -27,9 +28,11 @@ const CreateEvent: React.FC = () => {
         ...formData,
         maxAttendees: formData.maxAttendees ? parseInt(formData.maxAttendees) : undefined
       });
+      showToast.success('Event submitted for review successfully!');
       navigate('/app/events');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create event:', error);
+      showToast.error(error?.message || 'Failed to create event. Please try again.');
     } finally {
       setLoading(false);
     }

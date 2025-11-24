@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useInnovations } from '../../contexts/InnovationContext';
+import { showToast } from '../../utils/toast';
 
 const SubmitInnovation: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -37,9 +38,11 @@ const SubmitInnovation: React.FC = () => {
         fundingGoal: parseInt(formData.fundingGoal),
         tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean)
       });
+      showToast.success('Innovation submitted for review successfully!');
       navigate('/app/innovation');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to submit innovation:', error);
+      showToast.error(error?.message || 'Failed to submit innovation. Please try again.');
     } finally {
       setLoading(false);
     }

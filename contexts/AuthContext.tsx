@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
+import { showToast } from '../utils/toast';
 
 interface AuthContextType {
   user: SupabaseUser | null;
@@ -76,8 +77,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      showToast.success('Logged out successfully');
+    } catch (error: any) {
+      showToast.error(error?.message || 'Failed to sign out');
+      throw error;
+    }
   };
 
   const resetPassword = async (email: string) => {
