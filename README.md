@@ -463,7 +463,7 @@ Inspired by Wangari Maathai's unwavering commitment to environmental conservatio
 
 - 🌐 **Live Demo**: (https://maathai-innovation-catalyst.vercel.app/)
 - 📹 **Video Demo**: [Watch on YouTube](#)
--    **Pitch Deck** [Pitch-deck-Slides] (https://www.canva.com/design/DAG5njvksBg/y_1nsse2Sj-ONcM9W6u7BA)
+-    **Pitch Deck** [Pitch-deck-Slides] (https://trail.canva.com/CL0/https:%2F%2Fwww.canva.com%2Flogin%2Fswitch%3Fbrand=BAE2PzD1c-g%26redirect=%252Fdesign%252FDAG5njvksBg%252Fy_1nsse2Sj-ONcM9W6u7BA%252Fedit/2/0100019ab736ea2b-9f8136e7-a871-4a5e-9431-2ae00d9c3e97-000000/N309_w1ahXIoB_3KsaA6YNW6bnsBntmfjH3oAnsl7rw=432)
 
 
 ---
