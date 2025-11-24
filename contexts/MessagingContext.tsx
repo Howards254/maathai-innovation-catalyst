@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 
+let heartbeatInterval: NodeJS.Timeout | null = null;
+
 interface Message {
   id: string;
   conversation_id: string;
@@ -56,10 +58,35 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   useEffect(() => {
     if (user) {
       loadConversations();
+      setOnlineStatus(true);
+      startHeartbeat();
       const unsub = subscribeToMessages();
-      return unsub;
+      return () => {
+        setOnlineStatus(false);
+        stopHeartbeat();
+        unsub();
+      };
     }
   }, [user]);
+
+  const setOnlineStatus = async (online: boolean) => {
+    if (!user) return;
+    await supabase.rpc('update_online_status', { user_id: user.id, online });
+  };
+
+  const startHeartbeat = () => {
+    if (heartbeatInterval) return;
+    heartbeatInterval = setInterval(() => {
+      if (user) setOnlineStatus(true);
+    }, 30000);
+  };
+
+  const stopHeartbeat = () => {
+    if (heartbeatInterval) {
+      clearInterval(heartbeatInterval);
+      heartbeatInterval = null;
+    }
+  };
 
   const loadConversations = async () => {
     if (!user) return;
