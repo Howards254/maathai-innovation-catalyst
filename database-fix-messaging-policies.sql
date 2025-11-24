@@ -1,13 +1,22 @@
 -- Fix infinite recursion in conversation_participants policies
 
--- Drop all existing policies
+-- Drop ALL existing policies on these tables
 DROP POLICY IF EXISTS "Users can view their conversations" ON conversation_participants;
 DROP POLICY IF EXISTS "Users can join conversations" ON conversation_participants;
 DROP POLICY IF EXISTS "Users can update their participation" ON conversation_participants;
+DROP POLICY IF EXISTS "Users can view their own participation" ON conversation_participants;
+DROP POLICY IF EXISTS "Users can insert their own participation" ON conversation_participants;
+
 DROP POLICY IF EXISTS "Users can view conversations they participate in" ON conversations;
 DROP POLICY IF EXISTS "Users can create conversations" ON conversations;
+DROP POLICY IF EXISTS "Users can update their conversations" ON conversations;
+DROP POLICY IF EXISTS "Users can view their conversations" ON conversations;
+
 DROP POLICY IF EXISTS "Users can view messages in their conversations" ON messages;
 DROP POLICY IF EXISTS "Users can send messages" ON messages;
+DROP POLICY IF EXISTS "Users can send messages to their conversations" ON messages;
+DROP POLICY IF EXISTS "Users can update their own messages" ON messages;
+DROP POLICY IF EXISTS "Users can delete their own messages" ON messages;
 
 -- Conversation participants policies (simple, no recursion)
 CREATE POLICY "Users can view their own participation"
