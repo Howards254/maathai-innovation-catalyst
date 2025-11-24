@@ -277,23 +277,6 @@ VITE_SUPABASE_ANON_KEY=your-anon-key-here
 - Test user registration and login
 - Verify all features work in production
 
-## 📊 Impact & Statistics
-
-<div align="center">
-
-| Metric | Count | Description |
-|--------|-------|-------------|
-| 🌳 **Trees Planted** | 1.2M+ | Across global campaigns |
-| 👥 **Active Members** | 50K+ | Engaged community |
-| 🎯 **Active Campaigns** | 850+ | Worldwide initiatives |
-| 🌍 **Countries** | 120+ | Global reach |
-| 💬 **Discussions** | 10K+ | Community conversations |
-| 📅 **Events Hosted** | 2K+ | Environmental meetups |
-| 🏆 **Badges Earned** | 75K+ | User achievements |
-| 💚 **Friendships Made** | 25K+ | Green connections |
-
-</div>
-
 ## 🔒 Security & Performance
 
 - Supabase Row Level Security (RLS) enabled
@@ -393,35 +376,30 @@ GreenVerse modernizes Maathai's vision for the digital age:
 <table>
   <tr>
     <td align="center">
-      <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=member1" width="150px" alt="Team Member 1"/><br />
-      <b>Team Member 1</b><br />
-      <i>Full Stack Developer</i><br />
-      <a href="https://github.com/member1">GitHub</a> • <a href="https://linkedin.com/in/member1">LinkedIn</a>
+      <b>Karol Howards</b><br />
+      <i>Lead Developer</i><br />
+      <a href="https://github.com/howards254">GitHub</a>
     </td>
     <td align="center">
-      <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=member2" width="150px" alt="Team Member 2"/><br />
-      <b>Team Member 2</b><br />
-      <i>UI/UX Designer</i><br />
+      <b>Amos Oluoch</b><br />
+      <i>Software Engineer</i><br />
       <a href="https://github.com/member2">GitHub</a> • <a href="https://linkedin.com/in/member2">LinkedIn</a>
     </td>
     <td align="center">
-      <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=member3" width="150px" alt="Team Member 3"/><br />
-      <b>Team Member 3</b><br />
-      <i>Backend Engineer</i><br />
+      <b>Boniface Thuo</b><br />
+      <i>Product Manager</i><br />
       <a href="https://github.com/member3">GitHub</a> • <a href="https://linkedin.com/in/member3">LinkedIn</a>
     </td>
   </tr>
   <tr>
     <td align="center">
-      <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=member4" width="150px" alt="Team Member 4"/><br />
-      <b>Team Member 4</b><br />
-      <i>Data Scientist</i><br />
+      <b>Basil Odango</b><br />
+      <i>Data Engineer</i><br />
       <a href="https://github.com/member4">GitHub</a> • <a href="https://linkedin.com/in/member4">LinkedIn</a>
     </td>
     <td align="center">
-      <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=member5" width="150px" alt="Team Member 5"/><br />
-      <b>Team Member 5</b><br />
-      <i>Product Manager</i><br />
+      <b>Brandon Umtiti</b><br />
+      <i>Data Engineer</i><br />
       <a href="https://github.com/member5">GitHub</a> • <a href="https://linkedin.com/in/member5">LinkedIn</a>
     </td>
     <td></td>
@@ -483,10 +461,9 @@ Inspired by Wangari Maathai's unwavering commitment to environmental conservatio
 
 ### Demo & Resources
 
-- 🌐 **Live Demo**: [greenverse.vercel.app](https://your-demo-url.vercel.app)
-- 📹 **Video Demo**: [Watch on YouTube](https://youtube.com/your-demo)
-- 📊 **Pitch Deck**: [View Presentation](https://your-pitch-deck-url)
-- 📱 **Mobile Demo**: Scan QR code below
+- 🌐 **Live Demo**: (https://maathai-innovation-catalyst.vercel.app/)
+- 📹 **Video Demo**: [Watch on YouTube](#)
+
 
 ---
 
@@ -494,15 +471,12 @@ Inspired by Wangari Maathai's unwavering commitment to environmental conservatio
 
 - **Wangari Maathai** - For inspiring generations to take environmental action
 - **Green Belt Movement** - For 40+ years of environmental conservation
-- **Hackathon Organizers** - For creating this opportunity
+- **Hackathon Organizers (GreenBelt Movement, Wangari Maathai Foundation, AntuGrow, Adamur, Amnesty International, Alliance Francaise)** - For creating this opportunity
 - **Open Source Community** - For the amazing tools and libraries
 - **Our Families** - For supporting our late-night coding sessions
 
 ---
 
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
@@ -514,6 +488,6 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 **"Until you dig a hole, you plant a tree, you water it and make it survive, you haven't done a thing. You are just talking."** — Wangari Maathai
 
-[⭐ Star this repo](https://github.com/howards254/greenverse) • [🐛 Report Bug](https://github.com/howards254/greenverse/issues) • [💡 Request Feature](https://github.com/howards254/greenverse/issues)
+[⭐ Star this repo](https://github.com/howards254/maathai-innovation-catalyst) • [🐛 Report Bug](https://github.com/howards254/maathai-innovation-catalyst/issues) • [💡 Request Feature](https://github.com/howards254/maathai-innovation-catalyst/issues)
 
 </div>
