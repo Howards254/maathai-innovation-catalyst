@@ -44,24 +44,38 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const loadNotifications = async () => {
     if (!user) return;
 
-    const { data } = await supabase
-      .from('notifications')
-      .select('*, from_user:profiles!notifications_from_user_id_fkey(full_name, avatar_url)')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(20);
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*, from_user:profiles!notifications_from_user_id_fkey(full_name, avatar_url)')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(20);
 
-    if (data) setNotifications(data);
+      if (error) {
+        console.log('Notifications table not found, skipping...');
+        return;
+      }
+
+      if (data) setNotifications(data);
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+    }
   };
 
   const subscribeToNotifications = () => {
-    return supabase
-      .channel('notifications')
-      .on('postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user?.id}` },
-        () => loadNotifications()
-      )
-      .subscribe();
+    try {
+      return supabase
+        .channel('notifications')
+        .on('postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user?.id}` },
+          () => loadNotifications()
+        )
+        .subscribe();
+    } catch (error) {
+      console.log('Could not subscribe to notifications');
+      return { unsubscribe: () => {} };
+    }
   };
 
   const markAsRead = async (id: string) => {

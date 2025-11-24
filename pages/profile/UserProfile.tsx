@@ -22,11 +22,22 @@ const UserProfile: React.FC = () => {
   const loadProfile = async () => {
     setLoading(true);
     try {
-      const { data } = await supabase
+      // Try with user_badges first
+      let { data, error } = await supabase
         .from('profiles')
         .select('*, user_badges(badge_name, earned_at)')
         .eq('username', username)
         .single();
+      
+      // If user_badges table doesn't exist, try without it
+      if (error && error.message?.includes('user_badges')) {
+        const result = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('username', username)
+          .single();
+        data = result.data;
+      }
       
       if (data) {
         setUser({
