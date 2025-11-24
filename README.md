@@ -23,37 +23,6 @@ GreenVerse is not just another environmental platform—it's a **social network 
 
 Inspired by Nobel Peace Prize winner Wangari Maathai's Green Belt Movement, GreenVerse empowers individuals and communities to take environmental action while building lasting connections with like-minded eco-warriors worldwide.
 
-## 📸 Platform Screenshots
-
-<div align="center">
-
-### Landing Page - Modern & Engaging
-![Landing Page](https://drive.google.com/file/d/15BYeZIROrQzrILSluJqa2FEK2JBNN9Bo/view?usp=drive_link)
-
-### Social Features - Connect & Share
-<table>
-  <tr>
-    <td><img src="https://via.placeholder.com/400x300/3b82f6/ffffff?text=Direct+Messaging" alt="Messaging"/></td>
-    <td><img src="https://via.placeholder.com/400x300/8b5cf6/ffffff?text=Stories+%26+Reels" alt="Stories"/></td>
-  </tr>
-  <tr>
-    <td><img src="https://via.placeholder.com/400x300/ec4899/ffffff?text=Green+Matchmaking" alt="Matchmaking"/></td>
-    <td><img src="https://via.placeholder.com/400x300/f59e0b/ffffff?text=Notifications" alt="Notifications"/></td>
-  </tr>
-</table>
-
-### Environmental Action - Make Impact
-<table>
-  <tr>
-    <td><img src="https://via.placeholder.com/400x300/10b981/ffffff?text=Tree+Campaigns" alt="Campaigns"/></td>
-    <td><img src="https://via.placeholder.com/400x300/06b6d4/ffffff?text=Impact+Dashboard" alt="Dashboard"/></td>
-  </tr>
-</table>
-
-</div>
-
----
-
 ## ✨ Core Features
 
 ### 🌐 **Social Features** - *Connect with Purpose*
