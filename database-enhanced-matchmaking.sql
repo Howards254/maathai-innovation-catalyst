@@ -1,6 +1,6 @@
--- Enhanced Green Matchmaking
+-- Enhanced Green Matchmaking - Safe Migration
 
--- 1. Add location and interests to profiles if missing
+-- 1. Add columns to profiles
 DO $$ 
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='location') THEN
@@ -20,7 +20,10 @@ BEGIN
   END IF;
 END $$;
 
--- 2. Function to find matches based on interests, location, and goals
+-- 2. Drop old function
+DROP FUNCTION IF EXISTS find_green_matches(UUID, INTEGER, INTEGER, INTEGER) CASCADE;
+
+-- 3. Create matching function
 CREATE OR REPLACE FUNCTION find_green_matches(
   user_id UUID,
   max_distance_km INTEGER DEFAULT 50,
@@ -41,9 +44,13 @@ RETURNS TABLE (
 BEGIN
   RETURN QUERY
   WITH user_data AS (
-    SELECT interests, environmental_goals, latitude, longitude
-    FROM profiles
-    WHERE id = user_id
+    SELECT 
+      COALESCE(p.interests, ARRAY[]::TEXT[]) as interests, 
+      COALESCE(p.environmental_goals, ARRAY[]::TEXT[]) as environmental_goals, 
+      p.latitude, 
+      p.longitude
+    FROM profiles p
+    WHERE p.id = user_id
   ),
   potential_matches AS (
     SELECT 
@@ -52,18 +59,18 @@ BEGIN
       p.avatar_url,
       p.bio,
       p.location,
-      p.interests,
-      p.environmental_goals,
+      COALESCE(p.interests, ARRAY[]::TEXT[]) as interests,
+      COALESCE(p.environmental_goals, ARRAY[]::TEXT[]) as environmental_goals,
       p.latitude,
       p.longitude,
       (
-        SELECT COUNT(*)
-        FROM unnest(p.interests) AS interest
+        SELECT COUNT(*)::INTEGER
+        FROM unnest(COALESCE(p.interests, ARRAY[]::TEXT[])) AS interest
         WHERE interest = ANY((SELECT interests FROM user_data))
       ) AS shared_interests_count,
       (
-        SELECT COUNT(*)
-        FROM unnest(p.environmental_goals) AS goal
+        SELECT COUNT(*)::INTEGER
+        FROM unnest(COALESCE(p.environmental_goals, ARRAY[]::TEXT[])) AS goal
         WHERE goal = ANY((SELECT environmental_goals FROM user_data))
       ) AS shared_goals_count,
       CASE 
@@ -82,7 +89,7 @@ BEGIN
       END AS distance
     FROM profiles p
     WHERE p.id != user_id
-      AND p.id NOT IN (SELECT following_id FROM follows WHERE follower_id = user_id)
+      AND NOT EXISTS (SELECT 1 FROM follows WHERE follower_id = user_id AND following_id = p.id)
   )
   SELECT 
     pm.id,
@@ -90,8 +97,8 @@ BEGIN
     pm.avatar_url,
     pm.bio,
     pm.location,
-    pm.shared_interests_count::INTEGER,
-    pm.shared_goals_count::INTEGER,
+    pm.shared_interests_count,
+    pm.shared_goals_count,
     pm.distance,
     (pm.shared_interests_count * 10 + pm.shared_goals_count * 15 + 
      CASE WHEN pm.distance IS NOT NULL AND pm.distance <= max_distance_km THEN 20 ELSE 0 END)::INTEGER AS score

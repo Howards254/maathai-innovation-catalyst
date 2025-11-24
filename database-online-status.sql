@@ -1,6 +1,6 @@
--- Online Status and Read Receipts
+-- Online Status and Read Receipts - Safe Migration
 
--- 1. Add online status to profiles
+-- 1. Add online status columns to profiles
 DO $$ 
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='profiles' AND column_name='is_online') THEN
@@ -11,7 +11,12 @@ BEGIN
   END IF;
 END $$;
 
--- 2. Function to update online status
+-- 2. Drop old functions
+DROP FUNCTION IF EXISTS update_online_status(UUID, BOOLEAN) CASCADE;
+DROP FUNCTION IF EXISTS increment_unread_count() CASCADE;
+DROP TRIGGER IF EXISTS increment_unread_on_message ON messages;
+
+-- 3. Create update online status function
 CREATE OR REPLACE FUNCTION update_online_status(user_id UUID, online BOOLEAN)
 RETURNS VOID AS $$
 BEGIN
@@ -21,20 +26,21 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 3. Function to update unread count
+-- 4. Create increment unread function
 CREATE OR REPLACE FUNCTION increment_unread_count()
 RETURNS TRIGGER AS $$
 BEGIN
-  UPDATE conversation_participants
-  SET unread_count = unread_count + 1
-  WHERE conversation_id = NEW.conversation_id
-    AND user_id != NEW.sender_id;
+  IF NEW.conversation_id IS NOT NULL THEN
+    UPDATE conversation_participants
+    SET unread_count = unread_count + 1
+    WHERE conversation_id = NEW.conversation_id
+      AND user_id != NEW.sender_id;
+  END IF;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- 4. Trigger to increment unread on new message
-DROP TRIGGER IF EXISTS increment_unread_on_message ON messages;
+-- 5. Create trigger
 CREATE TRIGGER increment_unread_on_message
   AFTER INSERT ON messages
   FOR EACH ROW
