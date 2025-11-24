@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Innovation, InnovationHubSettings } from '../types';
 import { useAuth } from './AuthContext';
-// import { useUsers } from './UserContext';
+import { useUsers } from './UserContext';
 
 interface InnovationContextType {
   innovations: Innovation[];
@@ -42,7 +42,7 @@ export const InnovationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   });
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  // const { awardPoints } = useUsers();
+  const { awardPoints } = useUsers();
 
   useEffect(() => {
     const saved = localStorage.getItem('innovations');

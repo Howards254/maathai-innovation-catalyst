@@ -1,37 +1,29 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { Event } from '../types';
 import { useAuth } from './AuthContext';
-
-interface Event {
-  id: string;
-  title: string;
-  description: string;
-  event_date: string;
-  location: string;
-  type: string;
-  image_url?: string;
-  organizer_id: string;
-  organizer?: { full_name: string; avatar_url: string };
-  max_attendees?: number;
-  status: string;
-  attendees?: any[];
-  created_at: string;
-}
+import { useUsers } from './UserContext';
+import { getEventImage } from '../utils/imageUtils';
 
 interface EventContextType {
   events: Event[];
   loading: boolean;
-  createEvent: (data: any) => Promise<void>;
+  createEvent: (event: Omit<Event, 'id' | 'organizerId' | 'organizerName' | 'status' | 'createdAt' | 'attendees'>) => Promise<void>;
   rsvpEvent: (eventId: string) => Promise<void>;
   unrsvpEvent: (eventId: string) => Promise<void>;
+  approveEvent: (eventId: string) => Promise<void>;
+  rejectEvent: (eventId: string) => Promise<void>;
   getEvent: (id: string) => Event | undefined;
+  getApprovedEvents: () => Event[];
+  getPendingEvents: () => Event[];
 }
 
 const EventContext = createContext<EventContextType | undefined>(undefined);
 
 export const useEvents = () => {
   const context = useContext(EventContext);
-  if (!context) throw new Error('useEvents must be used within EventProvider');
+  if (!context) {
+    throw new Error('useEvents must be used within EventProvider');
+  }
   return context;
 };
 
@@ -39,109 +31,114 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { awardPoints } = useUsers();
 
   useEffect(() => {
-    loadEvents();
-  }, [user]);
-
-  const loadEvents = async () => {
-    try {
-      const { data } = await supabase
-        .from('events')
-        .select(`
-          *,
-          organizer:profiles!events_organizer_id_fkey(full_name, avatar_url),
-          attendees:event_attendees(user_id)
-        `)
-        .order('event_date', { ascending: true });
-
-      setEvents(data || []);
-    } catch (error) {
-      console.error('Error loading events:', error);
+    const saved = localStorage.getItem('events');
+    if (saved) {
+      setEvents(JSON.parse(saved));
+    } else {
       setEvents([]);
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
+  }, []);
+
+  const saveEvents = (newEvents: Event[]) => {
+    setEvents(newEvents);
+    localStorage.setItem('events', JSON.stringify(newEvents));
   };
 
-  const createEvent = async (eventData: any) => {
+  const createEvent = async (eventData: Omit<Event, 'id' | 'organizerId' | 'organizerName' | 'status' | 'createdAt' | 'attendees'>) => {
     if (!user) return;
 
-    try {
-      await supabase
-        .from('events')
-        .insert({
-          title: eventData.title,
-          description: eventData.description,
-          event_date: eventData.date,
-          location: eventData.location,
-          type: eventData.type,
-          image_url: eventData.imageUrl,
-          organizer_id: user.id,
-          max_attendees: eventData.maxAttendees,
-          status: 'approved'
-        });
+    const eventId = `e${Date.now()}`;
+    const newEvent: Event = {
+      ...eventData,
+      id: eventId,
+      imageUrl: eventData.imageUrl || getEventImage(eventId),
+      organizerId: user.id,
+      organizerName: user.fullName,
+      status: 'pending',
+      attendees: [],
+      createdAt: new Date().toISOString()
+    };
 
-      await loadEvents();
-    } catch (error) {
-      console.error('Error creating event:', error);
-    }
+    const newEvents = [...events, newEvent];
+    saveEvents(newEvents);
   };
 
   const rsvpEvent = async (eventId: string) => {
     if (!user) return;
 
-    try {
-      await supabase
-        .from('event_attendees')
-        .insert({ event_id: eventId, user_id: user.id, rsvp_status: 'going' });
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('impact_points')
-        .eq('id', user.id)
-        .single();
-
-      if (profile) {
-        await supabase
-          .from('profiles')
-          .update({ impact_points: profile.impact_points + 15 })
-          .eq('id', user.id);
+    const newEvents = events.map(event => {
+      if (event.id === eventId && !event.attendees.includes(user.id)) {
+        return { ...event, attendees: [...event.attendees, user.id] };
       }
-
-      await loadEvents();
-    } catch (error) {
-      console.error('Error RSVPing:', error);
-    }
+      return event;
+    });
+    
+    saveEvents(newEvents);
+    awardPoints(user.id, 15, 'event_rsvp');
   };
 
   const unrsvpEvent = async (eventId: string) => {
     if (!user) return;
 
-    try {
-      await supabase
-        .from('event_attendees')
-        .delete()
-        .eq('event_id', eventId)
-        .eq('user_id', user.id);
-
-      await loadEvents();
-    } catch (error) {
-      console.error('Error un-RSVPing:', error);
-    }
+    const newEvents = events.map(event => {
+      if (event.id === eventId) {
+        return { ...event, attendees: event.attendees.filter(id => id !== user.id) };
+      }
+      return event;
+    });
+    
+    saveEvents(newEvents);
   };
 
-  const getEvent = (id: string) => events.find(e => e.id === id);
+  const approveEvent = async (eventId: string) => {
+    const newEvents = events.map(event =>
+      event.id === eventId
+        ? { ...event, status: 'approved' as const }
+        : event
+    );
+    saveEvents(newEvents);
+  };
+
+  const rejectEvent = async (eventId: string) => {
+    const newEvents = events.map(event =>
+      event.id === eventId
+        ? { ...event, status: 'rejected' as const }
+        : event
+    );
+    saveEvents(newEvents);
+  };
+
+  const getEvent = (id: string) => {
+    return events.find(event => event.id === id);
+  };
+
+  const getApprovedEvents = () => {
+    return events.filter(event => event.status === 'approved');
+  };
+
+  const getPendingEvents = () => {
+    return events.filter(event => event.status === 'pending');
+  };
+
+  const value = {
+    events,
+    loading,
+    createEvent,
+    rsvpEvent,
+    unrsvpEvent,
+    approveEvent,
+    rejectEvent,
+    getEvent,
+    getApprovedEvents,
+    getPendingEvents
+  };
 
   return (
-    <EventContext.Provider value={{
-      events,
-      loading,
-      createEvent,
-      rsvpEvent,
-      unrsvpEvent,
-      getEvent
-    }}>
+    <EventContext.Provider value={value}>
       {children}
     </EventContext.Provider>
   );
