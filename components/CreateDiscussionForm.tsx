@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useDiscussions } from '../contexts/DiscussionContext';
 import { Image, Video, Smile, X } from 'lucide-react';
-import { uploadDiscussionMedia } from '../lib/uploadMedia';
+import { uploadMedia } from '../lib/uploadMedia';
 
 interface CreateDiscussionFormProps {
   onClose: () => void;
@@ -62,7 +62,7 @@ const CreateDiscussionForm: React.FC<CreateDiscussionFormProps> = ({ onClose }) 
       // Upload media files to Supabase Storage
       const uploadedUrls: string[] = [];
       for (const file of mediaFiles) {
-        const url = await uploadDiscussionMedia(file);
+        const url = await uploadMedia(file, 'discussions');
         uploadedUrls.push(url);
       }
       

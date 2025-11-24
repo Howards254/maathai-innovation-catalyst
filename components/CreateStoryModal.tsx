@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { X, Upload, Camera, Video, Image, MapPin, Hash } from 'lucide-react';
-import { uploadStoryMedia } from '../lib/cloudinaryClient';
+import { uploadMedia } from '../lib/uploadMedia';
 import { useStories } from '../contexts/StoriesContext';
 
 interface CreateStoryModalProps {
@@ -67,7 +67,7 @@ const CreateStoryModal = ({ isOpen, onClose }: CreateStoryModalProps) => {
     try {
       // Upload to Cloudinary
       setUploadProgress(50);
-      const uploadResult = await uploadStoryMedia(file);
+      const mediaUrl = await uploadMedia(file, 'stories');
       
       setUploadProgress(80);
       
@@ -77,7 +77,7 @@ const CreateStoryModal = ({ isOpen, onClose }: CreateStoryModalProps) => {
       await createStory({
         title: title.trim(),
         description: description.trim() || undefined,
-        media_url: uploadResult.url,
+        media_url: mediaUrl,
         media_type: file.type.startsWith('video/') ? 'video' : 'image',
         duration: file.type.startsWith('video/') ? undefined : undefined, // Will be set by Cloudinary
         story_type: storyType,

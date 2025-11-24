@@ -5,16 +5,24 @@ import { useUser } from './UserContext';
 interface Story {
   id: string;
   user_id: string;
-  story_type: 'image' | 'video';
+  title: string;
+  description?: string;
   media_url: string;
-  caption: string;
+  media_type: 'image' | 'video';
+  duration?: number;
+  story_type: 'tree_planting' | 'campaign_progress' | 'event' | 'education' | 'cleanup' | 'general';
   location?: string;
+  tags?: string[];
+  view_count: number;
   created_at: string;
-  user?: {
+  author?: {
     id: string;
     full_name: string;
+    username: string;
     avatar_url?: string;
   };
+  reactions?: any[];
+  comments?: any[];
 }
 
 interface StoriesContextType {
@@ -32,13 +40,32 @@ export const StoriesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Stories feature disabled - no loading
-  }, [user]);
+    if (user?.id && user.id !== 'user-1') {
+      loadStories();
+    }
+  }, [user?.id]);
 
   const loadStories = async () => {
-    // Disabled until stories table is properly set up
-    setLoading(false);
-    setStories([]);
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('stories')
+        .select(`
+          *,
+          author:profiles!stories_user_id_fkey(id, full_name, username, avatar_url),
+          reactions:story_reactions(id, user_id, reaction_type),
+          comments:story_comments(id, user_id, content)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setStories(data || []);
+    } catch (error) {
+      console.error('Error loading stories:', error);
+      setStories([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const createStory = async (storyData: Partial<Story>) => {
@@ -48,19 +75,27 @@ export const StoriesProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const { data, error } = await supabase
         .from('stories')
         .insert({
-          ...storyData,
-          user_id: user.id
+          user_id: user.id,
+          title: storyData.title,
+          description: storyData.description,
+          media_url: storyData.media_url,
+          media_type: storyData.media_type,
+          duration: storyData.duration,
+          story_type: storyData.story_type || 'general',
+          location: storyData.location,
+          tags: storyData.tags
         })
         .select(`
           *,
-          user:profiles!stories_user_id_fkey(id, full_name, avatar_url)
+          author:profiles!stories_user_id_fkey(id, full_name, username, avatar_url)
         `)
         .single();
 
       if (error) throw error;
-      setStories(prev => [data, ...prev]);
+      await loadStories();
     } catch (error) {
       console.error('Error creating story:', error);
+      throw error;
     }
   };
 
