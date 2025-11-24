@@ -5,6 +5,7 @@ import { useDiscussions } from '../contexts/DiscussionContext';
 import { useUser } from '../contexts/UserContext';
 import { Play, ThumbsUp, Camera } from 'lucide-react';
 import CreateStoryModal from '../components/CreateStoryModal';
+import SuggestedUsers from '../components/SuggestedUsers';
 
 const Dashboard: React.FC = () => {
   const { campaigns, loading: campaignsLoading } = useCampaigns();
@@ -82,7 +83,9 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="p-4 space-y-6">
+        <div className="p-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Main Content */}
+            <div className="lg:col-span-2 space-y-6">
             {/* Featured Campaigns */}
             <div>
                 <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -334,6 +337,12 @@ const Dashboard: React.FC = () => {
                         </div>
                     )}
                 </div>
+            </div>
+            </div>
+            
+            {/* Sidebar */}
+            <div className="space-y-6">
+                <SuggestedUsers />
             </div>
         </div>
         

@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useUsers } from '../../contexts/UserContext';
 import { useAuth } from '../../contexts/AuthContext';
 import ActivityFeed from '../../components/ActivityFeed';
+import FollowButton from '../../components/FollowButton';
 
 const UserProfile: React.FC = () => {
   const { username } = useParams();
@@ -101,7 +102,7 @@ const UserProfile: React.FC = () => {
                             </button>
                         )
                     ) : (
-                        <button className="px-6 py-2 bg-primary-600 text-white font-bold rounded-full hover:bg-primary-700 transition-colors shadow-sm">Follow</button>
+                        <FollowButton userId={user.id} />
                     )}
                 </div>
             </div>

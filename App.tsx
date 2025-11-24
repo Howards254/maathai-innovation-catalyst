@@ -15,6 +15,7 @@ import { GroupsProvider } from './contexts/GroupsContext';
 import { LiveStreamProvider } from './contexts/LiveStreamContext';
 import { ActivityFeedProvider } from './contexts/ActivityFeedContext';
 import { MatchmakingProvider } from './contexts/MatchmakingContext';
+import { FollowProvider } from './contexts/FollowContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Layouts
@@ -85,6 +86,7 @@ const App: React.FC = () => {
                         <LiveStreamProvider>
                           <ActivityFeedProvider>
                             <MatchmakingProvider>
+                              <FollowProvider>
                 <HashRouter>
       <Routes>
         {/* Public Routes */}
@@ -151,6 +153,7 @@ const App: React.FC = () => {
         </Route>
       </Routes>
           </HashRouter>
+                              </FollowProvider>
                             </MatchmakingProvider>
                           </ActivityFeedProvider>
                         </LiveStreamProvider>
