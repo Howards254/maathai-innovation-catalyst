@@ -8,7 +8,17 @@ export default defineConfig(({ mode }) => {
       server: {
         port: 3000,
         host: '0.0.0.0',
+        // Add history API fallback for BrowserRouter
+        proxy: {
+          '/api': 'http://localhost:3000'
+        }
       },
+      // Support client-side routing with BrowserRouter
+      preview: {
+        port: 3000,
+        host: '0.0.0.0',
+      },
+      base: '/',
       plugins: [react()],
       define: {
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),

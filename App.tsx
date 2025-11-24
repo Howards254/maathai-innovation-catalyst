@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { HashRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import ScrollToTop from './components/ScrollToTop';
 import ErrorBoundary from './components/ErrorBoundary';
 import { clearOldDataOnce } from './utils/clearStorage';
@@ -88,7 +88,7 @@ const App: React.FC = () => {
                         <LiveStreamProvider>
                           <ActivityFeedProvider>
                             <MatchmakingProvider>
-                <HashRouter>
+                <BrowserRouter>
                   <ScrollToTop />
                   <Routes>
         {/* Public Routes */}
@@ -156,7 +156,7 @@ const App: React.FC = () => {
           <Route path="marketplace" element={<Placeholder title="Tree Exchange Marketplace" />} />
         </Route>
       </Routes>
-          </HashRouter>
+          </BrowserRouter>
                             </MatchmakingProvider>
                           </ActivityFeedProvider>
                         </LiveStreamProvider>
