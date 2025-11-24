@@ -58,10 +58,8 @@ export const CampaignProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const { user } = useAuth();
 
   useEffect(() => {
-    if (user) {
-      loadCampaigns();
-      loadSubmissions();
-    }
+    loadCampaigns();
+    loadSubmissions();
   }, [user]);
 
   const loadCampaigns = async () => {
@@ -74,6 +72,7 @@ export const CampaignProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setCampaigns(data || []);
     } catch (error) {
       console.error('Error loading campaigns:', error);
+      setCampaigns([]);
     } finally {
       setLoading(false);
     }
@@ -89,6 +88,7 @@ export const CampaignProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setSubmissions(data || []);
     } catch (error) {
       console.error('Error loading submissions:', error);
+      setSubmissions([]);
     }
   };
 

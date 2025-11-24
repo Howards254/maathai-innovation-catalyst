@@ -41,7 +41,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const { user } = useAuth();
 
   useEffect(() => {
-    if (user) loadEvents();
+    loadEvents();
   }, [user]);
 
   const loadEvents = async () => {
@@ -58,6 +58,7 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setEvents(data || []);
     } catch (error) {
       console.error('Error loading events:', error);
+      setEvents([]);
     } finally {
       setLoading(false);
     }

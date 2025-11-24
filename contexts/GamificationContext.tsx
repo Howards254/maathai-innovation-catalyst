@@ -47,11 +47,11 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const { user } = useAuth();
 
   useEffect(() => {
+    loadBadges();
     if (user) {
-      loadBadges();
       loadUserBadges();
-      loadLeaderboard();
     }
+    loadLeaderboard();
   }, [user]);
 
   const loadBadges = async () => {
@@ -64,11 +64,16 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setBadges(data || []);
     } catch (error) {
       console.error('Error loading badges:', error);
+      setBadges([]);
     }
   };
 
   const loadUserBadges = async () => {
-    if (!user) return;
+    if (!user) {
+      setUserBadges([]);
+      setLoading(false);
+      return;
+    }
 
     try {
       const { data } = await supabase
@@ -80,6 +85,7 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setUserBadges(data || []);
     } catch (error) {
       console.error('Error loading user badges:', error);
+      setUserBadges([]);
     } finally {
       setLoading(false);
     }
@@ -101,6 +107,7 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       setLeaderboard(ranked);
     } catch (error) {
       console.error('Error loading leaderboard:', error);
+      setLeaderboard([]);
     }
   };
 
