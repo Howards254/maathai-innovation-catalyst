@@ -87,6 +87,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loadUsers();
   }, []);
 
+  useEffect(() => {
+    // Reload users when current user changes
+    if (currentUser) {
+      loadUsers();
+    }
+  }, [currentUser]);
+
   const loadUsers = async () => {
     try {
       const { data, error } = await supabase

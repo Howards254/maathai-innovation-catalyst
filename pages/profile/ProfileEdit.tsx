@@ -87,7 +87,20 @@ const ProfileEdit: React.FC = () => {
         }
       }
 
-      await updateProfile(formData);
+      // Update Supabase profiles table
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: formData.fullName,
+          username: formData.username,
+          bio: formData.bio,
+          location: formData.location,
+          website: formData.website
+        })
+        .eq('id', authUser.id);
+      
+      if (error) throw error;
+      
       alert('Profile updated successfully!');
       navigate(`/app/profile/${formData.username}`);
     } catch (error) {

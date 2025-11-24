@@ -1,31 +1,65 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useUsers } from '../../contexts/UserContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../lib/supabase';
 import ActivityFeed from '../../components/ActivityFeed';
 import FollowButton from '../../components/FollowButton';
 
 const UserProfile: React.FC = () => {
   const { username } = useParams();
-  const { users, updateProfile } = useUsers();
+  const { updateProfile } = useUsers();
   const { user: currentUser } = useAuth();
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ fullName: '', bio: '' });
   
-  // Find user and ensure it's a valid User object
-  const foundUser = users.find(u => u.username === username);
-  const user = foundUser || (currentUser ? {
-    id: currentUser.id,
-    username: currentUser.user_metadata?.username || 'user',
-    fullName: currentUser.user_metadata?.full_name || 'User',
-    avatarUrl: currentUser.user_metadata?.avatar_url || 'https://picsum.photos/200',
-    impactPoints: currentUser.user_metadata?.impact_points || 0,
-    badges: currentUser.user_metadata?.badges || [],
-    role: 'user' as const
-  } : null);
+  useEffect(() => {
+    loadProfile();
+  }, [username]);
+
+  const loadProfile = async () => {
+    setLoading(true);
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*, user_badges(badge_name, earned_at)')
+        .eq('username', username)
+        .single();
+      
+      if (data) {
+        setUser({
+          id: data.id,
+          username: data.username,
+          fullName: data.full_name,
+          avatarUrl: data.avatar_url,
+          impactPoints: data.impact_points || 0,
+          bio: data.bio,
+          location: data.location,
+          website: data.website,
+          badges: data.user_badges?.map((b: any) => b.badge_name) || [],
+          role: data.role || 'user'
+        });
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
   
-  const isOwnProfile = currentUser?.user_metadata?.username === username;
+  const isOwnProfile = currentUser?.id === user?.id;
   
+  if (loading) {
+    return (
+      <div className="p-6 text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-4"></div>
+        <p className="text-gray-500">Loading profile...</p>
+      </div>
+    );
+  }
+
   if (!user) {
     return (
       <div className="p-6 text-center">
