@@ -45,19 +45,37 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
+      // First try with the join
+      let { data, error } = await supabase
         .from('notifications')
-        .select('*, from_user:profiles!notifications_from_user_id_fkey(full_name, avatar_url)')
+        .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(20);
 
       if (error) {
-        console.log('Notifications table not found, skipping...');
+        console.log('Notifications table not found, skipping...', error);
         return;
       }
 
-      if (data) setNotifications(data);
+      // Then load user info for each notification
+      if (data) {
+        const enriched = await Promise.all(
+          data.map(async (notif) => {
+            if (notif.from_user_id) {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('full_name, avatar_url')
+                .eq('id', notif.from_user_id)
+                .single();
+              
+              return { ...notif, from_user: profile };
+            }
+            return notif;
+          })
+        );
+        setNotifications(enriched);
+      }
     } catch (error) {
       console.error('Error loading notifications:', error);
     }

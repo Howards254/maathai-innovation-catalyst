@@ -22,21 +22,17 @@ const UserProfile: React.FC = () => {
   const loadProfile = async () => {
     setLoading(true);
     try {
-      // Try with user_badges first
-      let { data, error } = await supabase
+      // Simple query without joins
+      const { data, error } = await supabase
         .from('profiles')
-        .select('*, user_badges(badge_name, earned_at)')
+        .select('*')
         .eq('username', username)
         .single();
       
-      // If user_badges table doesn't exist, try without it
-      if (error && error.message?.includes('user_badges')) {
-        const result = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('username', username)
-          .single();
-        data = result.data;
+      if (error) {
+        console.error('Error loading profile:', error);
+        setLoading(false);
+        return;
       }
       
       if (data) {
@@ -49,7 +45,7 @@ const UserProfile: React.FC = () => {
           bio: data.bio,
           location: data.location,
           website: data.website,
-          badges: data.user_badges?.map((b: any) => b.badge_name) || [],
+          badges: [],
           role: data.role || 'user'
         });
       }
