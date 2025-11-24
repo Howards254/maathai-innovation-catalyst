@@ -95,10 +95,18 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         .from('event_attendees')
         .insert({ event_id: eventId, user_id: user.id, rsvp_status: 'going' });
 
-      await supabase
+      const { data: profile } = await supabase
         .from('profiles')
-        .update({ impact_points: supabase.raw('impact_points + 15') })
-        .eq('id', user.id);
+        .select('impact_points')
+        .eq('id', user.id)
+        .single();
+
+      if (profile) {
+        await supabase
+          .from('profiles')
+          .update({ impact_points: profile.impact_points + 15 })
+          .eq('id', user.id);
+      }
 
       await loadEvents();
     } catch (error) {

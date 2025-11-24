@@ -166,17 +166,31 @@ export const CampaignProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         .update({ status: 'approved', approved_at: new Date().toISOString() })
         .eq('id', submissionId);
 
-      await supabase.rpc('increment', {
-        table_name: 'campaigns',
-        row_id: submission.campaign_id,
-        column_name: 'planted_trees',
-        increment_by: submission.trees_count
-      });
+      const { data: campaign } = await supabase
+        .from('campaigns')
+        .select('planted_trees')
+        .eq('id', submission.campaign_id)
+        .single();
 
-      await supabase
+      if (campaign) {
+        await supabase
+          .from('campaigns')
+          .update({ planted_trees: campaign.planted_trees + submission.trees_count })
+          .eq('id', submission.campaign_id);
+      }
+
+      const { data: profile } = await supabase
         .from('profiles')
-        .update({ impact_points: supabase.raw(`impact_points + ${submission.trees_count * 10}`) })
-        .eq('id', submission.user_id);
+        .select('impact_points')
+        .eq('id', submission.user_id)
+        .single();
+
+      if (profile) {
+        await supabase
+          .from('profiles')
+          .update({ impact_points: profile.impact_points + (submission.trees_count * 10) })
+          .eq('id', submission.user_id);
+      }
 
       await loadSubmissions();
       await loadCampaigns();
