@@ -6,6 +6,7 @@ import { useUser } from '../contexts/UserContext';
 import { Play, ThumbsUp, Camera } from 'lucide-react';
 import CreateStoryModal from '../components/CreateStoryModal';
 import SuggestedUsers from '../components/SuggestedUsers';
+import FriendsActivityFeed from '../components/FriendsActivityFeed';
 
 const Dashboard: React.FC = () => {
   const { campaigns, loading: campaignsLoading } = useCampaigns();
@@ -343,6 +344,7 @@ const Dashboard: React.FC = () => {
             {/* Sidebar */}
             <div className="space-y-6">
                 <SuggestedUsers />
+                <FriendsActivityFeed />
             </div>
         </div>
         
