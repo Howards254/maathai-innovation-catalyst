@@ -20,7 +20,7 @@ DROP FUNCTION IF EXISTS get_friends_activity_feed(UUID, INTEGER) CASCADE;
 CREATE OR REPLACE FUNCTION get_friends_activity_feed(user_id UUID, limit_count INTEGER DEFAULT 50)
 RETURNS TABLE (
   activity_id UUID,
-  user_id UUID,
+  activity_user_id UUID,
   user_name TEXT,
   user_avatar TEXT,
   activity_type TEXT,

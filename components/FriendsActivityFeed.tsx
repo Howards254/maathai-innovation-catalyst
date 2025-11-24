@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 
 interface ActivityItem {
   activity_id: string;
-  user_id: string;
+  activity_user_id: string;
   user_name: string;
   user_avatar: string;
   activity_type: string;
@@ -106,7 +106,7 @@ export default function FriendsActivityFeed() {
           activities.map(activity => (
             <div key={activity.activity_id} className="p-4 hover:bg-gray-50 transition-colors">
               <div className="flex gap-3">
-                <Link to={`/app/profile/${activity.user_id}`}>
+                <Link to={`/app/profile/${activity.activity_user_id}`}>
                   <img
                     src={activity.user_avatar || 'https://via.placeholder.com/40'}
                     alt={activity.user_name}
@@ -117,7 +117,7 @@ export default function FriendsActivityFeed() {
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
                       <Link
-                        to={`/app/profile/${activity.user_id}`}
+                        to={`/app/profile/${activity.activity_user_id}`}
                         className="font-semibold text-gray-900 hover:underline"
                       >
                         {activity.user_name}
