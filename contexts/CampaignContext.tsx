@@ -1,316 +1,217 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Campaign, CampaignUpdate, TreePlantingSubmission } from '../types';
+import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
-import { useUsers } from './UserContext';
-import { getCampaignImage, getOrganizerAvatar } from '../utils/imageUtils';
+
+interface Campaign {
+  id: string;
+  title: string;
+  description: string;
+  target_trees: number;
+  planted_trees: number;
+  image_url: string;
+  organizer_id: string;
+  organizer?: { full_name: string; avatar_url: string };
+  location: string;
+  status: string;
+  start_date: string;
+  end_date: string;
+  is_public: boolean;
+  created_at: string;
+}
+
+interface TreeSubmission {
+  id: string;
+  campaign_id: string;
+  user_id: string;
+  trees_count: number;
+  photo_url?: string;
+  notes?: string;
+  status: string;
+  user?: { full_name: string; avatar_url: string };
+  created_at: string;
+}
 
 interface CampaignContextType {
   campaigns: Campaign[];
-  submissions: TreePlantingSubmission[];
+  submissions: TreeSubmission[];
   loading: boolean;
-  createCampaign: (campaign: Omit<Campaign, 'id' | 'plantedTrees' | 'daysLeft' | 'organizerId' | 'organizerAvatar' | 'participants' | 'pendingParticipants' | 'updates' | 'completionPhotos' | 'isCompletionPending' | 'createdAt'>) => Promise<void>;
+  createCampaign: (data: any) => Promise<void>;
   joinCampaign: (campaignId: string) => Promise<void>;
-  approveMember: (campaignId: string, userId: string) => Promise<void>;
-  rejectMember: (campaignId: string, userId: string) => Promise<void>;
-  submitTreePlanting: (submission: Omit<TreePlantingSubmission, 'id' | 'createdAt' | 'status' | 'userName' | 'userAvatar'>) => Promise<void>;
+  submitTreePlanting: (data: any) => Promise<void>;
   approveSubmission: (submissionId: string) => Promise<void>;
   rejectSubmission: (submissionId: string) => Promise<void>;
-  addUpdate: (campaignId: string, update: Omit<CampaignUpdate, 'id' | 'campaignId' | 'createdAt'>) => Promise<void>;
-  editCampaign: (campaignId: string, updates: Partial<Campaign>) => Promise<void>;
-  cancelCampaign: (campaignId: string) => Promise<void>;
-  completeCampaign: (campaignId: string, completionPhotos: string[]) => Promise<void>;
-  approveCompletion: (campaignId: string) => Promise<void>;
   getCampaign: (id: string) => Campaign | undefined;
-  getCampaignSubmissions: (campaignId: string) => TreePlantingSubmission[];
-  getUserSubmissions: (userId: string) => TreePlantingSubmission[];
 }
 
 const CampaignContext = createContext<CampaignContextType | undefined>(undefined);
 
 export const useCampaigns = () => {
   const context = useContext(CampaignContext);
-  if (!context) {
-    throw new Error('useCampaigns must be used within CampaignProvider');
-  }
+  if (!context) throw new Error('useCampaigns must be used within CampaignProvider');
   return context;
 };
 
 export const CampaignProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [submissions, setSubmissions] = useState<TreePlantingSubmission[]>([]);
+  const [submissions, setSubmissions] = useState<TreeSubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  const { awardPoints } = useUsers();
 
-  // Load campaigns from localStorage only (no mock data)
   useEffect(() => {
-    const saved = localStorage.getItem('campaigns');
-    const savedSubmissions = localStorage.getItem('submissions');
-    
-    if (saved) {
-      setCampaigns(JSON.parse(saved));
-    } else {
-      setCampaigns([]);
+    if (user) {
+      loadCampaigns();
+      loadSubmissions();
     }
-    
-    if (savedSubmissions) {
-      setSubmissions(JSON.parse(savedSubmissions));
-    }
-    
-    setLoading(false);
-  }, []);
+  }, [user]);
 
-  const saveCampaigns = (newCampaigns: Campaign[]) => {
-    setCampaigns(newCampaigns);
-    localStorage.setItem('campaigns', JSON.stringify(newCampaigns));
+  const loadCampaigns = async () => {
+    try {
+      const { data } = await supabase
+        .from('campaigns')
+        .select('*, organizer:profiles!campaigns_organizer_id_fkey(full_name, avatar_url)')
+        .order('created_at', { ascending: false });
+
+      setCampaigns(data || []);
+    } catch (error) {
+      console.error('Error loading campaigns:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const saveSubmissions = (newSubmissions: TreePlantingSubmission[]) => {
-    setSubmissions(newSubmissions);
-    localStorage.setItem('submissions', JSON.stringify(newSubmissions));
+  const loadSubmissions = async () => {
+    try {
+      const { data } = await supabase
+        .from('tree_submissions')
+        .select('*, user:profiles!tree_submissions_user_id_fkey(full_name, avatar_url)')
+        .order('created_at', { ascending: false });
+
+      setSubmissions(data || []);
+    } catch (error) {
+      console.error('Error loading submissions:', error);
+    }
   };
 
-  const createCampaign = async (campaignData: Omit<Campaign, 'id' | 'plantedTrees' | 'daysLeft' | 'organizerId' | 'organizerAvatar' | 'participants' | 'pendingParticipants' | 'updates' | 'completionPhotos' | 'isCompletionPending' | 'createdAt'>) => {
+  const createCampaign = async (campaignData: any) => {
     if (!user) return;
 
-    const endDate = new Date(campaignData.endDate);
-    const startDate = new Date(campaignData.startDate);
-    const daysLeft = Math.max(0, Math.ceil((endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+    try {
+      const { data, error } = await supabase
+        .from('campaigns')
+        .insert({
+          title: campaignData.title,
+          description: campaignData.description,
+          target_trees: campaignData.targetTrees,
+          image_url: campaignData.imageUrl,
+          organizer_id: user.id,
+          location: campaignData.location,
+          start_date: campaignData.startDate,
+          end_date: campaignData.endDate,
+          is_public: campaignData.isPublic ?? true,
+          status: 'active'
+        })
+        .select()
+        .single();
 
-    const campaignId = `c${Date.now()}`;
-    const newCampaign: Campaign = {
-      ...campaignData,
-      id: campaignId,
-      imageUrl: campaignData.imageUrl || getCampaignImage(campaignId),
-      plantedTrees: 0,
-      daysLeft,
-      organizerId: user.id,
-      organizerAvatar: getOrganizerAvatar(user.id),
-      participants: [],
-      pendingParticipants: [],
-      updates: [],
-      completionPhotos: [],
-      isCompletionPending: false,
-      createdAt: new Date().toISOString()
-    };
-    
-    const newCampaigns = [newCampaign, ...campaigns];
-    saveCampaigns(newCampaigns);
+      if (!error && data) {
+        await loadCampaigns();
+      }
+    } catch (error) {
+      console.error('Error creating campaign:', error);
+    }
   };
 
   const joinCampaign = async (campaignId: string) => {
     if (!user) return;
 
-    const newCampaigns = campaigns.map(campaign => {
-      if (campaign.id === campaignId) {
-        if (campaign.isPublic) {
-          return {
-            ...campaign,
-            participants: [...campaign.participants, user.id]
-          };
-        } else {
-          return {
-            ...campaign,
-            pendingParticipants: [...campaign.pendingParticipants, user.id]
-          };
-        }
-      }
-      return campaign;
-    });
-    saveCampaigns(newCampaigns);
-  };
+    try {
+      await supabase
+        .from('campaign_participants')
+        .insert({ campaign_id: campaignId, user_id: user.id });
 
-  const approveMember = async (campaignId: string, userId: string) => {
-    const newCampaigns = campaigns.map(campaign => {
-      if (campaign.id === campaignId) {
-        return {
-          ...campaign,
-          participants: [...campaign.participants, userId],
-          pendingParticipants: campaign.pendingParticipants.filter(id => id !== userId)
-        };
-      }
-      return campaign;
-    });
-    saveCampaigns(newCampaigns);
-  };
-
-  const rejectMember = async (campaignId: string, userId: string) => {
-    const newCampaigns = campaigns.map(campaign => {
-      if (campaign.id === campaignId) {
-        return {
-          ...campaign,
-          pendingParticipants: campaign.pendingParticipants.filter(id => id !== userId)
-        };
-      }
-      return campaign;
-    });
-    saveCampaigns(newCampaigns);
-  };
-
-  const submitTreePlanting = async (submissionData: Omit<TreePlantingSubmission, 'id' | 'createdAt' | 'status' | 'userName' | 'userAvatar'>) => {
-    if (!user) return;
-
-    const newSubmission: TreePlantingSubmission = {
-      ...submissionData,
-      id: `s${Date.now()}`,
-      userName: user.fullName,
-      userAvatar: user.avatarUrl,
-      status: 'pending',
-      createdAt: new Date().toISOString()
-    };
-
-    const newSubmissions = [newSubmission, ...submissions];
-    saveSubmissions(newSubmissions);
-  };
-
-  const approveSubmission = async (submissionId: string) => {
-    const submission = submissions.find(s => s.id === submissionId);
-    if (!submission) return;
-
-    const newSubmissions = submissions.map(s => 
-      s.id === submissionId 
-        ? { ...s, status: 'approved' as const, approvedAt: new Date().toISOString() }
-        : s
-    );
-    saveSubmissions(newSubmissions);
-
-    const newCampaigns = campaigns.map(campaign => {
-      if (campaign.id === submission.campaignId) {
-        return {
-          ...campaign,
-          plantedTrees: campaign.plantedTrees + submission.treesCount
-        };
-      }
-      return campaign;
-    });
-    saveCampaigns(newCampaigns);
-
-    // Award points for tree planting (10 points per tree)
-    const pointsEarned = submission.treesCount * 10;
-    awardPoints(submission.userId, pointsEarned, 'tree_planting');
-  };
-
-  const rejectSubmission = async (submissionId: string) => {
-    const newSubmissions = submissions.map(s => 
-      s.id === submissionId 
-        ? { ...s, status: 'rejected' as const }
-        : s
-    );
-    saveSubmissions(newSubmissions);
-  };
-
-  const addUpdate = async (campaignId: string, updateData: Omit<CampaignUpdate, 'id' | 'campaignId' | 'createdAt'>) => {
-    const newUpdate: CampaignUpdate = {
-      ...updateData,
-      id: `u${Date.now()}`,
-      campaignId,
-      createdAt: new Date().toISOString()
-    };
-
-    const newCampaigns = campaigns.map(campaign => {
-      if (campaign.id === campaignId) {
-        return {
-          ...campaign,
-          updates: [newUpdate, ...campaign.updates]
-        };
-      }
-      return campaign;
-    });
-    saveCampaigns(newCampaigns);
-  };
-
-  const editCampaign = async (campaignId: string, updates: Partial<Campaign>) => {
-    const newCampaigns = campaigns.map(campaign => 
-      campaign.id === campaignId 
-        ? { ...campaign, ...updates }
-        : campaign
-    );
-    saveCampaigns(newCampaigns);
-  };
-
-  const cancelCampaign = async (campaignId: string) => {
-    const newCampaigns = campaigns.map(campaign => 
-      campaign.id === campaignId 
-        ? { ...campaign, status: 'cancelled' as const }
-        : campaign
-    );
-    saveCampaigns(newCampaigns);
-  };
-
-  const completeCampaign = async (campaignId: string, completionPhotos: string[]) => {
-    const newCampaigns = campaigns.map(campaign => 
-      campaign.id === campaignId 
-        ? { 
-            ...campaign, 
-            status: 'completed' as const,
-            completionPhotos,
-            isCompletionPending: true
-          }
-        : campaign
-    );
-    saveCampaigns(newCampaigns);
-  };
-
-  const approveCompletion = async (campaignId: string) => {
-    const campaign = campaigns.find(c => c.id === campaignId);
-    if (!campaign) return;
-
-    const newCampaigns = campaigns.map(c => 
-      c.id === campaignId 
-        ? { ...c, isCompletionPending: false }
-        : c
-    );
-    saveCampaigns(newCampaigns);
-
-    // Award points to all participants
-    const pointsPerParticipant = Math.floor(campaign.plantedTrees * 2);
-    campaign.participants.forEach(participantId => {
-      if (participantId === user?.id) {
-        awardPoints(user.id, pointsPerParticipant, 'campaign_completed');
-      }
-    });
-    
-    // Award organizer bonus points
-    if (campaign.organizerId === user?.id) {
-      awardPoints(user.id, pointsPerParticipant * 2, 'campaign_organized');
+      await loadCampaigns();
+    } catch (error) {
+      console.error('Error joining campaign:', error);
     }
   };
 
-  const getCampaign = (id: string) => {
-    return campaigns.find(campaign => campaign.id === id);
+  const submitTreePlanting = async (submissionData: any) => {
+    if (!user) return;
+
+    try {
+      await supabase
+        .from('tree_submissions')
+        .insert({
+          campaign_id: submissionData.campaignId,
+          user_id: user.id,
+          trees_count: submissionData.treesCount,
+          photo_url: submissionData.photoUrl,
+          notes: submissionData.notes,
+          status: 'pending'
+        });
+
+      await loadSubmissions();
+    } catch (error) {
+      console.error('Error submitting trees:', error);
+    }
   };
 
-  const getCampaignSubmissions = (campaignId: string) => {
-    return submissions.filter(submission => submission.campaignId === campaignId);
+  const approveSubmission = async (submissionId: string) => {
+    try {
+      const submission = submissions.find(s => s.id === submissionId);
+      if (!submission) return;
+
+      await supabase
+        .from('tree_submissions')
+        .update({ status: 'approved', approved_at: new Date().toISOString() })
+        .eq('id', submissionId);
+
+      await supabase.rpc('increment', {
+        table_name: 'campaigns',
+        row_id: submission.campaign_id,
+        column_name: 'planted_trees',
+        increment_by: submission.trees_count
+      });
+
+      await supabase
+        .from('profiles')
+        .update({ impact_points: supabase.raw(`impact_points + ${submission.trees_count * 10}`) })
+        .eq('id', submission.user_id);
+
+      await loadSubmissions();
+      await loadCampaigns();
+    } catch (error) {
+      console.error('Error approving submission:', error);
+    }
   };
 
-  const getUserSubmissions = (userId: string) => {
-    return submissions.filter(submission => submission.userId === userId);
+  const rejectSubmission = async (submissionId: string) => {
+    try {
+      await supabase
+        .from('tree_submissions')
+        .update({ status: 'rejected' })
+        .eq('id', submissionId);
+
+      await loadSubmissions();
+    } catch (error) {
+      console.error('Error rejecting submission:', error);
+    }
   };
 
-  const value = {
-    campaigns,
-    submissions,
-    loading,
-    createCampaign,
-    joinCampaign,
-    approveMember,
-    rejectMember,
-    submitTreePlanting,
-    approveSubmission,
-    rejectSubmission,
-    addUpdate,
-    editCampaign,
-    cancelCampaign,
-    completeCampaign,
-    approveCompletion,
-    getCampaign,
-    getCampaignSubmissions,
-    getUserSubmissions
-  };
+  const getCampaign = (id: string) => campaigns.find(c => c.id === id);
 
   return (
-    <CampaignContext.Provider value={value}>
+    <CampaignContext.Provider value={{
+      campaigns,
+      submissions,
+      loading,
+      createCampaign,
+      joinCampaign,
+      submitTreePlanting,
+      approveSubmission,
+      rejectSubmission,
+      getCampaign
+    }}>
       {children}
     </CampaignContext.Provider>
   );

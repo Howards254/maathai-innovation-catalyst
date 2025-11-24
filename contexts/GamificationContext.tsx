@@ -1,184 +1,117 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
-import { useUsers } from './UserContext';
 
-interface Challenge {
+interface Badge {
   id: string;
-  title: string;
-  description: string;
-  target: number;
-  progress: number;
-  points: number;
-  completed: boolean;
-  type: 'daily' | 'weekly' | 'milestone';
-  expiresAt?: string;
-}
-
-interface Achievement {
-  id: string;
-  title: string;
+  name: string;
   description: string;
   icon: string;
-  unlockedAt: string;
+  points_required: number;
+}
+
+interface UserBadge {
+  badge: Badge;
+  earned_at: string;
+}
+
+interface LeaderboardEntry {
+  id: string;
+  full_name: string;
+  avatar_url: string;
+  impact_points: number;
+  rank: number;
 }
 
 interface GamificationContextType {
-  challenges: Challenge[];
-  achievements: Achievement[];
-  updateProgress: (challengeId: string, progress: number) => void;
-  completeChallenge: (challengeId: string) => void;
-  getDailyChallenges: () => Challenge[];
-  getStreakCount: () => number;
+  badges: Badge[];
+  userBadges: UserBadge[];
+  leaderboard: LeaderboardEntry[];
+  loading: boolean;
+  loadLeaderboard: () => Promise<void>;
 }
 
 const GamificationContext = createContext<GamificationContextType | undefined>(undefined);
 
 export const useGamification = () => {
   const context = useContext(GamificationContext);
-  if (!context) {
-    throw new Error('useGamification must be used within GamificationProvider');
-  }
+  if (!context) throw new Error('useGamification must be used within GamificationProvider');
   return context;
 };
 
 export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [challenges, setChallenges] = useState<Challenge[]>([]);
-  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [badges, setBadges] = useState<Badge[]>([]);
+  const [userBadges, setUserBadges] = useState<UserBadge[]>([]);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  const { awardPoints } = useUsers();
 
   useEffect(() => {
-    // Initialize daily challenges
-    const today = new Date().toDateString();
-    const dailyChallenges: Challenge[] = [
-      {
-        id: 'daily-trees',
-        title: 'Plant Trees Today',
-        description: 'Log 3 newly planted trees',
-        target: 3,
-        progress: 0,
-        points: 50,
-        completed: false,
-        type: 'daily',
-        expiresAt: today
-      },
-      {
-        id: 'daily-discussion',
-        title: 'Share Knowledge',
-        description: 'Create or comment on 2 discussions',
-        target: 2,
-        progress: 0,
-        points: 30,
-        completed: false,
-        type: 'daily',
-        expiresAt: today
-      },
-      {
-        id: 'daily-vote',
-        title: 'Community Engagement',
-        description: 'Vote on 5 discussions',
-        target: 5,
-        progress: 0,
-        points: 20,
-        completed: false,
-        type: 'daily',
-        expiresAt: today
-      }
-    ];
-
-    const milestones: Challenge[] = [
-      {
-        id: 'milestone-100-trees',
-        title: 'Century Planter',
-        description: 'Plant 100 trees total',
-        target: 100,
-        progress: 0,
-        points: 500,
-        completed: false,
-        type: 'milestone'
-      },
-      {
-        id: 'milestone-10-discussions',
-        title: 'Community Leader',
-        description: 'Create 10 discussions',
-        target: 10,
-        progress: 0,
-        points: 200,
-        completed: false,
-        type: 'milestone'
-      }
-    ];
-
-    const saved = localStorage.getItem(`challenges_${user?.id}`);
-    if (saved) {
-      setChallenges(JSON.parse(saved));
-    } else {
-      setChallenges([...dailyChallenges, ...milestones]);
+    if (user) {
+      loadBadges();
+      loadUserBadges();
+      loadLeaderboard();
     }
   }, [user]);
 
-  const saveChallenges = (newChallenges: Challenge[]) => {
-    setChallenges(newChallenges);
-    if (user) {
-      localStorage.setItem(`challenges_${user.id}`, JSON.stringify(newChallenges));
+  const loadBadges = async () => {
+    try {
+      const { data } = await supabase
+        .from('badges')
+        .select('*')
+        .order('points_required', { ascending: true });
+
+      setBadges(data || []);
+    } catch (error) {
+      console.error('Error loading badges:', error);
     }
   };
 
-  const updateProgress = (challengeId: string, progress: number) => {
-    const newChallenges = challenges.map(challenge => {
-      if (challenge.id === challengeId && !challenge.completed) {
-        const newProgress = Math.min(challenge.target, challenge.progress + progress);
-        const completed = newProgress >= challenge.target;
-        
-        if (completed && user) {
-          awardPoints(user.id, challenge.points, `challenge_${challengeId}`);
-          
-          // Add achievement
-          const newAchievement: Achievement = {
-            id: `achievement_${challengeId}`,
-            title: challenge.title,
-            description: `Completed: ${challenge.description}`,
-            icon: '🏆',
-            unlockedAt: new Date().toISOString()
-          };
-          setAchievements(prev => [...prev, newAchievement]);
-        }
-        
-        return { ...challenge, progress: newProgress, completed };
-      }
-      return challenge;
-    });
-    
-    saveChallenges(newChallenges);
-  };
+  const loadUserBadges = async () => {
+    if (!user) return;
 
-  const completeChallenge = (challengeId: string) => {
-    const challenge = challenges.find(c => c.id === challengeId);
-    if (challenge) {
-      updateProgress(challengeId, challenge.target - challenge.progress);
+    try {
+      const { data } = await supabase
+        .from('user_badges')
+        .select('*, badge:badges(*)')
+        .eq('user_id', user.id)
+        .order('earned_at', { ascending: false });
+
+      setUserBadges(data || []);
+    } catch (error) {
+      console.error('Error loading user badges:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getDailyChallenges = () => {
-    return challenges.filter(c => c.type === 'daily');
-  };
+  const loadLeaderboard = async () => {
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url, impact_points')
+        .order('impact_points', { ascending: false })
+        .limit(100);
 
-  const getStreakCount = () => {
-    // Mock streak calculation - in real app would track daily activity
-    return Math.floor(Math.random() * 15) + 1;
-  };
+      const ranked = (data || []).map((entry, index) => ({
+        ...entry,
+        rank: index + 1
+      }));
 
-  const value = {
-    challenges,
-    achievements,
-    updateProgress,
-    completeChallenge,
-    getDailyChallenges,
-    getStreakCount
+      setLeaderboard(ranked);
+    } catch (error) {
+      console.error('Error loading leaderboard:', error);
+    }
   };
 
   return (
-    <GamificationContext.Provider value={value}>
+    <GamificationContext.Provider value={{
+      badges,
+      userBadges,
+      leaderboard,
+      loading,
+      loadLeaderboard
+    }}>
       {children}
     </GamificationContext.Provider>
   );
