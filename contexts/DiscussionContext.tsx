@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Discussion, User } from '../types';
 import { useAuth } from './AuthContext';
-import { useUsers } from './UserContext';
+// import { useUsers } from './UserContext';
 import { supabase } from '../lib/supabase';
 
 interface Comment {
@@ -40,7 +40,7 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [userVotes, setUserVotes] = useState<Record<string, 'up' | 'down'>>({});
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  const { awardPoints, getUserById } = useUsers();
+  // const { awardPoints, getUserById } = useUsers();
 
   useEffect(() => {
     loadDiscussions();
