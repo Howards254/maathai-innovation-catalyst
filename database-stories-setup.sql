@@ -1,14 +1,19 @@
 -- Stories/Reels Database Setup
 
--- 1. Create stories table
-CREATE TABLE IF NOT EXISTS stories (
+-- 1. Drop existing stories table if it has wrong schema
+DROP TABLE IF EXISTS story_comments CASCADE;
+DROP TABLE IF EXISTS story_reactions CASCADE;
+DROP TABLE IF EXISTS stories CASCADE;
+
+-- 2. Create stories table
+CREATE TABLE stories (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   title TEXT NOT NULL,
   description TEXT,
   media_url TEXT NOT NULL,
   media_type TEXT NOT NULL CHECK (media_type IN ('image', 'video')),
-  duration INTEGER, -- in seconds for videos
+  duration INTEGER,
   story_type TEXT DEFAULT 'general' CHECK (story_type IN ('tree_planting', 'campaign_progress', 'event', 'education', 'cleanup', 'general')),
   location TEXT,
   tags TEXT[],
@@ -17,8 +22,8 @@ CREATE TABLE IF NOT EXISTS stories (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 2. Create story reactions table
-CREATE TABLE IF NOT EXISTS story_reactions (
+-- 3. Create story reactions table
+CREATE TABLE story_reactions (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   story_id UUID REFERENCES stories(id) ON DELETE CASCADE NOT NULL,
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
@@ -27,8 +32,8 @@ CREATE TABLE IF NOT EXISTS story_reactions (
   UNIQUE(story_id, user_id)
 );
 
--- 3. Create story comments table
-CREATE TABLE IF NOT EXISTS story_comments (
+-- 4. Create story comments table
+CREATE TABLE story_comments (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   story_id UUID REFERENCES stories(id) ON DELETE CASCADE NOT NULL,
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
