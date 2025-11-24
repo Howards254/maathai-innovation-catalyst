@@ -9,10 +9,6 @@
 
 **A Social Environmental Platform Inspired by Wangari Maathai's Legacy**
 
-[![Live Demo](https://img.shields.io/badge/demo-live-green.svg)](https://your-demo-url.vercel.app)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Hackathon](https://img.shields.io/badge/Wangari%20Maathai-Hackathon-success.svg)]()
-
 </div>
 
 ---
