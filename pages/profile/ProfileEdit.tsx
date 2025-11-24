@@ -52,10 +52,17 @@ const ProfileEdit: React.FC = () => {
         .from('profiles')
         .select('username')
         .eq('username', username)
-        .single();
+        .maybeSingle();
+      
+      // If error and not a "no rows" error, log it
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error checking username:', error);
+        return true; // Assume available on error
+      }
       
       return !data; // Available if no data found
     } catch (error) {
+      console.error('Error checking username:', error);
       return true; // Assume available if profiles table doesn't exist
     }
   };
