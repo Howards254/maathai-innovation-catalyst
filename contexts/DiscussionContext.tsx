@@ -195,33 +195,68 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const addComment = async (discussionId: string, content: string) => {
     if (!user) return;
     
-    const newComment: Comment = {
-      id: `comment_${Date.now()}`,
-      content,
-      author: user,
-      discussionId,
-      createdAt: new Date().toISOString()
-    };
-    
-    const newComments = [...comments, newComment];
-    setComments(newComments);
-    localStorage.setItem('comments', JSON.stringify(newComments));
-    
-    // Update comment count
-    const newDiscussions = discussions.map(discussion => {
-      if (discussion.id === discussionId) {
-        return { ...discussion, commentsCount: discussion.commentsCount + 1 };
-      }
-      return discussion;
-    });
-    
-    saveDiscussions(newDiscussions);
-    awardPoints(user.id, 5, 'comment_created');
+    try {
+      const { data, error } = await supabase
+        .from('comments')
+        .insert({
+          discussion_id: discussionId,
+          author_id: user.id,
+          content: content
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      // Reload comments
+      await loadComments(discussionId);
+      awardPoints(user.id, 5, 'comment_created');
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      throw error;
+    }
+  };
+  
+  const loadComments = async (discussionId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('comments')
+        .select('*')
+        .eq('discussion_id', discussionId)
+        .order('created_at', { ascending: true });
+      
+      if (error) throw error;
+      
+      const formattedComments = (data || []).map((c: any) => {
+        const author = getUserById(c.author_id) || {
+          id: c.author_id,
+          username: 'User',
+          fullName: 'User',
+          avatarUrl: '',
+          impactPoints: 0,
+          badges: [],
+          role: 'user' as const
+        };
+        
+        return {
+          id: c.id,
+          content: c.content,
+          author,
+          discussionId: c.discussion_id,
+          createdAt: c.created_at
+        };
+      });
+      
+      setComments(formattedComments);
+    } catch (error) {
+      console.error('Error loading comments:', error);
+    }
   };
   
   const getComments = (discussionId: string) => {
-    return comments.filter(comment => comment.discussionId === discussionId)
-      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    // Load comments from database when requested
+    loadComments(discussionId);
+    return comments.filter(comment => comment.discussionId === discussionId);
   };
   
   const getUserVote = (discussionId: string) => {

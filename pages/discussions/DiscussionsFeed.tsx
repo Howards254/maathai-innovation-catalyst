@@ -12,7 +12,10 @@ const DiscussionsFeed: React.FC = () => {
   const { user } = useUser();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string>('All');
-  const [reactions, setReactions] = useState<Record<string, string>>({});
+  const [reactions, setReactions] = useState<Record<string, string>>(() => {
+    const saved = localStorage.getItem('discussion_reactions');
+    return saved ? JSON.parse(saved) : {};
+  });
   const [showReactionPicker, setShowReactionPicker] = useState<string | null>(null);
 
   const reactionEmojis = [
@@ -25,10 +28,14 @@ const DiscussionsFeed: React.FC = () => {
   ];
 
   const handleReaction = (postId: string, emoji: string) => {
-    setReactions(prev => ({
-      ...prev,
-      [postId]: prev[postId] === emoji ? '' : emoji
-    }));
+    setReactions(prev => {
+      const newReactions = {
+        ...prev,
+        [postId]: prev[postId] === emoji ? '' : emoji
+      };
+      localStorage.setItem('discussion_reactions', JSON.stringify(newReactions));
+      return newReactions;
+    });
     setShowReactionPicker(null);
   };
   

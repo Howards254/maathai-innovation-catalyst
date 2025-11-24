@@ -114,7 +114,31 @@ const DiscussionDetail: React.FC = () => {
             
             {/* Content */}
             <h1 className="text-2xl font-bold text-gray-900 mb-4">{discussion.title}</h1>
-            <div className="text-gray-700 mb-6 whitespace-pre-wrap leading-relaxed">{discussion.content}</div>
+            <div className="text-gray-700 mb-4 whitespace-pre-wrap leading-relaxed">{discussion.content}</div>
+            
+            {/* Media Display */}
+            {discussion.mediaUrls && discussion.mediaUrls.length > 0 && (
+              <div className="mb-6 rounded-xl overflow-hidden">
+                {discussion.mediaUrls.length === 1 ? (
+                  <img src={discussion.mediaUrls[0]} alt="Post media" className="w-full max-h-[600px] object-contain bg-gray-100" />
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    {discussion.mediaUrls.map((url, idx) => (
+                      <img key={idx} src={url} alt={`Media ${idx + 1}`} className="w-full h-64 object-cover" />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {/* Tags */}
+            {discussion.tags && discussion.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-6">
+                {discussion.tags.map((tag, idx) => (
+                  <span key={idx} className="text-green-600 text-sm hover:text-green-700 cursor-pointer">#{tag}</span>
+                ))}
+              </div>
+            )}
             
             {/* Actions */}
             <div className="flex items-center justify-between pt-4 border-t border-gray-100">
