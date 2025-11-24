@@ -99,7 +99,7 @@ const Landing = () => {
           </div>
           
           <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold mb-6 animate-fade-in-up leading-tight">
-            Planting Seeds of <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-300">Change</span>
+            Where Green Meets <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-300">Social</span>
           </h1>
           
           <p className="text-lg sm:text-xl md:text-2xl mb-8 text-green-100 max-w-3xl mx-auto animate-fade-in-up animation-delay-200">
