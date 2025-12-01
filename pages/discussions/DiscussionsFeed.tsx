@@ -316,7 +316,7 @@ const DiscussionsFeed: React.FC = () => {
                      </svg>
                    </button>
                    <span className="px-3 py-2 bg-gray-50 text-sm font-medium text-gray-700 min-w-[3rem] text-center">
-                     {(post.upvotes || 0) - (post.downvotes || 0)}
+                     {Math.max(0, (post.upvotes || 0) - (post.downvotes || 0))}
                    </span>
                    <button 
                      onClick={(e) => {
