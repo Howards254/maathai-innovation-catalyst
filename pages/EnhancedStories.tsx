@@ -44,6 +44,9 @@ const EnhancedStories: React.FC = () => {
   const [isMuted, setIsMuted] = useState(true);
   const [showUserTransition, setShowUserTransition] = useState(false);
   const [viewedStories, setViewedStories] = useState<Set<string>>(new Set());
+  const [showComments, setShowComments] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [storyReactions, setStoryReactions] = useState<Record<string, any>>({});
   const videoRef = useRef<HTMLVideoElement>(null);
   const progressInterval = useRef<NodeJS.Timeout>();
 
@@ -128,18 +131,63 @@ const EnhancedStories: React.FC = () => {
     if (!user) return;
     
     try {
-      const { error } = await supabase
-        .from('story_reactions')
-        .upsert({
-          story_id: storyId,
-          user_id: user.id,
-          reaction_type: reactionType
-        });
+      const existingReaction = storyReactions[storyId];
       
-      if (error) throw error;
-      loadStories(); // Refresh to update counts
+      if (existingReaction === reactionType) {
+        await supabase
+          .from('story_reactions')
+          .delete()
+          .eq('story_id', storyId)
+          .eq('user_id', user.id);
+        
+        setStoryReactions(prev => ({ ...prev, [storyId]: null }));
+      } else {
+        await supabase
+          .from('story_reactions')
+          .upsert({
+            story_id: storyId,
+            user_id: user.id,
+            reaction_type: reactionType
+          });
+        
+        setStoryReactions(prev => ({ ...prev, [storyId]: reactionType }));
+      }
+      
+      setStories(prev => prev.map(story => {
+        if (story.id === storyId) {
+          const increment = existingReaction === reactionType ? -1 : (existingReaction ? 0 : 1);
+          return { ...story, reactions_count: Math.max(0, story.reactions_count + increment) };
+        }
+        return story;
+      }));
     } catch (error) {
       console.error('Error reacting to story:', error);
+    }
+  };
+
+  const addComment = async (storyId: string, content: string) => {
+    if (!user || !content.trim()) return;
+    
+    try {
+      await supabase
+        .from('story_comments')
+        .insert({
+          story_id: storyId,
+          author_id: user.id,
+          content: content.trim()
+        });
+      
+      setStories(prev => prev.map(story => {
+        if (story.id === storyId) {
+          return { ...story, comments_count: story.comments_count + 1 };
+        }
+        return story;
+      }));
+      
+      setCommentText('');
+      setShowComments(false);
+    } catch (error) {
+      console.error('Error adding comment:', error);
     }
   };
 
@@ -531,18 +579,21 @@ const EnhancedStories: React.FC = () => {
         <button
           onClick={() => reactToStory(currentStory.id, 'love')}
           className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
-            currentStory.user_reaction === 'love' 
+            storyReactions[currentStory.id] === 'love'
               ? 'bg-red-500 scale-110' 
               : 'bg-white/20 hover:bg-white/30'
           }`}
         >
-          <Heart className={`w-6 h-6 ${currentStory.user_reaction === 'love' ? 'text-white fill-white' : 'text-white'}`} />
+          <Heart className={`w-6 h-6 ${storyReactions[currentStory.id] === 'love' ? 'text-white fill-white' : 'text-white'}`} />
         </button>
         <div className="text-center">
           <span className="text-white text-xs">{currentStory.reactions_count}</span>
         </div>
 
-        <button className="w-12 h-12 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors">
+        <button 
+          onClick={() => setShowComments(true)}
+          className="w-12 h-12 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
+        >
           <MessageCircle className="w-6 h-6 text-white" />
         </button>
         <div className="text-center">
@@ -590,6 +641,42 @@ const EnhancedStories: React.FC = () => {
             </div>
             <p className="text-white text-lg font-semibold">Next User</p>
             <p className="text-white/80 text-sm">{stories[currentIndex + 1]?.author_name}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Comments Modal */}
+      {showComments && (
+        <div className="absolute inset-0 bg-black/50 flex items-end z-30">
+          <div className="bg-white w-full max-h-[70vh] rounded-t-2xl p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Comments</h3>
+              <button onClick={() => setShowComments(false)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="flex-1 mb-4 max-h-60 overflow-y-auto">
+              <p className="text-gray-500 text-center py-8">No comments yet. Be the first to comment!</p>
+            </div>
+            
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder="Add a comment..."
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                onKeyPress={(e) => e.key === 'Enter' && addComment(currentStory.id, commentText)}
+              />
+              <button
+                onClick={() => addComment(currentStory.id, commentText)}
+                disabled={!commentText.trim()}
+                className="px-4 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 disabled:opacity-50"
+              >
+                Post
+              </button>
+            </div>
           </div>
         </div>
       )}
