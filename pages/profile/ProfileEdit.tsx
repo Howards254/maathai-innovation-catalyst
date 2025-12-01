@@ -100,13 +100,13 @@ const ProfileEdit: React.FC = () => {
           bio: data.bio || '',
           location: data.location || '',
           website: data.website || '',
-          locationCity: data.location_city || '',
-          locationCountry: data.location_country || '',
+          locationCity: data.location?.split(',')[0]?.trim() || '',
+          locationCountry: data.location?.split(',')[1]?.trim() || '',
           experienceLevel: data.experience_level || 'beginner',
           availability: data.availability || 'weekends',
-          causes: data.looking_for || [],
-          skills: [],
-          activities: [],
+          causes: data.interests || [], // Load interests as causes
+          skills: data.goals?.filter((g: string) => skills.some(s => s.id === g)) || [], // Filter goals that are skills
+          activities: data.goals?.filter((g: string) => activities.some(a => a.id === g)) || [], // Filter goals that are activities
           lookingFor: data.looking_for || [],
           maxDistance: data.max_distance_km || 50
         });
@@ -179,7 +179,7 @@ const ProfileEdit: React.FC = () => {
         }
       }
 
-      // Update Supabase profiles table with all fields
+      // Update Supabase profiles table with all fields including matchmaking data
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -187,13 +187,10 @@ const ProfileEdit: React.FC = () => {
           username: formData.username,
           bio: formData.bio,
           location: `${formData.locationCity}, ${formData.locationCountry}`.trim().replace(/^,\s*|,\s*$/g, ''),
-          website: formData.website,
-          location_city: formData.locationCity,
-          location_country: formData.locationCountry,
-          experience_level: formData.experienceLevel,
-          availability: formData.availability,
-          looking_for: formData.lookingFor,
-          max_distance_km: formData.maxDistance,
+          interests: formData.causes, // Store environmental causes as interests
+          goals: [...formData.skills, ...formData.activities], // Combine skills and activities as goals
+          latitude: null, // Will be set later via geocoding if needed
+          longitude: null,
           updated_at: new Date().toISOString()
         })
         .eq('id', authUser.id);
