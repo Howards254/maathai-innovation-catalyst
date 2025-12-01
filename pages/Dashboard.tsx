@@ -259,9 +259,9 @@ const Dashboard: React.FC = () => {
                                     {/* Upvote/Downvote */}
                                     <div className="flex items-center gap-1">
                                       <button
-                                        onClick={(e) => {
+                                        onClick={async (e) => {
                                           e.preventDefault();
-                                          voteDiscussion(post.id, 'up');
+                                          await voteDiscussion(post.id, 'up');
                                         }}
                                         className={`flex items-center gap-1 px-2 py-1 rounded-lg text-sm font-medium transition-all ${
                                           getUserVote(post.id) === 'up'
@@ -273,9 +273,9 @@ const Dashboard: React.FC = () => {
                                         <span>{post.upvotes || 0}</span>
                                       </button>
                                       <button
-                                        onClick={(e) => {
+                                        onClick={async (e) => {
                                           e.preventDefault();
-                                          voteDiscussion(post.id, 'down');
+                                          await voteDiscussion(post.id, 'down');
                                         }}
                                         className={`flex items-center gap-1 px-2 py-1 rounded-lg text-sm font-medium transition-all ${
                                           getUserVote(post.id) === 'down'
@@ -288,6 +288,55 @@ const Dashboard: React.FC = () => {
                                       </button>
                                     </div>
 
+                                    {/* Like/Reaction Button */}
+                                    <div className="relative">
+                                      <button
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          if (!reactions[post.id]) {
+                                            handleReaction(post.id, '👍');
+                                          } else {
+                                            setShowReactionPicker(showReactionPicker === post.id ? null : post.id);
+                                          }
+                                        }}
+                                        onMouseEnter={() => setShowReactionPicker(post.id)}
+                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                                          reactions[post.id]
+                                            ? 'text-green-600 bg-green-50'
+                                            : 'text-gray-600 hover:bg-gray-100'
+                                        }`}
+                                      >
+                                        {reactions[post.id] ? (
+                                          <span className="text-base">{reactions[post.id]}</span>
+                                        ) : (
+                                          <ThumbsUp className="w-4 h-4" />
+                                        )}
+                                        <span>{reactions[post.id] ? 'Reacted' : 'Like'}</span>
+                                      </button>
+                                      
+                                      {/* Reaction Picker */}
+                                      {showReactionPicker === post.id && (
+                                        <div 
+                                          className="absolute bottom-full left-0 mb-2 bg-white border border-gray-200 rounded-full shadow-lg px-2 py-2 flex gap-1 z-10"
+                                          onMouseLeave={() => setShowReactionPicker(null)}
+                                        >
+                                          {reactionEmojis.map((reaction, index) => (
+                                            <button
+                                              key={index}
+                                              onClick={(e) => {
+                                                e.preventDefault();
+                                                handleReaction(post.id, reaction.emoji);
+                                              }}
+                                              className="text-2xl hover:scale-125 transition-transform p-1"
+                                              title={reaction.label}
+                                            >
+                                              {reaction.emoji}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+
                                     <Link 
                                       to={`/app/discussions`}
                                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors"
@@ -295,7 +344,7 @@ const Dashboard: React.FC = () => {
                                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                                       </svg>
-                                      <span>{post.comment_count || 0}</span>
+                                      <span>{post.comment_count || post.commentsCount || 0}</span>
                                     </Link>
 
                                     <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors ml-auto">
