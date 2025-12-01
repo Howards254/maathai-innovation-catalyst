@@ -1,0 +1,469 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { Camera, Plus, Heart, MessageCircle, Share2, Eye, Clock, Music, Sparkles, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
+import EnhancedCreateStoryModal from '../components/EnhancedCreateStoryModal';
+
+interface Story {
+  id: string;
+  author_id: string;
+  title: string;
+  description?: string;
+  media_url: string;
+  media_type: 'image' | 'video';
+  duration?: number;
+  story_type: string;
+  location?: string;
+  tags?: string[];
+  music_url?: string;
+  music_title?: string;
+  filters?: any;
+  stickers?: any[];
+  text_overlays?: any[];
+  views_count: number;
+  reactions_count: number;
+  comments_count: number;
+  created_at: string;
+  expires_at: string;
+  author_name: string;
+  author_username: string;
+  author_avatar?: string;
+  has_viewed: boolean;
+  user_reaction?: string;
+}
+
+const EnhancedStories: React.FC = () => {
+  const { user } = useAuth();
+  const [stories, setStories] = useState<Story[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const progressInterval = useRef<NodeJS.Timeout>();
+
+  useEffect(() => {
+    loadStories();
+  }, []);
+
+  useEffect(() => {
+    if (isFullScreen && !isPaused) {
+      startProgress();
+    } else {
+      stopProgress();
+    }
+    return () => stopProgress();
+  }, [isFullScreen, currentIndex, isPaused]);
+
+  const loadStories = async () => {
+    try {
+      const { data, error } = await supabase.rpc('get_active_stories', {
+        viewer_user_id: user?.id,
+        limit_count: 50
+      });
+      
+      if (error) throw error;
+      setStories(data || []);
+    } catch (error) {
+      console.error('Error loading stories:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const recordView = async (storyId: string, duration: number = 0) => {
+    if (!user) return;
+    
+    try {
+      await supabase.rpc('record_story_view', {
+        p_story_id: storyId,
+        p_viewer_id: user.id,
+        p_duration: duration
+      });
+    } catch (error) {
+      console.error('Error recording view:', error);
+    }
+  };
+
+  const reactToStory = async (storyId: string, reactionType: string) => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('story_reactions')
+        .upsert({
+          story_id: storyId,
+          user_id: user.id,
+          reaction_type: reactionType
+        });
+      
+      if (error) throw error;
+      loadStories(); // Refresh to update counts
+    } catch (error) {
+      console.error('Error reacting to story:', error);
+    }
+  };
+
+  const startProgress = () => {
+    const story = stories[currentIndex];
+    if (!story) return;
+    
+    const duration = story.media_type === 'video' ? (story.duration || 15) : 5;
+    const increment = 100 / (duration * 10); // Update every 100ms
+    
+    setProgress(0);
+    progressInterval.current = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) {
+          nextStory();
+          return 0;
+        }
+        return prev + increment;
+      });
+    }, 100);
+  };
+
+  const stopProgress = () => {
+    if (progressInterval.current) {
+      clearInterval(progressInterval.current);
+    }
+  };
+
+  const nextStory = () => {
+    if (currentIndex < stories.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+      setProgress(0);
+    } else {
+      setIsFullScreen(false);
+    }
+  };
+
+  const prevStory = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+      setProgress(0);
+    }
+  };
+
+  const openFullScreen = (index: number) => {
+    setCurrentIndex(index);
+    setIsFullScreen(true);
+    recordView(stories[index].id);
+  };
+
+  const getTimeRemaining = (expiresAt: string) => {
+    const now = new Date();
+    const expires = new Date(expiresAt);
+    const diff = expires.getTime() - now.getTime();
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    return `${minutes}m`;
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+      </div>
+    );
+  }
+
+  // Stories Ring View (like Instagram/Facebook)
+  const StoriesRing = () => (
+    <div className="flex gap-4 p-4 overflow-x-auto">
+      {/* Add Story Button */}
+      <div className="flex-shrink-0 text-center">
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center text-white shadow-lg hover:shadow-xl transition-all"
+        >
+          <Plus className="w-8 h-8" />
+        </button>
+        <p className="text-xs mt-2 text-gray-600">Your Story</p>
+      </div>
+
+      {/* Stories */}
+      {stories.map((story, index) => (
+        <div key={story.id} className="flex-shrink-0 text-center">
+          <button
+            onClick={() => openFullScreen(index)}
+            className={`relative w-16 h-16 rounded-full p-0.5 ${
+              story.has_viewed 
+                ? 'bg-gray-300' 
+                : 'bg-gradient-to-tr from-pink-500 via-red-500 to-yellow-500'
+            }`}
+          >
+            <img
+              src={story.author_avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(story.author_name)}&background=10b981&color=fff`}
+              alt={story.author_name}
+              className="w-full h-full rounded-full object-cover border-2 border-white"
+            />
+            {!story.has_viewed && (
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+            )}
+          </button>
+          <p className="text-xs mt-2 text-gray-600 truncate w-16">{story.author_name.split(' ')[0]}</p>
+        </div>
+      ))}
+    </div>
+  );
+
+  // Grid View (like TikTok Discover)
+  if (!isFullScreen) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        {/* Stories Ring */}
+        <div className="bg-white border-b">
+          <StoriesRing />
+        </div>
+
+        {/* Header */}
+        <div className="bg-white p-4 border-b">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <Camera className="w-6 h-6 text-green-600" />
+                Impact Stories
+              </h1>
+              <p className="text-gray-600 text-sm">Stories disappear after 24 hours</p>
+            </div>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Create Story
+            </button>
+          </div>
+        </div>
+
+        {/* Stories Grid */}
+        <div className="p-4">
+          {stories.length === 0 ? (
+            <div className="text-center py-12">
+              <Camera className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No active stories</h3>
+              <p className="text-gray-500 mb-4">Be the first to share your environmental impact!</p>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="px-6 py-3 bg-green-600 text-white rounded-full font-medium hover:bg-green-700 transition-colors"
+              >
+                Share Your Story
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {stories.map((story, index) => (
+                <div
+                  key={story.id}
+                  onClick={() => openFullScreen(index)}
+                  className="relative bg-black rounded-xl overflow-hidden cursor-pointer hover:scale-105 transition-transform"
+                  style={{ aspectRatio: '9/16' }}
+                >
+                  {story.media_type === 'video' ? (
+                    <video
+                      src={story.media_url}
+                      className="w-full h-full object-cover"
+                      muted
+                    />
+                  ) : (
+                    <img
+                      src={story.media_url}
+                      alt={story.title}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                  
+                  {/* Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  
+                  {/* Story Info */}
+                  <div className="absolute bottom-0 left-0 right-0 p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <img
+                        src={story.author_avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(story.author_name)}&background=10b981&color=fff`}
+                        alt={story.author_name}
+                        className="w-6 h-6 rounded-full"
+                      />
+                      <span className="text-white text-sm font-medium">{story.author_name}</span>
+                    </div>
+                    <p className="text-white text-sm line-clamp-2">{story.title}</p>
+                    
+                    {/* Stats */}
+                    <div className="flex items-center gap-3 mt-2 text-white text-xs">
+                      <span className="flex items-center gap-1">
+                        <Eye className="w-3 h-3" />
+                        {story.views_count}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Heart className="w-3 h-3" />
+                        {story.reactions_count}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {getTimeRemaining(story.expires_at)}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Viewed indicator */}
+                  {story.has_viewed && (
+                    <div className="absolute top-2 right-2 w-3 h-3 bg-green-500 rounded-full border border-white"></div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <EnhancedCreateStoryModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} />
+      </div>
+    );
+  }
+
+  // Full Screen Story View (like TikTok/Instagram Stories)
+  const currentStory = stories[currentIndex];
+  if (!currentStory) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black z-50">
+      {/* Progress bars */}
+      <div className="absolute top-0 left-0 right-0 z-20 flex gap-1 p-2">
+        {stories.map((_, index) => (
+          <div key={index} className="flex-1 h-1 bg-white/30 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-white transition-all duration-100"
+              style={{
+                width: index < currentIndex ? '100%' : index === currentIndex ? `${progress}%` : '0%'
+              }}
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Header */}
+      <div className="absolute top-4 left-0 right-0 z-20 flex items-center justify-between px-4 pt-8">
+        <div className="flex items-center gap-3">
+          <img
+            src={currentStory.author_avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentStory.author_name)}&background=10b981&color=fff`}
+            alt={currentStory.author_name}
+            className="w-10 h-10 rounded-full border-2 border-white"
+          />
+          <div>
+            <p className="text-white font-semibold">{currentStory.author_name}</p>
+            <p className="text-white/80 text-sm">{getTimeRemaining(currentStory.expires_at)} left</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setIsFullScreen(false)}
+          className="text-white hover:bg-white/10 p-2 rounded-full transition-colors"
+        >
+          <X className="w-6 h-6" />
+        </button>
+      </div>
+
+      {/* Media */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        {currentStory.media_type === 'video' ? (
+          <video
+            ref={videoRef}
+            src={currentStory.media_url}
+            className="max-w-full max-h-full object-contain"
+            autoPlay
+            loop
+            muted
+            playsInline
+          />
+        ) : (
+          <img
+            src={currentStory.media_url}
+            alt={currentStory.title}
+            className="max-w-full max-h-full object-contain"
+          />
+        )}
+      </div>
+
+      {/* Navigation */}
+      <button
+        onClick={prevStory}
+        className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white p-2"
+        disabled={currentIndex === 0}
+      >
+        <ChevronLeft className="w-8 h-8" />
+      </button>
+      <button
+        onClick={nextStory}
+        className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white p-2"
+      >
+        <ChevronRight className="w-8 h-8" />
+      </button>
+
+      {/* Tap areas for navigation */}
+      <div className="absolute inset-0 flex">
+        <div className="flex-1" onClick={prevStory} />
+        <div className="flex-1" onClick={nextStory} />
+      </div>
+
+      {/* Story content */}
+      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+        <h2 className="text-white text-lg font-semibold mb-2">{currentStory.title}</h2>
+        {currentStory.description && (
+          <p className="text-white/90 mb-3">{currentStory.description}</p>
+        )}
+        
+        {/* Music info */}
+        {currentStory.music_title && (
+          <div className="flex items-center gap-2 mb-3">
+            <Music className="w-4 h-4 text-white" />
+            <span className="text-white text-sm">{currentStory.music_title}</span>
+          </div>
+        )}
+
+        {/* Tags */}
+        {currentStory.tags && currentStory.tags.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-3">
+            {currentStory.tags.map((tag, i) => (
+              <span key={i} className="text-white text-sm">#{tag}</span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Actions */}
+      <div className="absolute right-4 bottom-20 flex flex-col gap-4">
+        <button
+          onClick={() => reactToStory(currentStory.id, 'love')}
+          className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
+            currentStory.user_reaction === 'love' 
+              ? 'bg-red-500 scale-110' 
+              : 'bg-white/20 hover:bg-white/30'
+          }`}
+        >
+          <Heart className={`w-6 h-6 ${currentStory.user_reaction === 'love' ? 'text-white fill-white' : 'text-white'}`} />
+        </button>
+        <div className="text-center">
+          <span className="text-white text-xs">{currentStory.reactions_count}</span>
+        </div>
+
+        <button className="w-12 h-12 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors">
+          <MessageCircle className="w-6 h-6 text-white" />
+        </button>
+        <div className="text-center">
+          <span className="text-white text-xs">{currentStory.comments_count}</span>
+        </div>
+
+        <button className="w-12 h-12 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors">
+          <Share2 className="w-6 h-6 text-white" />
+        </button>
+      </div>
+
+      <EnhancedCreateStoryModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} />
+    </div>
+  );
+};
+
+export default EnhancedStories;

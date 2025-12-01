@@ -49,18 +49,31 @@ export const StoriesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const loadStories = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('stories')
-        .select(`
-          *,
-          author:profiles!stories_author_id_fkey(id, full_name, username, avatar_url),
-          reactions:story_reactions(id, user_id, reaction_type),
-          comments:story_comments(id, author_id, content)
-        `)
-        .order('created_at', { ascending: false });
+      // Use the enhanced function to get active stories only
+      const { data, error } = await supabase.rpc('get_active_stories', {
+        viewer_user_id: user?.id,
+        limit_count: 50
+      });
 
-      if (error) throw error;
-      setStories(data || []);
+      if (error) {
+        // Fallback to regular query if function doesn't exist
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('stories')
+          .select(`
+            *,
+            author:profiles!stories_author_id_fkey(id, full_name, username, avatar_url),
+            reactions:story_reactions(id, user_id, reaction_type),
+            comments:story_comments(id, author_id, content)
+          `)
+          .gt('expires_at', new Date().toISOString())
+          .eq('is_archived', false)
+          .order('created_at', { ascending: false });
+        
+        if (fallbackError) throw fallbackError;
+        setStories(fallbackData || []);
+      } else {
+        setStories(data || []);
+      }
     } catch (error) {
       console.error('Error loading stories:', error);
       setStories([]);
@@ -85,7 +98,8 @@ export const StoriesProvider: React.FC<{ children: React.ReactNode }> = ({ child
           file_size: storyData.file_size,
           story_type: storyData.story_type || 'general',
           location: storyData.location,
-          tags: storyData.tags
+          tags: storyData.tags,
+          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours from now
         })
         .select(`
           *,

@@ -54,6 +54,7 @@ import Contact from './pages/Contact';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import Stories from './pages/Stories';
+import EnhancedStories from './pages/EnhancedStories';
 import Messages from './pages/Messages';
 import Groups from './pages/Groups';
 import LiveStreams from './pages/LiveStreams';
@@ -143,7 +144,8 @@ const App: React.FC = () => {
           <Route path="admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           
           {/* Social Features */}
-          <Route path="stories" element={<Stories />} />
+          <Route path="stories" element={<EnhancedStories />} />
+          <Route path="stories/legacy" element={<Stories />} />
           <Route path="messages" element={<Messages />} />
           <Route path="groups" element={<Groups />} />
           
