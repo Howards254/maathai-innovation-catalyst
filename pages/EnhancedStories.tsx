@@ -97,20 +97,19 @@ const EnhancedStories: React.FC = () => {
     if (!user) return;
     
     try {
-      // Simple view recording without RPC
-      await supabase
-        .from('story_views')
-        .upsert({
-          story_id: storyId,
-          viewer_id: user.id,
-          view_duration: duration
-        });
-        
-      // Update view count
-      await supabase
+      // Only update view count, skip story_views table if it causes conflicts
+      const { data: story } = await supabase
         .from('stories')
-        .update({ views_count: supabase.sql`COALESCE(views_count, 0) + 1` })
-        .eq('id', storyId);
+        .select('views_count')
+        .eq('id', storyId)
+        .single();
+        
+      if (story) {
+        await supabase
+          .from('stories')
+          .update({ views_count: (story.views_count || 0) + 1 })
+          .eq('id', storyId);
+      }
     } catch (error) {
       console.error('Error recording view:', error);
     }
