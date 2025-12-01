@@ -141,7 +141,7 @@ const UserProfile: React.FC = () => {
           <div className="absolute top-4 right-4 flex gap-2">
             {isOwnProfile && (
               <Link 
-                to="/profile/edit"
+                to={`/app/profile/${user.username}/edit`}
                 className="p-2 bg-white/20 backdrop-blur-sm rounded-full text-white hover:bg-white/30 transition-colors"
               >
                 <Settings className="w-5 h-5" />
@@ -223,7 +223,7 @@ const UserProfile: React.FC = () => {
                     <div className="ml-4">
                       {isOwnProfile ? (
                         <Link 
-                          to="/profile/edit"
+                          to={`/app/profile/${user.username}/edit`}
                           className="px-6 py-2 bg-gray-100 text-gray-700 font-medium rounded-full hover:bg-gray-200 transition-colors border border-gray-300"
                         >
                           Edit Profile
