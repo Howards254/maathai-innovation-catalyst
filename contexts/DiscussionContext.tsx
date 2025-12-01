@@ -121,6 +121,7 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             category: d.category,
             author,
             upvotes: d.upvotes || 0,
+            downvotes: d.downvotes || 0,
             commentsCount: d.comment_count || 0,
             postedAt: new Date(d.created_at).toLocaleDateString(),
             reactions: [],

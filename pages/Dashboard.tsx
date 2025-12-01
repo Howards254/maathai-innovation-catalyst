@@ -256,28 +256,38 @@ const Dashboard: React.FC = () => {
                                 
                                 {/* Actions */}
                                 <div className="flex items-center gap-4 pt-3 border-t border-gray-100">
-                                    {/* Upvote Only */}
-                                    <button
-                                      onClick={async (e) => {
-                                        e.preventDefault();
-                                        const currentVote = getUserVote(post.id);
-                                        if (currentVote === 'up') {
-                                          // Remove upvote by downvoting (which removes the vote)
-                                          await voteDiscussion(post.id, 'down');
-                                        } else {
-                                          // Add upvote
+                                    {/* Quora-style Voting */}
+                                    <div className="flex items-center">
+                                      <button
+                                        onClick={async (e) => {
+                                          e.preventDefault();
                                           await voteDiscussion(post.id, 'up');
-                                        }
-                                      }}
-                                      className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                                        getUserVote(post.id) === 'up'
-                                          ? 'text-green-600 bg-green-50'
-                                          : 'text-gray-600 hover:bg-gray-100'
-                                      }`}
-                                    >
-                                      <ArrowUp className="w-4 h-4" />
-                                      <span>{post.upvotes || 0}</span>
-                                    </button>
+                                        }}
+                                        className={`p-2 rounded-l-lg transition-all ${
+                                          getUserVote(post.id) === 'up'
+                                            ? 'text-green-600 bg-green-50'
+                                            : 'text-gray-600 hover:bg-gray-100'
+                                        }`}
+                                      >
+                                        <ArrowUp className="w-4 h-4" />
+                                      </button>
+                                      <span className="px-3 py-2 bg-gray-50 text-sm font-medium text-gray-700 min-w-[3rem] text-center">
+                                        {(post.upvotes || 0) - (post.downvotes || 0)}
+                                      </span>
+                                      <button
+                                        onClick={async (e) => {
+                                          e.preventDefault();
+                                          await voteDiscussion(post.id, 'down');
+                                        }}
+                                        className={`p-2 rounded-r-lg transition-all ${
+                                          getUserVote(post.id) === 'down'
+                                            ? 'text-red-600 bg-red-50'
+                                            : 'text-gray-600 hover:bg-gray-100'
+                                        }`}
+                                      >
+                                        <ArrowDown className="w-4 h-4" />
+                                      </button>
+                                    </div>
 
                                     {/* Like/Reaction Button */}
                                     <div className="relative">

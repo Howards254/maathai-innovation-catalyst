@@ -298,30 +298,42 @@ const DiscussionsFeed: React.FC = () => {
                
                {/* Actions */}
                <div className="flex items-center gap-4 pt-3 border-t border-gray-100">
-                 {/* Upvote Only */}
-                 <button 
-                   onClick={(e) => {
-                     e.preventDefault();
-                     const currentVote = getUserVote(post.id);
-                     if (currentVote === 'up') {
-                       // Remove upvote by downvoting (which removes the vote)
-                       handleVote(post.id, 'down');
-                     } else {
-                       // Add upvote
+                 {/* Quora-style Voting */}
+                 <div className="flex items-center">
+                   <button 
+                     onClick={(e) => {
+                       e.preventDefault();
                        handleVote(post.id, 'up');
-                     }
-                   }}
-                   className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                     getUserVote(post.id) === 'up' 
-                       ? 'text-green-600 bg-green-50' 
-                       : 'text-gray-600 hover:bg-gray-100'
-                   }`}
-                 >
-                   <svg className="w-4 h-4" fill={getUserVote(post.id) === 'up' ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                   </svg>
-                   <span>{post.upvotes || 0}</span>
-                 </button>
+                     }}
+                     className={`p-2 rounded-l-lg transition-all ${
+                       getUserVote(post.id) === 'up' 
+                         ? 'text-green-600 bg-green-50' 
+                         : 'text-gray-600 hover:bg-gray-100'
+                     }`}
+                   >
+                     <svg className="w-4 h-4" fill={getUserVote(post.id) === 'up' ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                     </svg>
+                   </button>
+                   <span className="px-3 py-2 bg-gray-50 text-sm font-medium text-gray-700 min-w-[3rem] text-center">
+                     {(post.upvotes || 0) - (post.downvotes || 0)}
+                   </span>
+                   <button 
+                     onClick={(e) => {
+                       e.preventDefault();
+                       handleVote(post.id, 'down');
+                     }}
+                     className={`p-2 rounded-r-lg transition-all ${
+                       getUserVote(post.id) === 'down' 
+                         ? 'text-red-600 bg-red-50' 
+                         : 'text-gray-600 hover:bg-gray-100'
+                     }`}
+                   >
+                     <svg className="w-4 h-4" fill={getUserVote(post.id) === 'down' ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                     </svg>
+                   </button>
+                 </div>
                  
                  {/* Like/Reaction Button */}
                  <div className="relative">
