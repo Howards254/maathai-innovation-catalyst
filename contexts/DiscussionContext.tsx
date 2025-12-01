@@ -9,7 +9,7 @@ interface Comment {
   content: string;
   author: User;
   discussionId: string;
-  parentCommentId?: string;
+  parentId?: string;
   likeCount: number;
   replyCount: number;
   createdAt: string;
@@ -22,7 +22,7 @@ interface DiscussionContextType {
   loading: boolean;
   createDiscussion: (discussion: Omit<Discussion, 'id' | 'author' | 'upvotes' | 'commentsCount' | 'postedAt' | 'reactions'>) => Promise<void>;
   voteDiscussion: (discussionId: string, voteType: 'up' | 'down') => Promise<void>;
-  addComment: (discussionId: string, content: string, parentCommentId?: string) => Promise<void>;
+  addComment: (discussionId: string, content: string, parentId?: string) => Promise<void>;
   likeComment: (commentId: string) => Promise<void>;
   addReaction: (discussionId: string, reactionType: string) => Promise<void>;
   getDiscussion: (id: string) => Discussion | undefined;
@@ -197,7 +197,7 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
   
-  const addComment = async (discussionId: string, content: string, parentCommentId?: string) => {
+  const addComment = async (discussionId: string, content: string, parentId?: string) => {
     if (!user) return;
     
     try {
@@ -207,7 +207,7 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           discussion_id: discussionId,
           author_id: user.id,
           content: content,
-          parent_comment_id: parentCommentId || null
+          parent_id: parentId || null
         })
         .select()
         .single();
@@ -344,7 +344,7 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           content: c.content,
           author,
           discussionId: c.discussion_id,
-          parentCommentId: c.parent_comment_id,
+          parentId: c.parent_id,
           likeCount: c.like_count || 0,
           replyCount: c.reply_count || 0,
           createdAt: c.created_at
@@ -352,12 +352,12 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       });
       
       // Organize comments into threads (parent comments with their replies)
-      const parentComments = formattedComments.filter(c => !c.parentCommentId);
-      const replies = formattedComments.filter(c => c.parentCommentId);
+      const parentComments = formattedComments.filter(c => !c.parentId);
+      const replies = formattedComments.filter(c => c.parentId);
       
       const commentsWithReplies = parentComments.map(parent => ({
         ...parent,
-        replies: replies.filter(reply => reply.parentCommentId === parent.id)
+        replies: replies.filter(reply => reply.parentId === parent.id)
       }));
       
       setComments(commentsWithReplies);
