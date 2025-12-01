@@ -41,6 +41,9 @@ const EnhancedStories: React.FC = () => {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const [showUserTransition, setShowUserTransition] = useState(false);
+  const [viewedStories, setViewedStories] = useState<Set<string>>(new Set());
   const videoRef = useRef<HTMLVideoElement>(null);
   const progressInterval = useRef<NodeJS.Timeout>();
 
@@ -167,8 +170,21 @@ const EnhancedStories: React.FC = () => {
 
   const nextStory = () => {
     if (currentIndex < stories.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-      setProgress(0);
+      const currentStory = stories[currentIndex];
+      const nextStory = stories[currentIndex + 1];
+      
+      // Check if switching to different user
+      if (currentStory.author_id !== nextStory.author_id) {
+        setShowUserTransition(true);
+        setTimeout(() => {
+          setShowUserTransition(false);
+          setCurrentIndex(currentIndex + 1);
+          setProgress(0);
+        }, 1000);
+      } else {
+        setCurrentIndex(currentIndex + 1);
+        setProgress(0);
+      }
     } else {
       setIsFullScreen(false);
     }
@@ -185,6 +201,9 @@ const EnhancedStories: React.FC = () => {
     setCurrentIndex(index);
     setIsFullScreen(true);
     recordView(stories[index].id);
+    
+    // Mark story as viewed
+    setViewedStories(prev => new Set([...prev, stories[index].id]));
   };
 
   const getTimeRemaining = (expiresAt: string) => {
@@ -243,7 +262,7 @@ const EnhancedStories: React.FC = () => {
 
       {/* Grouped Stories */}
       {storyGroups.map((group) => {
-        const hasUnviewed = group.stories.some((s: any) => !s.has_viewed);
+        const hasUnviewed = group.stories.some((s: any) => !viewedStories.has(s.id));
         const storyCount = group.stories.length;
         
         return (
@@ -267,7 +286,7 @@ const EnhancedStories: React.FC = () => {
                 </div>
               )}
               {hasUnviewed && (
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
               )}
             </button>
             <p className="text-xs mt-2 text-gray-600 truncate w-16">{group.author.name.split(' ')[0]}</p>
@@ -377,7 +396,7 @@ const EnhancedStories: React.FC = () => {
                   </div>
                   
                   {/* Viewed indicator */}
-                  {story.has_viewed && (
+                  {viewedStories.has(story.id) && (
                     <div className="absolute top-2 right-2 w-3 h-3 bg-green-500 rounded-full border border-white"></div>
                   )}
                 </div>
@@ -446,7 +465,9 @@ const EnhancedStories: React.FC = () => {
             playsInline
             onClick={() => {
               if (videoRef.current) {
-                videoRef.current.muted = !videoRef.current.muted;
+                const newMutedState = !isMuted;
+                videoRef.current.muted = newMutedState;
+                setIsMuted(newMutedState);
               }
             }}
           />
@@ -531,7 +552,47 @@ const EnhancedStories: React.FC = () => {
         <button className="w-12 h-12 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors">
           <Share2 className="w-6 h-6 text-white" />
         </button>
+        
+        {/* Sound toggle for videos */}
+        {currentStory.media_type === 'video' && (
+          <button
+            onClick={() => {
+              if (videoRef.current) {
+                const newMutedState = !isMuted;
+                videoRef.current.muted = newMutedState;
+                setIsMuted(newMutedState);
+              }
+            }}
+            className="w-12 h-12 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
+          >
+            {isMuted ? (
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" clipRule="evenodd" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+              </svg>
+            )}
+          </button>
+        )}
       </div>
+
+      {/* User Transition Overlay */}
+      {showUserTransition && (
+        <div className="absolute inset-0 bg-black/90 flex items-center justify-center z-30">
+          <div className="text-center">
+            <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </div>
+            <p className="text-white text-lg font-semibold">Next User</p>
+            <p className="text-white/80 text-sm">{stories[currentIndex + 1]?.author_name}</p>
+          </div>
+        </div>
+      )}
 
       <EnhancedCreateStoryModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} />
     </div>
