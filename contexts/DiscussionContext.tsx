@@ -52,7 +52,33 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   useEffect(() => {
     loadDiscussions();
+    if (user?.id) {
+      loadUserVotes();
+    }
   }, [user?.id]);
+
+  const loadUserVotes = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('discussion_votes')
+        .select('discussion_id, vote_type')
+        .eq('user_id', user.id);
+      
+      if (error) throw error;
+      
+      const votes: Record<string, 'up' | 'down'> = {};
+      data?.forEach(vote => {
+        votes[vote.discussion_id] = vote.vote_type;
+      });
+      
+      setUserVotes(votes);
+      localStorage.setItem(`user_votes_${user.id}`, JSON.stringify(votes));
+    } catch (error) {
+      console.error('Error loading user votes:', error);
+    }
+  };
 
   const loadDiscussions = async () => {
     try {

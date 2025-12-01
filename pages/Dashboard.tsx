@@ -256,37 +256,28 @@ const Dashboard: React.FC = () => {
                                 
                                 {/* Actions */}
                                 <div className="flex items-center gap-4 pt-3 border-t border-gray-100">
-                                    {/* Upvote/Downvote */}
-                                    <div className="flex items-center gap-1">
-                                      <button
-                                        onClick={async (e) => {
-                                          e.preventDefault();
-                                          await voteDiscussion(post.id, 'up');
-                                        }}
-                                        className={`flex items-center gap-1 px-2 py-1 rounded-lg text-sm font-medium transition-all ${
-                                          getUserVote(post.id) === 'up'
-                                            ? 'text-green-600 bg-green-50'
-                                            : 'text-gray-600 hover:bg-gray-100'
-                                        }`}
-                                      >
-                                        <ArrowUp className="w-4 h-4" />
-                                        <span>{post.upvotes || 0}</span>
-                                      </button>
-                                      <button
-                                        onClick={async (e) => {
-                                          e.preventDefault();
+                                    {/* Upvote Only */}
+                                    <button
+                                      onClick={async (e) => {
+                                        e.preventDefault();
+                                        const currentVote = getUserVote(post.id);
+                                        if (currentVote === 'up') {
+                                          // Remove upvote by downvoting (which removes the vote)
                                           await voteDiscussion(post.id, 'down');
-                                        }}
-                                        className={`flex items-center gap-1 px-2 py-1 rounded-lg text-sm font-medium transition-all ${
-                                          getUserVote(post.id) === 'down'
-                                            ? 'text-red-600 bg-red-50'
-                                            : 'text-gray-600 hover:bg-gray-100'
-                                        }`}
-                                      >
-                                        <ArrowDown className="w-4 h-4" />
-                                        <span>{post.downvotes || 0}</span>
-                                      </button>
-                                    </div>
+                                        } else {
+                                          // Add upvote
+                                          await voteDiscussion(post.id, 'up');
+                                        }
+                                      }}
+                                      className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                                        getUserVote(post.id) === 'up'
+                                          ? 'text-green-600 bg-green-50'
+                                          : 'text-gray-600 hover:bg-gray-100'
+                                      }`}
+                                    >
+                                      <ArrowUp className="w-4 h-4" />
+                                      <span>{post.upvotes || 0}</span>
+                                    </button>
 
                                     {/* Like/Reaction Button */}
                                     <div className="relative">
