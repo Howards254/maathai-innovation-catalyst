@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Camera, Plus, Heart, MessageCircle, Share2, Eye, Clock, Music, Sparkles, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import CreateStoryModal from '../components/CreateStoryModal';
+import EnhancedCreateStoryModal from '../components/EnhancedCreateStoryModal';
 
 interface Story {
   id: string;
@@ -354,7 +354,7 @@ const EnhancedStories: React.FC = () => {
           )}
         </div>
 
-        <CreateStoryModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} />
+        <EnhancedCreateStoryModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} />
       </div>
     );
   }
@@ -495,7 +495,7 @@ const EnhancedStories: React.FC = () => {
         </button>
       </div>
 
-      <CreateStoryModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} />
+      <EnhancedCreateStoryModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} />
     </div>
   );
 };

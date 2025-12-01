@@ -55,10 +55,8 @@ const EnhancedCreateStoryModal: React.FC<EnhancedCreateStoryModalProps> = ({ isO
     setMediaType(isVideo ? 'video' : 'image');
     setMediaFile(file);
     
-    // Use FileReader for preview (works in production)
-    const reader = new FileReader();
-    reader.onload = () => setMediaPreview(reader.result as string);
-    reader.readAsDataURL(file);
+    const url = URL.createObjectURL(file);
+    setMediaPreview(url);
     setStep('edit');
   };
 
@@ -93,12 +91,9 @@ const EnhancedCreateStoryModal: React.FC<EnhancedCreateStoryModalProps> = ({ isO
         ? 'https://api.cloudinary.com/v1_1/your-cloud-name/video/upload'
         : 'https://api.cloudinary.com/v1_1/your-cloud-name/image/upload';
       
-      // Convert file to base64 for temporary storage (works in production)
-      const mediaUrl = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.readAsDataURL(mediaFile);
-      });
+      // Use original working Cloudinary upload
+      const { uploadMedia } = await import('../lib/uploadMedia');
+      const mediaUrl = await uploadMedia(mediaFile, 'stories');
       
       await createStory({
         title: formData.title || 'My Impact Story',
