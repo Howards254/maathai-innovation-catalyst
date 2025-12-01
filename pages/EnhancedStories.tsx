@@ -206,6 +206,27 @@ const EnhancedStories: React.FC = () => {
     );
   }
 
+  // Group stories by author (like Facebook/Instagram)
+  const groupedStories = stories.reduce((groups, story, index) => {
+    const authorId = story.author_id;
+    if (!groups[authorId]) {
+      groups[authorId] = {
+        author: {
+          id: authorId,
+          name: story.author_name,
+          username: story.author_username,
+          avatar: story.author_avatar
+        },
+        stories: [],
+        firstIndex: index
+      };
+    }
+    groups[authorId].stories.push({ ...story, originalIndex: index });
+    return groups;
+  }, {} as Record<string, any>);
+
+  const storyGroups = Object.values(groupedStories);
+
   // Stories Ring View (like Instagram/Facebook)
   const StoriesRing = () => (
     <div className="flex gap-4 p-4 overflow-x-auto">
@@ -220,29 +241,39 @@ const EnhancedStories: React.FC = () => {
         <p className="text-xs mt-2 text-gray-600">Your Story</p>
       </div>
 
-      {/* Stories */}
-      {stories.map((story, index) => (
-        <div key={story.id} className="flex-shrink-0 text-center">
-          <button
-            onClick={() => openFullScreen(index)}
-            className={`relative w-16 h-16 rounded-full p-0.5 ${
-              story.has_viewed 
-                ? 'bg-gray-300' 
-                : 'bg-gradient-to-tr from-pink-500 via-red-500 to-yellow-500'
-            }`}
-          >
-            <img
-              src={story.author_avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(story.author_name)}&background=10b981&color=fff`}
-              alt={story.author_name}
-              className="w-full h-full rounded-full object-cover border-2 border-white"
-            />
-            {!story.has_viewed && (
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
-            )}
-          </button>
-          <p className="text-xs mt-2 text-gray-600 truncate w-16">{story.author_name.split(' ')[0]}</p>
-        </div>
-      ))}
+      {/* Grouped Stories */}
+      {storyGroups.map((group) => {
+        const hasUnviewed = group.stories.some((s: any) => !s.has_viewed);
+        const storyCount = group.stories.length;
+        
+        return (
+          <div key={group.author.id} className="flex-shrink-0 text-center">
+            <button
+              onClick={() => openFullScreen(group.firstIndex)}
+              className={`relative w-16 h-16 rounded-full p-0.5 ${
+                hasUnviewed 
+                  ? 'bg-gradient-to-tr from-pink-500 via-red-500 to-yellow-500'
+                  : 'bg-gray-300'
+              }`}
+            >
+              <img
+                src={group.author.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(group.author.name)}&background=10b981&color=fff`}
+                alt={group.author.name}
+                className="w-full h-full rounded-full object-cover border-2 border-white"
+              />
+              {storyCount > 1 && (
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center border-2 border-white font-bold">
+                  {storyCount}
+                </div>
+              )}
+              {hasUnviewed && (
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+              )}
+            </button>
+            <p className="text-xs mt-2 text-gray-600 truncate w-16">{group.author.name.split(' ')[0]}</p>
+          </div>
+        );
+      })}
     </div>
   );
 
@@ -291,10 +322,11 @@ const EnhancedStories: React.FC = () => {
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {stories.map((story, index) => (
+              {storyGroups.map((group) => (
+                group.stories.map((story: any, storyIndex: number) => (
                 <div
                   key={story.id}
-                  onClick={() => openFullScreen(index)}
+                  onClick={() => openFullScreen(story.originalIndex)}
                   className="relative bg-black rounded-xl overflow-hidden cursor-pointer hover:scale-105 transition-transform"
                   style={{ aspectRatio: '9/16' }}
                 >
@@ -349,6 +381,7 @@ const EnhancedStories: React.FC = () => {
                     <div className="absolute top-2 right-2 w-3 h-3 bg-green-500 rounded-full border border-white"></div>
                   )}
                 </div>
+                ))
               ))}
             </div>
           )}
@@ -411,6 +444,11 @@ const EnhancedStories: React.FC = () => {
             loop
             muted
             playsInline
+            onClick={() => {
+              if (videoRef.current) {
+                videoRef.current.muted = !videoRef.current.muted;
+              }
+            }}
           />
         ) : (
           <img

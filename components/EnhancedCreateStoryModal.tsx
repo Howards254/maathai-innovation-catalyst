@@ -107,6 +107,10 @@ const EnhancedCreateStoryModal: React.FC<EnhancedCreateStoryModalProps> = ({ isO
         file_size: mediaFile.size
       });
 
+      // Success notification and refresh
+      alert('Story published successfully! 🎉');
+      window.location.reload();
+      
       onClose();
       resetForm();
     } catch (error) {
