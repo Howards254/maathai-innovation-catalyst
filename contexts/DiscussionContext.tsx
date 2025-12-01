@@ -178,18 +178,24 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const voteDiscussion = async (discussionId: string, voteType: 'up' | 'down') => {
     if (!user) return;
     
+    console.log('Voting:', { discussionId, voteType, currentVote: userVotes[discussionId] });
+    
     try {
       const currentVote = userVotes[discussionId];
       
       if (currentVote === voteType) {
         // Remove vote if clicking same vote type
+        console.log('Removing vote');
         const { error } = await supabase
           .from('discussion_votes')
           .delete()
           .eq('discussion_id', discussionId)
           .eq('user_id', user.id);
         
-        if (error) throw error;
+        if (error) {
+          console.error('Delete error:', error);
+          throw error;
+        }
         
         const newVotes = { ...userVotes };
         delete newVotes[discussionId];
@@ -197,6 +203,7 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         localStorage.setItem(`user_votes_${user.id}`, JSON.stringify(newVotes));
       } else {
         // Add or update vote
+        console.log('Adding/updating vote');
         const { error } = await supabase
           .from('discussion_votes')
           .upsert({
@@ -205,7 +212,10 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             vote_type: voteType
           });
         
-        if (error) throw error;
+        if (error) {
+          console.error('Upsert error:', error);
+          throw error;
+        }
         
         const newVotes = { ...userVotes, [discussionId]: voteType };
         setUserVotes(newVotes);
@@ -219,6 +229,7 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       
       // Reload discussions to get updated counts
       await loadDiscussions();
+      console.log('Vote completed successfully');
     } catch (error) {
       console.error('Error voting on discussion:', error);
     }
