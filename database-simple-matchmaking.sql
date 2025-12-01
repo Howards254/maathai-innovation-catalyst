@@ -8,7 +8,10 @@ ALTER TABLE profiles ADD COLUMN IF NOT EXISTS location TEXT;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS latitude DECIMAL(10,8);
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS longitude DECIMAL(11,8);
 
--- Simple matchmaking function
+-- Add social preferences field
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS social_preferences TEXT[] DEFAULT '{}';
+
+-- Enhanced matchmaking function emphasizing social + interests
 CREATE OR REPLACE FUNCTION find_green_matches(
     user_id UUID,
     max_distance_km INTEGER DEFAULT 50,
@@ -29,7 +32,7 @@ RETURNS TABLE (
 BEGIN
     RETURN QUERY
     WITH user_data AS (
-        SELECT interests, goals, latitude, longitude
+        SELECT interests, goals, social_preferences, latitude, longitude
         FROM profiles 
         WHERE id = user_id
     ),
@@ -42,13 +45,16 @@ BEGIN
             p.location,
             p.interests,
             p.goals,
+            p.social_preferences,
             p.latitude,
             p.longitude,
-            -- Calculate shared interests
+            -- Calculate shared interests (PRIMARY)
             COALESCE(array_length(p.interests & u.interests, 1), 0) as shared_interests_count,
-            -- Calculate shared goals  
+            -- Calculate shared social preferences (PRIMARY)
+            COALESCE(array_length(p.social_preferences & u.social_preferences, 1), 0) as shared_social_count,
+            -- Calculate shared goals (SECONDARY)
             COALESCE(array_length(p.goals & u.goals, 1), 0) as shared_goals_count,
-            -- Calculate distance if coordinates available
+            -- Calculate distance (TERTIARY)
             CASE 
                 WHEN p.latitude IS NOT NULL AND p.longitude IS NOT NULL 
                      AND u.latitude IS NOT NULL AND u.longitude IS NOT NULL
@@ -75,20 +81,21 @@ BEGIN
         pm.shared_interests_count,
         pm.shared_goals_count,
         ROUND(pm.distance, 1),
-        -- Match score: interests × 10 + goals × 15 + proximity × 20
-        (pm.shared_interests_count * 10 + 
-         pm.shared_goals_count * 15 + 
+        -- NEW SCORING: Social × 25 + Interests × 20 + Goals × 10 + Location × 5
+        (pm.shared_social_count * 25 + 
+         pm.shared_interests_count * 20 + 
+         pm.shared_goals_count * 10 + 
          CASE 
-            WHEN pm.distance IS NULL THEN 10
-            WHEN pm.distance <= 10 THEN 20
-            WHEN pm.distance <= 25 THEN 15
-            WHEN pm.distance <= 50 THEN 10
-            ELSE 5
+            WHEN pm.distance IS NULL THEN 3
+            WHEN pm.distance <= 10 THEN 5
+            WHEN pm.distance <= 25 THEN 4
+            WHEN pm.distance <= 50 THEN 3
+            ELSE 1
          END) as score
     FROM potential_matches pm
     WHERE pm.shared_interests_count >= min_shared_interests
     AND (pm.distance IS NULL OR pm.distance <= max_distance_km)
-    ORDER BY score DESC, pm.distance ASC NULLS LAST
+    ORDER BY score DESC, pm.shared_social_count DESC, pm.shared_interests_count DESC, pm.distance ASC NULLS LAST
     LIMIT limit_count;
 END;
 $$ LANGUAGE plpgsql;

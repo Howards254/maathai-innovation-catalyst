@@ -45,7 +45,7 @@ const GreenMatchmaking: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('interests, goals, location')
+        .select('interests, goals, social_preferences, location')
         .eq('id', user.id)
         .single();
       
@@ -54,8 +54,9 @@ const GreenMatchmaking: React.FC = () => {
       
       // Show setup if profile is incomplete
       const hasInterests = data?.interests && data.interests.length > 0;
+      const hasSocial = data?.social_preferences && data.social_preferences.length > 0;
       const hasLocation = data?.location && data.location.trim() !== '';
-      setShowSetup(!hasInterests || !hasLocation);
+      setShowSetup(!hasInterests || !hasSocial);
     } catch (error) {
       console.error('Error loading user profile:', error);
       setShowSetup(true);
@@ -225,7 +226,7 @@ const GreenMatchmaking: React.FC = () => {
                 Search Again
               </button>
               <button
-                onClick={() => navigate('/app/profile/edit')}
+                onClick={() => navigate('/app/profile/me/edit')}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
               >
                 <Settings className="w-4 h-4" />

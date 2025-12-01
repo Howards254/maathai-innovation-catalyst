@@ -10,7 +10,7 @@ const MatchmakingSetup: React.FC<MatchmakingSetupProps> = ({ onClose }) => {
   const navigate = useNavigate();
 
   const handleSetupProfile = () => {
-    navigate('/app/profile/edit');
+    navigate('/app/profile/me/edit');
     onClose?.();
   };
 
@@ -33,16 +33,16 @@ const MatchmakingSetup: React.FC<MatchmakingSetupProps> = ({ onClose }) => {
           
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
             <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Users className="w-4 h-4 text-pink-500" />
+              <span>Social preferences</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-gray-600">
               <Heart className="w-4 h-4 text-green-500" />
               <span>Environmental interests</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <MapPin className="w-4 h-4 text-blue-500" />
-              <span>Location & distance</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Users className="w-4 h-4 text-purple-500" />
-              <span>Skills & activities</span>
+              <span>Location (optional)</span>
             </div>
           </div>
           

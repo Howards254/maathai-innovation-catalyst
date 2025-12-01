@@ -107,7 +107,7 @@ const ProfileEdit: React.FC = () => {
           causes: data.interests || [], // Load interests as causes
           skills: data.goals?.filter((g: string) => skills.some(s => s.id === g)) || [], // Filter goals that are skills
           activities: data.goals?.filter((g: string) => activities.some(a => a.id === g)) || [], // Filter goals that are activities
-          lookingFor: data.looking_for || [],
+          lookingFor: data.social_preferences || [], // Load social preferences
           maxDistance: data.max_distance_km || 50
         });
       }
@@ -187,8 +187,9 @@ const ProfileEdit: React.FC = () => {
           username: formData.username,
           bio: formData.bio,
           location: `${formData.locationCity}, ${formData.locationCountry}`.trim().replace(/^,\s*|,\s*$/g, ''),
-          interests: formData.causes, // Store environmental causes as interests
-          goals: [...formData.skills, ...formData.activities], // Combine skills and activities as goals
+          interests: formData.causes, // Environmental causes as interests
+          social_preferences: formData.lookingFor, // Social preferences (what they're looking for)
+          goals: [...formData.skills, ...formData.activities], // Skills and activities as goals
           latitude: null, // Will be set later via geocoding if needed
           longitude: null,
           updated_at: new Date().toISOString()
