@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCampaigns } from '../contexts/CampaignContext';
 import { useDiscussions } from '../contexts/DiscussionContext';
 import { useUser } from '../contexts/UserContext';
-import { Play, ThumbsUp, Camera } from 'lucide-react';
+import { Play, ThumbsUp, ThumbsDown, Camera, ArrowUp, ArrowDown } from 'lucide-react';
 import CreateStoryModal from '../components/CreateStoryModal';
 import SuggestedUsers from '../components/SuggestedUsers';
 import FriendsActivityFeed from '../components/FriendsActivityFeed';
@@ -256,53 +256,36 @@ const Dashboard: React.FC = () => {
                                 
                                 {/* Actions */}
                                 <div className="flex items-center gap-4 pt-3 border-t border-gray-100">
-                                    {/* Like/Reaction Button */}
-                                    <div className="relative">
+                                    {/* Upvote/Downvote */}
+                                    <div className="flex items-center gap-1">
                                       <button
                                         onClick={(e) => {
                                           e.preventDefault();
-                                          if (!reactions[post.id]) {
-                                            handleReaction(post.id, '👍');
-                                          } else {
-                                            setShowReactionPicker(showReactionPicker === post.id ? null : post.id);
-                                          }
+                                          voteDiscussion(post.id, 'up');
                                         }}
-                                        onMouseEnter={() => setShowReactionPicker(post.id)}
-                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                                          reactions[post.id]
+                                        className={`flex items-center gap-1 px-2 py-1 rounded-lg text-sm font-medium transition-all ${
+                                          getUserVote(post.id) === 'up'
                                             ? 'text-green-600 bg-green-50'
                                             : 'text-gray-600 hover:bg-gray-100'
                                         }`}
                                       >
-                                        {reactions[post.id] ? (
-                                          <span className="text-base">{reactions[post.id]}</span>
-                                        ) : (
-                                          <ThumbsUp className="w-4 h-4" />
-                                        )}
-                                        <span>{reactions[post.id] ? 'Reacted' : 'Like'}</span>
+                                        <ArrowUp className="w-4 h-4" />
+                                        <span>{post.upvotes || 0}</span>
                                       </button>
-                                      
-                                      {/* Reaction Picker */}
-                                      {showReactionPicker === post.id && (
-                                        <div 
-                                          className="absolute bottom-full left-0 mb-2 bg-white border border-gray-200 rounded-full shadow-lg px-2 py-2 flex gap-1 z-10"
-                                          onMouseLeave={() => setShowReactionPicker(null)}
-                                        >
-                                          {reactionEmojis.map((reaction, index) => (
-                                            <button
-                                              key={index}
-                                              onClick={(e) => {
-                                                e.preventDefault();
-                                                handleReaction(post.id, reaction.emoji);
-                                              }}
-                                              className="text-2xl hover:scale-125 transition-transform p-1"
-                                              title={reaction.label}
-                                            >
-                                              {reaction.emoji}
-                                            </button>
-                                          ))}
-                                        </div>
-                                      )}
+                                      <button
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          voteDiscussion(post.id, 'down');
+                                        }}
+                                        className={`flex items-center gap-1 px-2 py-1 rounded-lg text-sm font-medium transition-all ${
+                                          getUserVote(post.id) === 'down'
+                                            ? 'text-red-600 bg-red-50'
+                                            : 'text-gray-600 hover:bg-gray-100'
+                                        }`}
+                                      >
+                                        <ArrowDown className="w-4 h-4" />
+                                        <span>{post.downvotes || 0}</span>
+                                      </button>
                                     </div>
 
                                     <Link 
@@ -312,7 +295,7 @@ const Dashboard: React.FC = () => {
                                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                                       </svg>
-                                      <span>{post.commentsCount || 0}</span>
+                                      <span>{post.comment_count || 0}</span>
                                     </Link>
 
                                     <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors ml-auto">

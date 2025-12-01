@@ -86,9 +86,9 @@ export default function SuggestedUsers() {
           <div key={user.id} className="flex items-start gap-3">
             <Link to={`/app/profile/${user.username}`}>
               <img
-                src={user.avatar_url || 'https://via.placeholder.com/40'}
+                src={user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name || user.username)}&background=10b981&color=fff&size=40`}
                 alt={user.full_name}
-                className="w-10 h-10 rounded-full object-cover"
+                className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-100 hover:ring-green-300 transition-all"
               />
             </Link>
             <div className="flex-1 min-w-0">
