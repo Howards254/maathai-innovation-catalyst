@@ -59,46 +59,35 @@ const EnhancedStories: React.FC = () => {
 
   const loadStories = async () => {
     try {
-      // Try enhanced function first, fallback to regular query
-      let data, error;
-      
-      try {
-        const result = await supabase.rpc('get_active_stories', {
-          viewer_user_id: user?.id,
-          limit_count: 50
-        });
-        data = result.data;
-        error = result.error;
-      } catch (rpcError) {
-        // Fallback to regular query if RPC doesn't exist
-        const result = await supabase
-          .from('stories')
-          .select(`
-            *,
-            author:profiles!stories_author_id_fkey(id, full_name, username, avatar_url)
-          `)
-          .gt('expires_at', new Date().toISOString())
-          .order('created_at', { ascending: false })
-          .limit(50);
-        
-        data = result.data?.map(story => ({
-          ...story,
-          author_name: story.author?.full_name,
-          author_username: story.author?.username,
-          author_avatar: story.author?.avatar_url,
-          views_count: story.views_count || 0,
-          reactions_count: 0,
-          comments_count: 0,
-          has_viewed: false,
-          user_reaction: null
-        }));
-        error = result.error;
-      }
+      // Use regular query (RPC functions may not be available)
+      const { data, error } = await supabase
+        .from('stories')
+        .select(`
+          *,
+          author:profiles!stories_author_id_fkey(id, full_name, username, avatar_url)
+        `)
+        .gte('expires_at', new Date().toISOString())
+        .order('created_at', { ascending: false })
+        .limit(50);
       
       if (error) throw error;
-      setStories(data || []);
+      
+      const formattedStories = data?.map(story => ({
+        ...story,
+        author_name: story.author?.full_name || 'Unknown User',
+        author_username: story.author?.username || 'unknown',
+        author_avatar: story.author?.avatar_url,
+        views_count: story.views_count || 0,
+        reactions_count: 0,
+        comments_count: 0,
+        has_viewed: false,
+        user_reaction: null
+      })) || [];
+      
+      setStories(formattedStories);
     } catch (error) {
       console.error('Error loading stories:', error);
+      setStories([]);
     } finally {
       setLoading(false);
     }
@@ -108,23 +97,20 @@ const EnhancedStories: React.FC = () => {
     if (!user) return;
     
     try {
-      // Try RPC function first, fallback to manual insert
-      try {
-        await supabase.rpc('record_story_view', {
-          p_story_id: storyId,
-          p_viewer_id: user.id,
-          p_duration: duration
+      // Simple view recording without RPC
+      await supabase
+        .from('story_views')
+        .upsert({
+          story_id: storyId,
+          viewer_id: user.id,
+          view_duration: duration
         });
-      } catch (rpcError) {
-        // Fallback to manual view recording
-        await supabase
-          .from('story_views')
-          .upsert({
-            story_id: storyId,
-            viewer_id: user.id,
-            view_duration: duration
-          });
-      }
+        
+      // Update view count
+      await supabase
+        .from('stories')
+        .update({ views_count: supabase.sql`COALESCE(views_count, 0) + 1` })
+        .eq('id', storyId);
     } catch (error) {
       console.error('Error recording view:', error);
     }

@@ -91,18 +91,16 @@ const EnhancedCreateStoryModal: React.FC<EnhancedCreateStoryModalProps> = ({ isO
         ? 'https://api.cloudinary.com/v1_1/your-cloud-name/video/upload'
         : 'https://api.cloudinary.com/v1_1/your-cloud-name/image/upload';
       
-      let mediaUrl;
-      try {
-        const uploadResponse = await fetch(cloudinaryUrl, {
-          method: 'POST',
-          body: formDataUpload
-        });
-        const uploadResult = await uploadResponse.json();
-        mediaUrl = uploadResult.secure_url;
-      } catch (uploadError) {
-        // Fallback to blob URL for development
-        mediaUrl = URL.createObjectURL(mediaFile);
-      }
+      // For now, use blob URL (replace with your Cloudinary config)
+      const mediaUrl = URL.createObjectURL(mediaFile);
+      
+      // TODO: Replace with your actual Cloudinary upload
+      // const formDataUpload = new FormData();
+      // formDataUpload.append('file', mediaFile);
+      // formDataUpload.append('upload_preset', 'your_preset');
+      // const response = await fetch('your_cloudinary_url', { method: 'POST', body: formDataUpload });
+      // const result = await response.json();
+      // mediaUrl = result.secure_url;
       
       await createStory({
         title: formData.title || 'My Impact Story',
