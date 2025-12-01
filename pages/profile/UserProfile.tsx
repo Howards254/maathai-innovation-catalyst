@@ -71,16 +71,20 @@ const UserProfile: React.FC = () => {
 
   const loadUserStats = async (userId: string) => {
     try {
-      // Get followers/following count
-      const [followersRes, followingRes, campaignsRes, discussionsRes] = await Promise.all([
+      // Get all stats in parallel
+      const [followersRes, followingRes, campaignsRes, discussionsRes, treesRes] = await Promise.all([
         supabase.from('follows').select('id').eq('following_id', userId),
         supabase.from('follows').select('id').eq('follower_id', userId),
         supabase.from('campaign_participants').select('id').eq('user_id', userId),
-        supabase.from('discussions').select('id').eq('author_id', userId)
+        supabase.from('discussions').select('id').eq('author_id', userId),
+        supabase.from('tree_plantings').select('trees_planted').eq('user_id', userId)
       ]);
 
+      // Calculate total trees planted
+      const totalTrees = treesRes.data?.reduce((sum, record) => sum + (record.trees_planted || 0), 0) || 0;
+
       setStats({
-        treesPlanted: Math.floor(Math.random() * 200) + 50, // Mock data
+        treesPlanted: totalTrees,
         campaignsJoined: campaignsRes.data?.length || 0,
         discussionsCreated: discussionsRes.data?.length || 0,
         followers: followersRes.data?.length || 0,
@@ -270,7 +274,7 @@ const UserProfile: React.FC = () => {
               </div>
             </div>
             <div className="bg-white p-4 rounded-lg border border-gray-200 text-center">
-              <div className="text-2xl font-bold text-yellow-600">5</div>
+              <div className="text-2xl font-bold text-yellow-600">{user.badges?.length || 1}</div>
               <div className="text-sm text-gray-600 flex items-center justify-center gap-1">
                 <Award className="w-4 h-4" />
                 Badges
