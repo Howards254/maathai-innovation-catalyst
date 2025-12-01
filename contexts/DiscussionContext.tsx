@@ -204,16 +204,25 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       } else {
         // Add or update vote
         console.log('Adding/updating vote');
+        
+        // First delete any existing vote
+        await supabase
+          .from('discussion_votes')
+          .delete()
+          .eq('discussion_id', discussionId)
+          .eq('user_id', user.id);
+        
+        // Then insert the new vote
         const { error } = await supabase
           .from('discussion_votes')
-          .upsert({
+          .insert({
             discussion_id: discussionId,
             user_id: user.id,
             vote_type: voteType
           });
         
         if (error) {
-          console.error('Upsert error:', error);
+          console.error('Insert error:', error);
           throw error;
         }
         
