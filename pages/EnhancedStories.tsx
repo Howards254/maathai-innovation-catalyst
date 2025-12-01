@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Camera, Plus, Heart, MessageCircle, Share2, Eye, Clock, Music, Sparkles, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import EnhancedCreateStoryModal from '../components/EnhancedCreateStoryModal';
+import CreateStoryModal from '../components/CreateStoryModal';
 
 interface Story {
   id: string;
@@ -66,23 +66,29 @@ const EnhancedStories: React.FC = () => {
           *,
           author:profiles!stories_author_id_fkey(id, full_name, username, avatar_url)
         `)
-        .gte('expires_at', new Date().toISOString())
+
         .order('created_at', { ascending: false })
         .limit(50);
       
       if (error) throw error;
       
-      const formattedStories = data?.map(story => ({
+      // Filter expired stories and format for enhanced UI
+      const activeStories = data?.filter(story => {
+        if (!story.expires_at) return true;
+        return new Date(story.expires_at) > new Date();
+      }) || [];
+      
+      const formattedStories = activeStories.map(story => ({
         ...story,
         author_name: story.author?.full_name || 'Unknown User',
         author_username: story.author?.username || 'unknown',
         author_avatar: story.author?.avatar_url,
         views_count: story.views_count || 0,
-        reactions_count: 0,
-        comments_count: 0,
+        reactions_count: story.reactions?.length || 0,
+        comments_count: story.comments?.length || 0,
         has_viewed: false,
         user_reaction: null
-      })) || [];
+      }));
       
       setStories(formattedStories);
     } catch (error) {
@@ -348,7 +354,7 @@ const EnhancedStories: React.FC = () => {
           )}
         </div>
 
-        <EnhancedCreateStoryModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} />
+        <CreateStoryModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} />
       </div>
     );
   }
@@ -489,7 +495,7 @@ const EnhancedStories: React.FC = () => {
         </button>
       </div>
 
-      <EnhancedCreateStoryModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} />
+      <CreateStoryModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} />
     </div>
   );
 };

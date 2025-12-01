@@ -49,7 +49,6 @@ export const StoriesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const loadStories = async () => {
     setLoading(true);
     try {
-      // Use regular query for compatibility
       const { data, error } = await supabase
         .from('stories')
         .select(`
@@ -58,11 +57,17 @@ export const StoriesProvider: React.FC<{ children: React.ReactNode }> = ({ child
           reactions:story_reactions(id, user_id, reaction_type),
           comments:story_comments(id, author_id, content)
         `)
-        .gte('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false });
-      
+
       if (error) throw error;
-      setStories(data || []);
+      
+      // Filter expired stories on client side if expires_at exists
+      const activeStories = data?.filter(story => {
+        if (!story.expires_at) return true; // Show stories without expiration
+        return new Date(story.expires_at) > new Date();
+      }) || [];
+      
+      setStories(activeStories);
     } catch (error) {
       console.error('Error loading stories:', error);
       setStories([]);
@@ -88,8 +93,7 @@ export const StoriesProvider: React.FC<{ children: React.ReactNode }> = ({ child
           story_type: storyData.story_type || 'general',
           location: storyData.location,
           tags: storyData.tags,
-          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours from now
-          is_archived: false
+          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours from now
         })
         .select(`
           *,
