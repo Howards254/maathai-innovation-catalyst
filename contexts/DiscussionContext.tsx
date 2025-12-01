@@ -9,7 +9,11 @@ interface Comment {
   content: string;
   author: User;
   discussionId: string;
+  parentCommentId?: string;
+  likeCount: number;
+  replyCount: number;
   createdAt: string;
+  replies?: Comment[];
 }
 
 interface DiscussionContextType {
@@ -18,10 +22,14 @@ interface DiscussionContextType {
   loading: boolean;
   createDiscussion: (discussion: Omit<Discussion, 'id' | 'author' | 'upvotes' | 'commentsCount' | 'postedAt' | 'reactions'>) => Promise<void>;
   voteDiscussion: (discussionId: string, voteType: 'up' | 'down') => Promise<void>;
-  addComment: (discussionId: string, content: string) => Promise<void>;
+  addComment: (discussionId: string, content: string, parentCommentId?: string) => Promise<void>;
+  likeComment: (commentId: string) => Promise<void>;
+  addReaction: (discussionId: string, reactionType: string) => Promise<void>;
   getDiscussion: (id: string) => Discussion | undefined;
   getComments: (discussionId: string) => Comment[];
   getUserVote: (discussionId: string) => 'up' | 'down' | null;
+  getUserCommentLike: (commentId: string) => boolean;
+  getUserReaction: (discussionId: string) => string | null;
 }
 
 const DiscussionContext = createContext<DiscussionContextType | undefined>(undefined);
@@ -50,21 +58,34 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     try {
       const { data, error } = await supabase
         .from('discussions')
-        .select('*')
+        .select(`
+          *,
+          profiles!discussions_author_id_fkey(
+            id, username, full_name, avatar_url, impact_points, role
+          )
+        `)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
       
       if (data) {
         const formattedDiscussions = data.map((d: any) => {
-          const author = getUserById(d.author_id) || { 
-            id: d.author_id, 
-            username: d.is_anonymous ? 'anonymous' : 'User', 
-            fullName: d.is_anonymous ? 'Anonymous User' : 'User', 
-            avatarUrl: '', 
-            impactPoints: 0, 
-            badges: [], 
+          const author = d.is_anonymous ? {
+            id: 'anonymous',
+            username: 'anonymous',
+            fullName: 'Anonymous User',
+            avatarUrl: '',
+            impactPoints: 0,
+            badges: [],
             role: 'user' as const
+          } : {
+            id: d.profiles?.id || d.author_id,
+            username: d.profiles?.username || 'User',
+            fullName: d.profiles?.full_name || 'User',
+            avatarUrl: d.profiles?.avatar_url || '',
+            impactPoints: d.profiles?.impact_points || 0,
+            badges: [],
+            role: (d.profiles?.role || 'user') as const
           };
           
           return {
@@ -72,17 +93,9 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             title: d.title,
             content: d.content,
             category: d.category,
-            author: d.is_anonymous ? {
-              id: 'anonymous',
-              username: 'anonymous',
-              fullName: 'Anonymous User',
-              avatarUrl: '',
-              impactPoints: 0,
-              badges: [],
-              role: 'user' as const
-            } : author,
-            upvotes: 0,
-            commentsCount: 0,
+            author,
+            upvotes: d.upvotes || 0,
+            commentsCount: d.comment_count || 0,
             postedAt: new Date(d.created_at).toLocaleDateString(),
             reactions: [],
             isAnonymous: d.is_anonymous || false,
@@ -138,61 +151,53 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const voteDiscussion = async (discussionId: string, voteType: 'up' | 'down') => {
     if (!user) return;
     
-    const currentVote = userVotes[discussionId];
-    
-    // If user already voted the same way, remove vote
-    if (currentVote === voteType) {
-      const newVotes = { ...userVotes };
-      delete newVotes[discussionId];
-      setUserVotes(newVotes);
-      localStorage.setItem(`user_votes_${user.id}`, JSON.stringify(newVotes));
+    try {
+      const currentVote = userVotes[discussionId];
       
-      // Decrease vote count
-      const newDiscussions = discussions.map(discussion => {
-        if (discussion.id === discussionId) {
-          return {
-            ...discussion,
-            upvotes: voteType === 'up' ? Math.max(0, discussion.upvotes - 1) : discussion.upvotes
-          };
+      if (currentVote === voteType) {
+        // Remove vote if clicking same vote type
+        const { error } = await supabase
+          .from('discussion_votes')
+          .delete()
+          .eq('discussion_id', discussionId)
+          .eq('user_id', user.id);
+        
+        if (error) throw error;
+        
+        const newVotes = { ...userVotes };
+        delete newVotes[discussionId];
+        setUserVotes(newVotes);
+        localStorage.setItem(`user_votes_${user.id}`, JSON.stringify(newVotes));
+      } else {
+        // Add or update vote
+        const { error } = await supabase
+          .from('discussion_votes')
+          .upsert({
+            discussion_id: discussionId,
+            user_id: user.id,
+            vote_type: voteType
+          });
+        
+        if (error) throw error;
+        
+        const newVotes = { ...userVotes, [discussionId]: voteType };
+        setUserVotes(newVotes);
+        localStorage.setItem(`user_votes_${user.id}`, JSON.stringify(newVotes));
+        
+        // Award points for voting (only for new votes)
+        if (!currentVote) {
+          awardPoints(user.id, 2, 'discussion_voted');
         }
-        return discussion;
-      });
-      saveDiscussions(newDiscussions);
-      return;
-    }
-    
-    // Update vote
-    const newVotes = { ...userVotes, [discussionId]: voteType };
-    setUserVotes(newVotes);
-    localStorage.setItem(`user_votes_${user.id}`, JSON.stringify(newVotes));
-    
-    const newDiscussions = discussions.map(discussion => {
-      if (discussion.id === discussionId) {
-        let newUpvotes = discussion.upvotes;
-        
-        // Remove previous vote if exists
-        if (currentVote === 'up') newUpvotes--;
-        
-        // Add new vote
-        if (voteType === 'up') newUpvotes++;
-        
-        return {
-          ...discussion,
-          upvotes: Math.max(0, newUpvotes)
-        };
       }
-      return discussion;
-    });
-    
-    saveDiscussions(newDiscussions);
-    
-    // Award points for voting (only for new votes, not removing votes)
-    if (!currentVote) {
-      awardPoints(user.id, 2, 'discussion_voted');
+      
+      // Reload discussions to get updated counts
+      await loadDiscussions();
+    } catch (error) {
+      console.error('Error voting on discussion:', error);
     }
   };
   
-  const addComment = async (discussionId: string, content: string) => {
+  const addComment = async (discussionId: string, content: string, parentCommentId?: string) => {
     if (!user) return;
     
     try {
@@ -201,15 +206,17 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         .insert({
           discussion_id: discussionId,
           author_id: user.id,
-          content: content
+          content: content,
+          parent_comment_id: parentCommentId || null
         })
         .select()
         .single();
 
       if (error) throw error;
       
-      // Reload comments
+      // Reload comments and discussions to get updated counts
       await loadComments(discussionId);
+      await loadDiscussions();
       awardPoints(user.id, 5, 'comment_created');
     } catch (error) {
       console.error('Error adding comment:', error);
@@ -217,25 +224,119 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   };
   
+  const likeComment = async (commentId: string) => {
+    if (!user) return;
+    
+    try {
+      // Check if already liked
+      const { data: existingLike } = await supabase
+        .from('comment_likes')
+        .select('id')
+        .eq('comment_id', commentId)
+        .eq('user_id', user.id)
+        .single();
+      
+      if (existingLike) {
+        // Remove like
+        const { error } = await supabase
+          .from('comment_likes')
+          .delete()
+          .eq('comment_id', commentId)
+          .eq('user_id', user.id);
+        
+        if (error) throw error;
+      } else {
+        // Add like
+        const { error } = await supabase
+          .from('comment_likes')
+          .insert({
+            comment_id: commentId,
+            user_id: user.id
+          });
+        
+        if (error) throw error;
+      }
+      
+      // Reload comments to get updated counts
+      const discussionId = comments.find(c => c.id === commentId)?.discussionId;
+      if (discussionId) {
+        await loadComments(discussionId);
+      }
+    } catch (error) {
+      console.error('Error liking comment:', error);
+    }
+  };
+  
+  const addReaction = async (discussionId: string, reactionType: string) => {
+    if (!user) return;
+    
+    try {
+      // Check if user already has this reaction
+      const { data: existingReaction } = await supabase
+        .from('discussion_reactions')
+        .select('id')
+        .eq('discussion_id', discussionId)
+        .eq('user_id', user.id)
+        .eq('reaction_type', reactionType)
+        .single();
+      
+      if (existingReaction) {
+        // Remove reaction
+        const { error } = await supabase
+          .from('discussion_reactions')
+          .delete()
+          .eq('discussion_id', discussionId)
+          .eq('user_id', user.id)
+          .eq('reaction_type', reactionType);
+        
+        if (error) throw error;
+      } else {
+        // Remove any existing reaction from this user and add new one
+        await supabase
+          .from('discussion_reactions')
+          .delete()
+          .eq('discussion_id', discussionId)
+          .eq('user_id', user.id);
+        
+        const { error } = await supabase
+          .from('discussion_reactions')
+          .insert({
+            discussion_id: discussionId,
+            user_id: user.id,
+            reaction_type: reactionType
+          });
+        
+        if (error) throw error;
+      }
+    } catch (error) {
+      console.error('Error adding reaction:', error);
+    }
+  };
+  
   const loadComments = async (discussionId: string) => {
     try {
       const { data, error } = await supabase
         .from('comments')
-        .select('*')
+        .select(`
+          *,
+          profiles!comments_author_id_fkey(
+            id, username, full_name, avatar_url, impact_points, role
+          )
+        `)
         .eq('discussion_id', discussionId)
         .order('created_at', { ascending: true });
       
       if (error) throw error;
       
       const formattedComments = (data || []).map((c: any) => {
-        const author = getUserById(c.author_id) || {
-          id: c.author_id,
-          username: 'User',
-          fullName: 'User',
-          avatarUrl: '',
-          impactPoints: 0,
+        const author = {
+          id: c.profiles?.id || c.author_id,
+          username: c.profiles?.username || 'User',
+          fullName: c.profiles?.full_name || 'User',
+          avatarUrl: c.profiles?.avatar_url || '',
+          impactPoints: c.profiles?.impact_points || 0,
           badges: [],
-          role: 'user' as const
+          role: (c.profiles?.role || 'user') as const
         };
         
         return {
@@ -243,11 +344,23 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           content: c.content,
           author,
           discussionId: c.discussion_id,
+          parentCommentId: c.parent_comment_id,
+          likeCount: c.like_count || 0,
+          replyCount: c.reply_count || 0,
           createdAt: c.created_at
         };
       });
       
-      setComments(formattedComments);
+      // Organize comments into threads (parent comments with their replies)
+      const parentComments = formattedComments.filter(c => !c.parentCommentId);
+      const replies = formattedComments.filter(c => c.parentCommentId);
+      
+      const commentsWithReplies = parentComments.map(parent => ({
+        ...parent,
+        replies: replies.filter(reply => reply.parentCommentId === parent.id)
+      }));
+      
+      setComments(commentsWithReplies);
     } catch (error) {
       console.error('Error loading comments:', error);
     }
@@ -262,6 +375,16 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const getUserVote = (discussionId: string) => {
     return userVotes[discussionId] || null;
   };
+  
+  const getUserCommentLike = (commentId: string) => {
+    // This would need to be loaded from database, for now return false
+    return false;
+  };
+  
+  const getUserReaction = (discussionId: string) => {
+    // This would need to be loaded from database, for now return null
+    return null;
+  };
 
   const getDiscussion = (id: string) => {
     return discussions.find(discussion => discussion.id === id);
@@ -274,9 +397,13 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     createDiscussion,
     voteDiscussion,
     addComment,
+    likeComment,
+    addReaction,
     getDiscussion,
     getComments,
-    getUserVote
+    getUserVote,
+    getUserCommentLike,
+    getUserReaction
   };
 
   return (

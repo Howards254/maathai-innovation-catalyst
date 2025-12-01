@@ -5,7 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 
 const DiscussionDetail: React.FC = () => {
   const { id } = useParams();
-  const { getDiscussion, getComments, voteDiscussion, getUserVote, addComment } = useDiscussions();
+  const { getDiscussion, getComments, voteDiscussion, getUserVote, addComment, likeComment, getUserCommentLike } = useDiscussions();
   const { user } = useAuth();
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -13,23 +13,36 @@ const DiscussionDetail: React.FC = () => {
   const [replyText, setReplyText] = useState('');
   const [likedComments, setLikedComments] = useState<Set<string>>(new Set());
   
-  const handleLikeComment = (commentId: string) => {
-    setLikedComments(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(commentId)) {
-        newSet.delete(commentId);
-      } else {
-        newSet.add(commentId);
-      }
-      return newSet;
-    });
+  const handleLikeComment = async (commentId: string) => {
+    if (!user) return;
+    
+    try {
+      await likeComment(commentId);
+      // Update local state for immediate feedback
+      setLikedComments(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(commentId)) {
+          newSet.delete(commentId);
+        } else {
+          newSet.add(commentId);
+        }
+        return newSet;
+      });
+    } catch (error) {
+      console.error('Failed to like comment:', error);
+    }
   };
   
   const handleReply = async (commentId: string) => {
-    if (!replyText.trim()) return;
-    // Add reply logic here
-    setReplyingTo(null);
-    setReplyText('');
+    if (!replyText.trim() || !user) return;
+    
+    try {
+      await addComment(id!, replyText.trim(), commentId);
+      setReplyingTo(null);
+      setReplyText('');
+    } catch (error) {
+      console.error('Failed to add reply:', error);
+    }
   };
 
   const discussion = getDiscussion(id!);
@@ -279,7 +292,7 @@ const DiscussionDetail: React.FC = () => {
                             <svg className="w-4 h-4" fill={likedComments.has(comment.id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                             </svg>
-                            <span>{likedComments.has(comment.id) ? 'Liked' : 'Like'}</span>
+                            <span>{comment.likeCount || 0} {likedComments.has(comment.id) ? 'Liked' : 'Like'}</span>
                           </button>
                           <button 
                             onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
@@ -288,12 +301,53 @@ const DiscussionDetail: React.FC = () => {
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                             </svg>
-                            <span>Reply</span>
+                            <span>{comment.replyCount || 0} Reply</span>
                           </button>
                         </div>
                         
+                        {/* Replies */}
+                        {comment.replies && comment.replies.length > 0 && (
+                          <div className="mt-4 pl-4 border-l-2 border-gray-200 space-y-3">
+                            {comment.replies.map(reply => (
+                              <div key={reply.id} className="flex items-start gap-3">
+                                <img 
+                                  src={reply.author?.avatarUrl || 'https://picsum.photos/200'} 
+                                  alt={reply.author?.username} 
+                                  className="w-8 h-8 rounded-full ring-2 ring-gray-100 flex-shrink-0" 
+                                />
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className="font-semibold text-gray-900 text-sm">@{reply.author?.username}</span>
+                                    <span className="text-xs text-gray-500">
+                                      • {new Date(reply.createdAt).toLocaleDateString()}
+                                    </span>
+                                  </div>
+                                  <div className="text-gray-700 text-sm leading-relaxed">
+                                    {reply.content}
+                                  </div>
+                                  <div className="flex items-center gap-3 mt-2">
+                                    <button 
+                                      onClick={() => handleLikeComment(reply.id)}
+                                      className={`flex items-center gap-1 transition-colors text-xs ${
+                                        likedComments.has(reply.id)
+                                          ? 'text-red-600'
+                                          : 'text-gray-500 hover:text-red-600'
+                                      }`}
+                                    >
+                                      <svg className="w-3 h-3" fill={likedComments.has(reply.id) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                      </svg>
+                                      <span>{reply.likeCount || 0}</span>
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        
                         {/* Reply Form */}
-                        {replyingTo === comment.id && (
+                        {replyingTo === comment.id && user && (
                           <div className="mt-4 pl-4 border-l-2 border-blue-200">
                             <div className="flex gap-3">
                               <img 

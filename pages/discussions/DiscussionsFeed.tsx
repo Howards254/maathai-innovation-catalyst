@@ -304,6 +304,41 @@ const DiscussionsFeed: React.FC = () => {
                
                {/* Actions */}
                <div className="flex items-center gap-4 pt-3 border-t border-gray-100">
+                 {/* Upvote/Downvote */}
+                 <div className="flex items-center gap-1">
+                   <button 
+                     onClick={(e) => {
+                       e.preventDefault();
+                       handleVote(post.id, 'up');
+                     }}
+                     className={`p-2 rounded-full transition-colors ${
+                       getUserVote(post.id) === 'up' 
+                         ? 'text-green-600 bg-green-50' 
+                         : 'text-gray-400 hover:text-green-600 hover:bg-green-50'
+                     }`}
+                   >
+                     <svg className="w-4 h-4" fill={getUserVote(post.id) === 'up' ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                     </svg>
+                   </button>
+                   <span className="font-semibold text-gray-700 min-w-[2rem] text-center">{post.upvotes}</span>
+                   <button 
+                     onClick={(e) => {
+                       e.preventDefault();
+                       handleVote(post.id, 'down');
+                     }}
+                     className={`p-2 rounded-full transition-colors ${
+                       getUserVote(post.id) === 'down' 
+                         ? 'text-red-600 bg-red-50' 
+                         : 'text-gray-400 hover:text-red-600 hover:bg-red-50'
+                     }`}
+                   >
+                     <svg className="w-4 h-4" fill={getUserVote(post.id) === 'down' ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                     </svg>
+                   </button>
+                 </div>
+                 
                  {/* Like/Reaction Button */}
                  <div className="relative">
                    <button
@@ -352,12 +387,13 @@ const DiscussionsFeed: React.FC = () => {
                      </div>
                    )}
                  </div>
+                 
                  <Link 
                    to={`/app/discussions/${post.id}`}
                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors"
                  >
                    <MessageCircle className="w-4 h-4" />
-                   <span>{post.commentsCount || 0}</span>
+                   <span>{post.commentsCount || 0} comments</span>
                  </Link>
                  
                  <button 
