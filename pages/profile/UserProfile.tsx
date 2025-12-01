@@ -210,12 +210,23 @@ const UserProfile: React.FC = () => {
                       
                       {/* Follow Stats */}
                       <div className="flex gap-4 mt-3 text-sm">
-                        <span className="text-gray-600">
+                        <Link 
+                          to={`/app/profile/${user.username}/following`}
+                          className="text-gray-600 hover:text-green-600 transition-colors cursor-pointer"
+                        >
                           <span className="font-bold text-gray-900">{stats.following}</span> Following
-                        </span>
-                        <span className="text-gray-600">
+                        </Link>
+                        <Link 
+                          to={`/app/profile/${user.username}/followers`}
+                          className="text-gray-600 hover:text-green-600 transition-colors cursor-pointer"
+                        >
                           <span className="font-bold text-gray-900">{stats.followers}</span> Followers
-                        </span>
+                        </Link>
+                        {stats.followers > 0 && stats.following > 0 && (
+                          <span className="text-green-600 text-xs font-medium flex items-center gap-1">
+                            <span>👥</span> Friends
+                          </span>
+                        )}
                       </div>
                     </div>
                     

@@ -37,6 +37,8 @@ import DiscussionsFeed from './pages/discussions/DiscussionsFeed';
 import DiscussionDetail from './pages/discussions/DiscussionDetail';
 import UserProfile from './pages/profile/UserProfile';
 import ProfileEdit from './pages/profile/ProfileEdit';
+import Followers from './pages/profile/Followers';
+import Following from './pages/profile/Following';
 import Leaderboard from './pages/gamification/Leaderboard';
 import ResourcesList from './pages/resources/ResourcesList';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -126,6 +128,8 @@ const App: React.FC = () => {
           {/* Profile & Gamification */}
           <Route path="profile/:username" element={<UserProfile />} />
           <Route path="profile/:username/edit" element={<ProfileEdit />} />
+          <Route path="profile/:username/followers" element={<Followers />} />
+          <Route path="profile/:username/following" element={<Following />} />
           <Route path="leaderboard" element={<Leaderboard />} />
           <Route path="badges" element={<Badges />} />
 
