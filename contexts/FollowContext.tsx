@@ -37,6 +37,7 @@ export function FollowProvider({ children }: { children: ReactNode }) {
     if (!user) return;
     
     try {
+      // Get who I'm following
       const { data: following } = await supabase
         .from('follows')
         .select('following_id')
@@ -45,12 +46,19 @@ export function FollowProvider({ children }: { children: ReactNode }) {
       const followingSet = new Set(following?.map(f => f.following_id) || []);
       setFollowingIds(followingSet);
 
-      const { data: friends } = await supabase
-        .from('user_friends')
-        .select('friend_id')
-        .eq('user_id', user.id);
+      // Get mutual friends (people who follow me AND I follow them)
+      if (following && following.length > 0) {
+        const followingIds = following.map(f => f.following_id);
+        const { data: mutualFollows } = await supabase
+          .from('follows')
+          .select('follower_id')
+          .eq('following_id', user.id)
+          .in('follower_id', followingIds);
 
-      setFriendIds(new Set(friends?.map(f => f.friend_id) || []));
+        setFriendIds(new Set(mutualFollows?.map(f => f.follower_id) || []));
+      } else {
+        setFriendIds(new Set());
+      }
     } catch (error) {
       console.error('Error loading follow data:', error);
     } finally {
@@ -64,21 +72,30 @@ export function FollowProvider({ children }: { children: ReactNode }) {
     try {
       const { error } = await supabase
         .from('follows')
-        .insert({ follower_id: user.id, following_id: userId });
+        .insert({ 
+          follower_id: user.id, 
+          following_id: userId,
+          created_at: new Date().toISOString()
+        });
 
-      if (!error) {
-        setFollowingIds(prev => new Set([...prev, userId]));
-        
-        const { data } = await supabase
-          .from('follows')
-          .select('id')
-          .eq('follower_id', userId)
-          .eq('following_id', user.id)
-          .single();
+      if (error) {
+        console.error('Follow error:', error);
+        return;
+      }
 
-        if (data) {
-          setFriendIds(prev => new Set([...prev, userId]));
-        }
+      // Update local state
+      setFollowingIds(prev => new Set([...prev, userId]));
+      
+      // Check if they follow me back (making us friends)
+      const { data } = await supabase
+        .from('follows')
+        .select('id')
+        .eq('follower_id', userId)
+        .eq('following_id', user.id)
+        .single();
+
+      if (data) {
+        setFriendIds(prev => new Set([...prev, userId]));
       }
     } catch (error) {
       console.error('Error following user:', error);
@@ -134,17 +151,25 @@ export function FollowProvider({ children }: { children: ReactNode }) {
   };
 
   const getFriends = async (userId: string) => {
-    const { data } = await supabase
-      .from('user_friends')
-      .select('friend_id, friend_name, friend_avatar, friend_bio')
-      .eq('user_id', userId);
+    // Get mutual follows (friends)
+    const { data: following } = await supabase
+      .from('follows')
+      .select('following_id')
+      .eq('follower_id', userId);
 
-    return data?.map(f => ({
-      id: f.friend_id,
-      full_name: f.friend_name,
-      avatar_url: f.friend_avatar,
-      bio: f.friend_bio
-    })) || [];
+    if (!following || following.length === 0) return [];
+
+    const followingIds = following.map(f => f.following_id);
+    const { data: friends } = await supabase
+      .from('follows')
+      .select(`
+        follower_id,
+        profiles!follows_follower_id_fkey(id, username, full_name, avatar_url, bio)
+      `)
+      .eq('following_id', userId)
+      .in('follower_id', followingIds);
+
+    return friends?.map(f => f.profiles).filter(Boolean) || [];
   };
 
   return (
