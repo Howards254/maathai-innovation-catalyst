@@ -1,59 +1,33 @@
--- Enhanced Stories System - TikTok/Facebook Stories Inspired
--- 24-hour auto-deletion and improved features
+-- Simple Enhanced Stories System - No Cron Dependencies
+-- Works with existing Cloudinary setup
 
 -- Add expiration and enhanced features to stories
 ALTER TABLE stories ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP WITH TIME ZONE DEFAULT (NOW() + INTERVAL '24 hours');
 ALTER TABLE stories ADD COLUMN IF NOT EXISTS is_archived BOOLEAN DEFAULT FALSE;
-ALTER TABLE stories ADD COLUMN IF NOT EXISTS music_url TEXT;
-ALTER TABLE stories ADD COLUMN IF NOT EXISTS music_title TEXT;
-ALTER TABLE stories ADD COLUMN IF NOT EXISTS filters JSONB DEFAULT '{}';
-ALTER TABLE stories ADD COLUMN IF NOT EXISTS stickers JSONB DEFAULT '[]';
-ALTER TABLE stories ADD COLUMN IF NOT EXISTS text_overlays JSONB DEFAULT '[]';
 
--- Story views tracking (like Instagram/TikTok)
+-- Story views tracking
 CREATE TABLE IF NOT EXISTS story_views (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   story_id UUID REFERENCES stories(id) ON DELETE CASCADE,
   viewer_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
   viewed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  view_duration INTEGER DEFAULT 0, -- seconds watched
+  view_duration INTEGER DEFAULT 0,
   UNIQUE(story_id, viewer_id)
 );
 
--- Story highlights (save stories beyond 24h)
-CREATE TABLE IF NOT EXISTS story_highlights (
-  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-  title TEXT NOT NULL,
-  cover_image TEXT,
-  story_ids UUID[] DEFAULT '{}',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+-- Enhanced reactions
+DO $$ 
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.table_constraints 
+             WHERE table_name = 'story_reactions' AND constraint_name = 'story_reactions_reaction_type_check') THEN
+    ALTER TABLE story_reactions DROP CONSTRAINT story_reactions_reaction_type_check;
+  END IF;
+END $$;
 
--- Enhanced reactions with more types
-ALTER TABLE story_reactions DROP CONSTRAINT IF EXISTS story_reactions_reaction_type_check;
 ALTER TABLE story_reactions ADD CONSTRAINT story_reactions_reaction_type_check 
   CHECK (reaction_type IN ('love', 'fire', 'clap', 'laugh', 'wow', 'sad', 'angry', 'planted', 'inspiring'));
 
--- Function to auto-delete expired stories
-CREATE OR REPLACE FUNCTION delete_expired_stories()
-RETURNS void AS $$
-BEGIN
-  -- Archive expired stories instead of deleting (for analytics)
-  UPDATE stories 
-  SET is_archived = TRUE 
-  WHERE expires_at < NOW() 
-  AND is_archived = FALSE;
-  
-  -- Actually delete stories older than 7 days (cleanup)
-  DELETE FROM stories 
-  WHERE expires_at < (NOW() - INTERVAL '7 days') 
-  AND is_archived = TRUE;
-END;
-$$ LANGUAGE plpgsql;
-
--- Function to get active (non-expired) stories
+-- Function to get active stories
 CREATE OR REPLACE FUNCTION get_active_stories(
   viewer_user_id UUID DEFAULT NULL,
   limit_count INTEGER DEFAULT 50
@@ -69,11 +43,6 @@ RETURNS TABLE (
   story_type TEXT,
   location TEXT,
   tags TEXT[],
-  music_url TEXT,
-  music_title TEXT,
-  filters JSONB,
-  stickers JSONB,
-  text_overlays JSONB,
   views_count BIGINT,
   reactions_count BIGINT,
   comments_count BIGINT,
@@ -98,12 +67,7 @@ BEGIN
     s.story_type,
     s.location,
     s.tags,
-    s.music_url,
-    s.music_title,
-    s.filters,
-    s.stickers,
-    s.text_overlays,
-    COALESCE(v.view_count, 0) as views_count,
+    COALESCE(s.views_count, 0) as views_count,
     COALESCE(r.reaction_count, 0) as reactions_count,
     COALESCE(c.comment_count, 0) as comments_count,
     s.created_at,
@@ -121,11 +85,6 @@ BEGIN
   FROM stories s
   JOIN profiles p ON s.author_id = p.id
   LEFT JOIN (
-    SELECT story_id, COUNT(*) as view_count 
-    FROM story_views 
-    GROUP BY story_id
-  ) v ON s.id = v.story_id
-  LEFT JOIN (
     SELECT story_id, COUNT(*) as reaction_count 
     FROM story_reactions 
     GROUP BY story_id
@@ -136,7 +95,7 @@ BEGIN
     GROUP BY story_id
   ) c ON s.id = c.story_id
   WHERE s.expires_at > NOW() 
-  AND s.is_archived = FALSE
+  AND (s.is_archived = FALSE OR s.is_archived IS NULL)
   ORDER BY s.created_at DESC
   LIMIT limit_count;
 END;
@@ -159,31 +118,20 @@ BEGIN
     
   -- Update views count in stories table
   UPDATE stories 
-  SET views_count = views_count + 1 
+  SET views_count = COALESCE(views_count, 0) + 1 
   WHERE id = p_story_id;
 END;
 $$ LANGUAGE plpgsql;
 
--- Create indexes for performance
-CREATE INDEX IF NOT EXISTS idx_stories_expires_at ON stories(expires_at) WHERE is_archived = FALSE;
+-- Create indexes
+CREATE INDEX IF NOT EXISTS idx_stories_expires_at ON stories(expires_at) WHERE (is_archived = FALSE OR is_archived IS NULL);
 CREATE INDEX IF NOT EXISTS idx_story_views_story_viewer ON story_views(story_id, viewer_id);
-CREATE INDEX IF NOT EXISTS idx_story_highlights_user ON story_highlights(user_id);
 
--- RLS for new tables
+-- RLS for story views
 ALTER TABLE story_views ENABLE ROW LEVEL SECURITY;
-ALTER TABLE story_highlights ENABLE ROW LEVEL SECURITY;
 
--- Policies for story views
 CREATE POLICY "Users can view story views" ON story_views FOR SELECT USING (true);
 CREATE POLICY "Users can record their views" ON story_views FOR INSERT WITH CHECK (auth.uid() = viewer_id);
 CREATE POLICY "Users can update their views" ON story_views FOR UPDATE USING (auth.uid() = viewer_id);
 
--- Policies for story highlights
-CREATE POLICY "Anyone can view highlights" ON story_highlights FOR SELECT USING (true);
-CREATE POLICY "Users can manage their highlights" ON story_highlights FOR ALL USING (auth.uid() = user_id);
-
--- Note: Cleanup can be called manually or via external cron job
--- To manually cleanup: SELECT delete_expired_stories();
--- For production, set up external cron job to call this function
-
-SELECT 'Enhanced stories system with 24h expiration created' as status;
+SELECT 'Simple enhanced stories system created (Cloudinary compatible)' as status;

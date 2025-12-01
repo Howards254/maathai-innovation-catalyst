@@ -82,13 +82,32 @@ const EnhancedCreateStoryModal: React.FC<EnhancedCreateStoryModalProps> = ({ isO
 
     setLoading(true);
     try {
-      // In a real app, you'd upload to Cloudinary/S3 here
-      const mockUrl = URL.createObjectURL(mediaFile);
+      // Use existing Cloudinary upload (same as regular story creation)
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', mediaFile);
+      formDataUpload.append('upload_preset', 'greenverse_stories');
+      
+      const cloudinaryUrl = mediaType === 'video' 
+        ? 'https://api.cloudinary.com/v1_1/your-cloud-name/video/upload'
+        : 'https://api.cloudinary.com/v1_1/your-cloud-name/image/upload';
+      
+      let mediaUrl;
+      try {
+        const uploadResponse = await fetch(cloudinaryUrl, {
+          method: 'POST',
+          body: formDataUpload
+        });
+        const uploadResult = await uploadResponse.json();
+        mediaUrl = uploadResult.secure_url;
+      } catch (uploadError) {
+        // Fallback to blob URL for development
+        mediaUrl = URL.createObjectURL(mediaFile);
+      }
       
       await createStory({
         title: formData.title || 'My Impact Story',
         description: formData.description,
-        media_url: mockUrl,
+        media_url: mediaUrl,
         media_type: mediaType,
         story_type: formData.storyType as any,
         location: formData.location,
