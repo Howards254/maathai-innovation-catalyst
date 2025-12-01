@@ -123,6 +123,18 @@ class SocialShareService {
     };
     return shareData;
   }
+
+  // Discussion sharing
+  shareDiscussion(discussion: any) {
+    const shareData: ShareData = {
+      title: `💬 "${discussion.title}"`,
+      description: `${discussion.content.substring(0, 150)}${discussion.content.length > 150 ? '...' : ''} Join the environmental discussion!`,
+      url: `${this.baseUrl}/app/discussions/${discussion.id}`,
+      imageUrl: discussion.mediaUrls?.[0],
+      hashtags: ['discussion', 'environment', 'sustainability', 'climateaction', 'community']
+    };
+    return shareData;
+  }
 }
 
 export const socialShare = new SocialShareService();

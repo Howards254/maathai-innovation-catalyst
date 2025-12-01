@@ -3,7 +3,7 @@ import { Share2, MessageCircle, Twitter, Facebook, Instagram, Linkedin, Copy, X 
 import { socialShare } from '../lib/socialShare';
 
 interface ShareButtonProps {
-  type: 'campaign' | 'story' | 'badge' | 'event' | 'achievement';
+  type: 'campaign' | 'story' | 'badge' | 'event' | 'achievement' | 'discussion';
   data: any;
   userName?: string;
   className?: string;
@@ -31,6 +31,8 @@ const ShareButton: React.FC<ShareButtonProps> = ({
         return socialShare.shareEvent(data);
       case 'achievement':
         return socialShare.shareTreePlanting(data.treesPlanted, data.campaignTitle);
+      case 'discussion':
+        return socialShare.shareDiscussion(data);
       default:
         return null;
     }

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useDiscussions } from '../../contexts/DiscussionContext';
 import { useAuth } from '../../contexts/AuthContext';
+import ShareButton from '../../components/ShareButton';
 
 const DiscussionDetail: React.FC = () => {
   const { id } = useParams();
@@ -76,18 +77,7 @@ const DiscussionDetail: React.FC = () => {
     }
   };
 
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: discussion.title,
-        text: discussion.content,
-        url: window.location.href
-      });
-    } else {
-      navigator.clipboard.writeText(`${discussion.title} - ${window.location.href}`);
-      alert('Link copied to clipboard!');
-    }
-  };
+
 
   return (
     <div className="bg-gray-50 min-h-full">
@@ -109,14 +99,33 @@ const DiscussionDetail: React.FC = () => {
           <div className="p-6">
             {/* Author Header */}
             <div className="flex items-center gap-3 mb-4">
-              <img 
-                src={discussion.author?.avatarUrl || 'https://picsum.photos/200'} 
-                alt={discussion.author?.username} 
-                className="w-12 h-12 rounded-full ring-2 ring-gray-100" 
-              />
+              {discussion.isAnonymous ? (
+                <div className="w-12 h-12 rounded-full ring-2 ring-gray-300 bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center">
+                  <span className="text-2xl">🕶️</span>
+                </div>
+              ) : (
+                <img 
+                  src={discussion.author?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(discussion.author?.fullName || discussion.author?.username || 'User')}&background=10b981&color=fff&size=200`} 
+                  alt={discussion.author?.username} 
+                  className="w-12 h-12 rounded-full ring-2 ring-gray-100" 
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(discussion.author?.fullName || discussion.author?.username || 'User')}&background=10b981&color=fff&size=200`;
+                  }}
+                />
+              )}
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-gray-900">@{discussion.author?.username}</span>
+                  {discussion.isAnonymous ? (
+                    <>
+                      <span className="font-semibold text-gray-700">Anonymous User</span>
+                      <span className="bg-amber-100 text-amber-800 text-xs font-medium px-2 py-1 rounded-full">
+                        🔒 Anonymous
+                      </span>
+                    </>
+                  ) : (
+                    <span className="font-semibold text-gray-900">@{discussion.author?.username}</span>
+                  )}
                   <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
                     {discussion.category}
                   </span>
@@ -192,15 +201,12 @@ const DiscussionDetail: React.FC = () => {
                 </div>
               </div>
               
-              <button 
-                onClick={handleShare}
-                className="flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors p-2 rounded-full hover:bg-gray-50"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                </svg>
-                <span className="font-medium">Share</span>
-              </button>
+              <ShareButton 
+                type="discussion" 
+                data={discussion} 
+                size="lg"
+                className="p-2 rounded-full hover:bg-gray-50"
+              />
             </div>
           </div>
         </div>
@@ -210,9 +216,13 @@ const DiscussionDetail: React.FC = () => {
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-6">
             <div className="flex items-center gap-3 mb-4">
               <img 
-                src={user.avatarUrl || 'https://picsum.photos/200'} 
+                src={user.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName || user.username || 'User')}&background=10b981&color=fff&size=200`} 
                 alt={user.username} 
                 className="w-10 h-10 rounded-full ring-2 ring-gray-100" 
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName || user.username || 'User')}&background=10b981&color=fff&size=200`;
+                }}
               />
               <h3 className="font-semibold text-gray-900">Add a comment</h3>
             </div>
@@ -264,9 +274,13 @@ const DiscussionDetail: React.FC = () => {
                   <div className="p-6">
                     <div className="flex items-start gap-3">
                       <img 
-                        src={comment.author?.avatarUrl || 'https://picsum.photos/200'} 
+                        src={comment.author?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.author?.fullName || comment.author?.username || 'User')}&background=10b981&color=fff&size=200`} 
                         alt={comment.author?.username} 
                         className="w-10 h-10 rounded-full ring-2 ring-gray-100 flex-shrink-0" 
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.author?.fullName || comment.author?.username || 'User')}&background=10b981&color=fff&size=200`;
+                        }}
                       />
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
@@ -311,9 +325,13 @@ const DiscussionDetail: React.FC = () => {
                             {comment.replies.map(reply => (
                               <div key={reply.id} className="flex items-start gap-3">
                                 <img 
-                                  src={reply.author?.avatarUrl || 'https://picsum.photos/200'} 
+                                  src={reply.author?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(reply.author?.fullName || reply.author?.username || 'User')}&background=10b981&color=fff&size=200`} 
                                   alt={reply.author?.username} 
                                   className="w-8 h-8 rounded-full ring-2 ring-gray-100 flex-shrink-0" 
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(reply.author?.fullName || reply.author?.username || 'User')}&background=10b981&color=fff&size=200`;
+                                  }}
                                 />
                                 <div className="flex-1">
                                   <div className="flex items-center gap-2 mb-1">
@@ -351,9 +369,13 @@ const DiscussionDetail: React.FC = () => {
                           <div className="mt-4 pl-4 border-l-2 border-blue-200">
                             <div className="flex gap-3">
                               <img 
-                                src={user?.avatarUrl || 'https://picsum.photos/200'} 
+                                src={user?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.fullName || user?.username || 'User')}&background=10b981&color=fff&size=200`} 
                                 alt={user?.username} 
                                 className="w-8 h-8 rounded-full ring-2 ring-gray-100 flex-shrink-0" 
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.fullName || user?.username || 'User')}&background=10b981&color=fff&size=200`;
+                                }}
                               />
                               <div className="flex-1">
                                 <textarea

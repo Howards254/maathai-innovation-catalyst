@@ -4,7 +4,8 @@ import { useDiscussions } from '../../contexts/DiscussionContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useUser } from '../../contexts/UserContext';
 import CreateDiscussionForm from '../../components/CreateDiscussionForm';
-import { Heart, MessageCircle, Share2, Play } from 'lucide-react';
+import { Heart, MessageCircle, Play } from 'lucide-react';
+import ShareButton from '../../components/ShareButton';
 
 const DiscussionsFeed: React.FC = () => {
   const { discussions, loading, voteDiscussion, getUserVote } = useDiscussions();
@@ -48,18 +49,7 @@ const DiscussionsFeed: React.FC = () => {
     voteDiscussion(discussionId, voteType);
   };
   
-  const handleShare = (discussion: any) => {
-    if (navigator.share) {
-      navigator.share({
-        title: discussion.title,
-        text: discussion.content,
-        url: window.location.href
-      });
-    } else {
-      navigator.clipboard.writeText(`${discussion.title} - ${window.location.href}`);
-      alert('Link copied to clipboard!');
-    }
-  };
+
 
   if (loading) {
     return (
@@ -155,15 +145,19 @@ const DiscussionsFeed: React.FC = () => {
                {/* Header */}
                <div className="flex items-start gap-3 mb-4">
                  {post.isAnonymous ? (
-                   <div className="w-12 h-12 rounded-full ring-2 ring-gray-300 bg-gray-100 flex items-center justify-center">
+                   <div className="w-12 h-12 rounded-full ring-2 ring-gray-300 bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center">
                      <span className="text-2xl">🕶️</span>
                    </div>
                  ) : (
                    <Link to={`/app/profile/${post.author?.username}`}>
                      <img 
-                       src={post.author?.avatarUrl || 'https://picsum.photos/200'} 
+                       src={post.author?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.author?.fullName || post.author?.username || 'User')}&background=10b981&color=fff&size=200`} 
                        alt={post.author?.username} 
                        className="w-12 h-12 rounded-full ring-2 ring-gray-100 hover:ring-green-300 transition-all" 
+                       onError={(e) => {
+                         const target = e.target as HTMLImageElement;
+                         target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(post.author?.fullName || post.author?.username || 'User')}&background=10b981&color=fff&size=200`;
+                       }}
                      />
                    </Link>
                  )}
@@ -396,13 +390,12 @@ const DiscussionsFeed: React.FC = () => {
                    <span>{post.commentsCount || 0} comments</span>
                  </Link>
                  
-                 <button 
-                   onClick={() => handleShare(post)}
-                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors ml-auto"
-                 >
-                   <Share2 className="w-4 h-4" />
-                   <span>Share</span>
-                 </button>
+                 <ShareButton 
+                   type="discussion" 
+                   data={post} 
+                   className="ml-auto" 
+                   size="md"
+                 />
                </div>
              </div>
            </div>
