@@ -509,7 +509,7 @@ const Groups: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-500">{group.member_count} members</span>
                     <button
-                      onClick={() => handleGroupClick(group.id)}
+                      onClick={() => handleGroupClick(group)}
                       className="px-4 py-2 bg-emerald-500 text-white rounded-md text-sm hover:bg-emerald-600"
                     >
                       Open
