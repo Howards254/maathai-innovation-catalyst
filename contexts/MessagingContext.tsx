@@ -71,14 +71,8 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   useEffect(() => {
     if (!user) return;
-    
-    // Small delay to ensure user is properly authenticated
-    const timer = setTimeout(() => {
-      const unsub = subscribeToMessages();
-      return () => unsub();
-    }, 1000);
-    
-    return () => clearTimeout(timer);
+    const unsub = subscribeToMessages();
+    return () => unsub();
   }, [user, activeConversation]);
 
   const setOnlineStatus = async (online: boolean) => {

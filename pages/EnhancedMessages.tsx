@@ -37,10 +37,13 @@ const EnhancedMessages: React.FC = () => {
 
   useEffect(() => {
     if (user) {
-      loadAllUsers();
-      loadFriends();
-      loadFollowers();
-      loadFollowing();
+      // Load users data in parallel
+      Promise.all([
+        loadAllUsers(),
+        loadFriends(),
+        loadFollowers(),
+        loadFollowing()
+      ]);
     }
   }, [user]);
 
@@ -92,17 +95,14 @@ const EnhancedMessages: React.FC = () => {
     if (!user) return;
     
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('profiles')
-        .select('id, full_name, username, avatar_url, is_online, last_seen')
+        .select('id, full_name, username, avatar_url')
         .neq('id', user.id)
-        .order('is_online', { ascending: false })
-        .order('full_name', { ascending: true })
-        .limit(100);
+        .order('full_name')
+        .limit(50);
       
-      if (!error && data) {
-        setAllUsers(data);
-      }
+      if (data) setAllUsers(data);
     } catch (error) {
       console.error('Error loading users:', error);
     }
@@ -112,33 +112,17 @@ const EnhancedMessages: React.FC = () => {
     if (!user) return;
     
     try {
-      // Get users I follow
-      const { data: myFollowing } = await supabase
+      const { data } = await supabase
         .from('follows')
-        .select('following_id')
-        .eq('follower_id', user.id);
+        .select('following_id, profiles!follows_following_id_fkey(id, full_name, username, avatar_url)')
+        .eq('follower_id', user.id)
+        .limit(20);
       
-      // Get users who follow me
-      const { data: myFollowers } = await supabase
-        .from('follows')
-        .select('follower_id')
-        .eq('following_id', user.id);
-      
-      if (myFollowing && myFollowers) {
-        const followingIds = myFollowing.map(f => f.following_id);
-        const followerIds = myFollowers.map(f => f.follower_id);
-        const friendIds = followingIds.filter(id => followerIds.includes(id));
-        
-        if (friendIds.length > 0) {
-          const { data: friendsData } = await supabase
-            .from('profiles')
-            .select('id, full_name, username, avatar_url, is_online, last_seen')
-            .in('id', friendIds);
-          
-          setFriends(friendsData || []);
-        } else {
-          setFriends([]);
-        }
+      if (data) {
+        const friendsData = data.map(f => f.profiles).filter(Boolean);
+        setFriends(friendsData);
+      } else {
+        setFriends([]);
       }
     } catch (error) {
       console.error('Error loading friends:', error);
@@ -152,17 +136,13 @@ const EnhancedMessages: React.FC = () => {
     try {
       const { data } = await supabase
         .from('follows')
-        .select('follower_id')
-        .eq('following_id', user.id);
+        .select('follower_id, profiles!follows_follower_id_fkey(id, full_name, username, avatar_url)')
+        .eq('following_id', user.id)
+        .limit(20);
       
-      if (data && data.length > 0) {
-        const followerIds = data.map(f => f.follower_id);
-        const { data: followersData } = await supabase
-          .from('profiles')
-          .select('id, full_name, username, avatar_url, is_online, last_seen')
-          .in('id', followerIds);
-        
-        setFollowers(followersData || []);
+      if (data) {
+        const followersData = data.map(f => f.profiles).filter(Boolean);
+        setFollowers(followersData);
       } else {
         setFollowers([]);
       }
@@ -178,17 +158,13 @@ const EnhancedMessages: React.FC = () => {
     try {
       const { data } = await supabase
         .from('follows')
-        .select('following_id')
-        .eq('follower_id', user.id);
+        .select('following_id, profiles!follows_following_id_fkey(id, full_name, username, avatar_url)')
+        .eq('follower_id', user.id)
+        .limit(20);
       
-      if (data && data.length > 0) {
-        const followingIds = data.map(f => f.following_id);
-        const { data: followingData } = await supabase
-          .from('profiles')
-          .select('id, full_name, username, avatar_url, is_online, last_seen')
-          .in('id', followingIds);
-        
-        setFollowing(followingData || []);
+      if (data) {
+        const followingData = data.map(f => f.profiles).filter(Boolean);
+        setFollowing(followingData);
       } else {
         setFollowing([]);
       }
