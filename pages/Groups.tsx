@@ -304,6 +304,29 @@ const Groups: React.FC = () => {
 
         {activeTab === 'discover' && (
           <div>
+            {loading && (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mx-auto"></div>
+                <p className="text-gray-500 mt-2">Loading communities...</p>
+              </div>
+            )}
+            
+            {!loading && groups.length === 0 && (
+              <div className="text-center py-8">
+                <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No communities found</h3>
+                <p className="text-gray-500 mb-4">Be the first to create a community!</p>
+                <button
+                  onClick={() => setShowCreateGroup(true)}
+                  className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600"
+                >
+                  Create Community
+                </button>
+              </div>
+            )}
+            
+            {!loading && groups.length > 0 && (
+              <>
             {/* Search and Filters */}
             <div className="mb-6 space-y-4">
               <div className="relative">
@@ -458,6 +481,8 @@ const Groups: React.FC = () => {
                 );
               })}
             </div>
+              </>
+            )}
           </div>
         )}
 

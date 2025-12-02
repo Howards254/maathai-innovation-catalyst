@@ -78,17 +78,39 @@ export const GroupsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const loadGroups = async () => {
     setLoading(true);
     try {
+      console.log('Loading groups...');
+      
+      // Simple query first - get all groups
       const { data, error } = await supabase
         .from('groups')
         .select('*')
-        .or('visibility.eq.public,is_private.eq.false')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      console.log('Groups query result:', { data, error });
+
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      if (!data || data.length === 0) {
+        console.log('No groups found in database');
+        setGroups([]);
+        return;
+      }
+
+      // Filter for public groups and check membership
+      const publicGroups = data.filter(group => 
+        group.visibility === 'public' || 
+        group.is_private === false || 
+        !group.visibility
+      );
+
+      console.log('Public groups:', publicGroups);
 
       // Check membership status
       const groupsWithMembership = await Promise.all(
-        (data || []).map(async (group) => {
+        publicGroups.map(async (group) => {
           if (!user) return { ...group, is_member: false };
 
           const { data: membership } = await supabase
@@ -106,9 +128,11 @@ export const GroupsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         })
       );
 
+      console.log('Groups with membership:', groupsWithMembership);
       setGroups(groupsWithMembership);
     } catch (error) {
       console.error('Error loading groups:', error);
+      setGroups([]);
     } finally {
       setLoading(false);
     }
