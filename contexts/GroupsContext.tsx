@@ -78,11 +78,8 @@ export const GroupsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     try {
       const { data, error } = await supabase
         .from('groups')
-        .select(`
-          *,
-          group_members!inner(user_id, role)
-        `)
-        .eq('is_private', false)
+        .select('*')
+        .or('visibility.eq.public,is_private.eq.false')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -185,10 +182,18 @@ export const GroupsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         });
 
       // Update member count
-      await supabase
+      const { data: groupData } = await supabase
         .from('groups')
-        .update({ member_count: supabase.sql`member_count + 1` })
-        .eq('id', groupId);
+        .select('member_count')
+        .eq('id', groupId)
+        .single();
+      
+      if (groupData) {
+        await supabase
+          .from('groups')
+          .update({ member_count: (groupData.member_count || 0) + 1 })
+          .eq('id', groupId);
+      }
 
       await loadGroups();
       await loadMyGroups();
@@ -208,10 +213,18 @@ export const GroupsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .eq('user_id', user.id);
 
       // Update member count
-      await supabase
+      const { data: groupData } = await supabase
         .from('groups')
-        .update({ member_count: supabase.sql`member_count - 1` })
-        .eq('id', groupId);
+        .select('member_count')
+        .eq('id', groupId)
+        .single();
+      
+      if (groupData) {
+        await supabase
+          .from('groups')
+          .update({ member_count: Math.max((groupData.member_count || 0) - 1, 0) })
+          .eq('id', groupId);
+      }
 
       await loadGroups();
       await loadMyGroups();

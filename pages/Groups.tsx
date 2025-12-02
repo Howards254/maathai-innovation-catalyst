@@ -216,8 +216,9 @@ const Groups: React.FC = () => {
               type="text"
               value={postTitle}
               onChange={(e) => setPostTitle(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               placeholder="What's your post about?"
+              autoComplete="off"
             />
           </div>
           <div>
@@ -226,8 +227,9 @@ const Groups: React.FC = () => {
               value={postContent}
               onChange={(e) => setPostContent(e.target.value)}
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none resize-none"
               placeholder="Share your thoughts, experiences, or questions..."
+              autoComplete="off"
             />
           </div>
         </div>
