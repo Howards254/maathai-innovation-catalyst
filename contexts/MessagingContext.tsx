@@ -224,13 +224,12 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (!user) return;
 
     try {
-      // Use the modern schema format from database-messaging-system.sql
+      // Use only fields that exist in the actual database
       const messageData = {
         conversation_id: conversationId,
         sender_id: user.id,
         content: content || '',
         media_urls: mediaUrls || null,
-        media_type: mediaUrls?.length ? 'image' : null,
         is_deleted: false
       };
       
