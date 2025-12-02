@@ -55,13 +55,23 @@ const EnhancedStories: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (isFullScreen && !isPaused) {
+    if (isFullScreen && !isPaused && !showComments) {
       startProgress();
     } else {
       stopProgress();
     }
     return () => stopProgress();
-  }, [isFullScreen, currentIndex, isPaused]);
+  }, [isFullScreen, currentIndex, isPaused, showComments]);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      if (showComments || isPaused) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+    }
+  }, [showComments, isPaused]);
 
   const loadStories = async () => {
     try {
@@ -84,17 +94,32 @@ const EnhancedStories: React.FC = () => {
         return new Date(story.expires_at) > new Date();
       }) || [];
       
-      const formattedStories = activeStories.map(story => ({
-        ...story,
-        author_name: story.author?.full_name || 'Unknown User',
-        author_username: story.author?.username || 'unknown',
-        author_avatar: story.author?.avatar_url,
-        views_count: story.views_count || 0,
-        reactions_count: story.reactions?.length || 0,
-        comments_count: story.comments?.length || 0,
-        has_viewed: false,
-        user_reaction: null
-      }));
+      const formattedStories = activeStories.map(story => {
+        const reactionCount = story.reactions?.length || 0;
+        const commentCount = story.comments?.length || 0;
+        const userReaction = story.reactions?.find((r: any) => r.user_id === user?.id)?.reaction_type || null;
+        
+        return {
+          ...story,
+          author_name: story.author?.full_name || 'Unknown User',
+          author_username: story.author?.username || 'unknown',
+          author_avatar: story.author?.avatar_url,
+          views_count: story.views_count || 0,
+          reactions_count: reactionCount,
+          comments_count: commentCount,
+          has_viewed: false,
+          user_reaction: userReaction
+        };
+      });
+      
+      // Load user reactions into state
+      const userReactions: Record<string, string> = {};
+      formattedStories.forEach(story => {
+        if (story.user_reaction) {
+          userReactions[story.id] = story.user_reaction;
+        }
+      });
+      setStoryReactions(userReactions);
       
       setStories(formattedStories);
     } catch (error) {
@@ -511,13 +536,7 @@ const EnhancedStories: React.FC = () => {
             loop
             muted
             playsInline
-            onClick={() => {
-              if (videoRef.current) {
-                const newMutedState = !isMuted;
-                videoRef.current.muted = newMutedState;
-                setIsMuted(newMutedState);
-              }
-            }}
+            onClick={() => setIsPaused(!isPaused)}
           />
         ) : (
           <img
@@ -627,6 +646,15 @@ const EnhancedStories: React.FC = () => {
               </svg>
             )}
           </button>
+        )}
+        
+        {/* Pause indicator */}
+        {currentStory.media_type === 'video' && isPaused && (
+          <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293H15M9 10V9a2 2 0 012-2h2a2 2 0 012 2v1m-6 0V9a2 2 0 012-2h2a2 2 0 012 2v1" />
+            </svg>
+          </div>
         )}
       </div>
 
