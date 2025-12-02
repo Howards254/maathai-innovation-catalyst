@@ -22,7 +22,7 @@ const Groups: React.FC = () => {
 
   // Load groups on component mount
   useEffect(() => {
-    loadGroups();
+    loadGroups().catch(console.error);
   }, []);
 
   useEffect(() => {

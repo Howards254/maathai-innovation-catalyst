@@ -70,8 +70,8 @@ export const GroupsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   useEffect(() => {
     if (user) {
-      loadGroups();
-      loadMyGroups();
+      loadGroups().catch(console.error);
+      loadMyGroups().catch(console.error);
     }
   }, [user?.id]);
 
