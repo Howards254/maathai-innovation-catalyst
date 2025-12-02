@@ -71,8 +71,14 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   useEffect(() => {
     if (!user) return;
-    const unsub = subscribeToMessages();
-    return () => unsub();
+    
+    // Small delay to ensure user is properly authenticated
+    const timer = setTimeout(() => {
+      const unsub = subscribeToMessages();
+      return () => unsub();
+    }, 1000);
+    
+    return () => clearTimeout(timer);
   }, [user, activeConversation]);
 
   const setOnlineStatus = async (online: boolean) => {
@@ -258,14 +264,21 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (!user) return () => {};
 
     const channel = supabase
-      .channel('messages')
+      .channel(`messages-${user.id}`, {
+        config: {
+          broadcast: { self: false },
+          presence: { key: user.id }
+        }
+      })
       .on('postgres_changes', 
-        { event: 'INSERT', schema: 'public', table: 'messages' }, 
+        { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'messages',
+          filter: `sender_id=neq.${user.id}` // Only listen to messages not from current user
+        }, 
         async (payload) => {
           const msg = payload.new as Message;
-          
-          // Only add if it's not from current user (to avoid duplicates)
-          if (msg.sender_id === user.id) return;
           
           // Load sender info
           const { data: sender } = await supabase
@@ -276,13 +289,22 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           
           const enrichedMsg = { ...msg, sender };
           
+          // Add to active conversation
           if (msg.conversation_id === activeConversation) {
-            setMessages(prev => [...prev, enrichedMsg]);
+            setMessages(prev => {
+              // Check for duplicates
+              if (prev.some(m => m.id === msg.id)) return prev;
+              return [...prev, enrichedMsg];
+            });
           }
+          
+          // Update conversations list
           loadConversations();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Realtime subscription status:', status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
