@@ -38,6 +38,9 @@ const EnhancedMessages: React.FC = () => {
   useEffect(() => {
     if (user) {
       loadAllUsers();
+      loadFriends();
+      loadFollowers();
+      loadFollowing();
     }
   }, [user]);
 
@@ -62,8 +65,17 @@ const EnhancedMessages: React.FC = () => {
   useEffect(() => {
     let sourceUsers: User[] = [];
     
-    // For now, show all users in all tabs since follows table has issues
-    sourceUsers = allUsers;
+    switch (userFilter) {
+      case 'friends':
+        sourceUsers = friends;
+        break;
+      case 'followers':
+        sourceUsers = followers;
+        break;
+      case 'following':
+        sourceUsers = following;
+        break;
+    }
     
     if (userSearchTerm.trim()) {
       const filtered = sourceUsers.filter(u => 
@@ -98,17 +110,92 @@ const EnhancedMessages: React.FC = () => {
 
   const loadFriends = async () => {
     if (!user) return;
-    setFriends([]);
+    
+    try {
+      // Get users I follow
+      const { data: myFollowing } = await supabase
+        .from('follows')
+        .select('following_id')
+        .eq('follower_id', user.id);
+      
+      // Get users who follow me
+      const { data: myFollowers } = await supabase
+        .from('follows')
+        .select('follower_id')
+        .eq('following_id', user.id);
+      
+      if (myFollowing && myFollowers) {
+        const followingIds = myFollowing.map(f => f.following_id);
+        const followerIds = myFollowers.map(f => f.follower_id);
+        const friendIds = followingIds.filter(id => followerIds.includes(id));
+        
+        if (friendIds.length > 0) {
+          const { data: friendsData } = await supabase
+            .from('profiles')
+            .select('id, full_name, username, avatar_url, is_online, last_seen')
+            .in('id', friendIds);
+          
+          setFriends(friendsData || []);
+        } else {
+          setFriends([]);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading friends:', error);
+      setFriends([]);
+    }
   };
 
   const loadFollowers = async () => {
     if (!user) return;
-    setFollowers([]);
+    
+    try {
+      const { data } = await supabase
+        .from('follows')
+        .select('follower_id')
+        .eq('following_id', user.id);
+      
+      if (data && data.length > 0) {
+        const followerIds = data.map(f => f.follower_id);
+        const { data: followersData } = await supabase
+          .from('profiles')
+          .select('id, full_name, username, avatar_url, is_online, last_seen')
+          .in('id', followerIds);
+        
+        setFollowers(followersData || []);
+      } else {
+        setFollowers([]);
+      }
+    } catch (error) {
+      console.error('Error loading followers:', error);
+      setFollowers([]);
+    }
   };
 
   const loadFollowing = async () => {
     if (!user) return;
-    setFollowing([]);
+    
+    try {
+      const { data } = await supabase
+        .from('follows')
+        .select('following_id')
+        .eq('follower_id', user.id);
+      
+      if (data && data.length > 0) {
+        const followingIds = data.map(f => f.following_id);
+        const { data: followingData } = await supabase
+          .from('profiles')
+          .select('id, full_name, username, avatar_url, is_online, last_seen')
+          .in('id', followingIds);
+        
+        setFollowing(followingData || []);
+      } else {
+        setFollowing([]);
+      }
+    } catch (error) {
+      console.error('Error loading following:', error);
+      setFollowing([]);
+    }
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -521,7 +608,9 @@ const EnhancedMessages: React.FC = () => {
             {/* Filter tabs */}
             <div className="flex mb-4 bg-gray-100 rounded-lg p-1">
               {[
-                { key: 'friends', label: 'All Users', count: allUsers.length }
+                { key: 'friends', label: 'Friends', count: friends.length },
+                { key: 'followers', label: 'Followers', count: followers.length },
+                { key: 'following', label: 'Following', count: following.length }
               ].map(({ key, label, count }) => (
                 <button
                   key={key}
