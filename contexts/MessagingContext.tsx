@@ -218,7 +218,7 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('messages')
         .insert({
           conversation_id: conversationId,
@@ -230,15 +230,9 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         .select('*, sender:profiles!messages_sender_id_fkey(id, full_name, avatar_url)')
         .single();
 
-      if (error) throw error;
-      
-      // Update conversation timestamp
-      await supabase
-        .from('conversations')
-        .update({ updated_at: new Date().toISOString() })
-        .eq('id', conversationId);
-        
-      // The real-time subscription will handle adding the message to state
+      if (data) {
+        setMessages(prev => [...prev, data]);
+      }
     } catch (error) {
       console.error('Error sending message:', error);
     }
@@ -264,11 +258,14 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (!user) return () => {};
 
     const channel = supabase
-      .channel('realtime-messages')
+      .channel('messages')
       .on('postgres_changes', 
         { event: 'INSERT', schema: 'public', table: 'messages' }, 
         async (payload) => {
           const msg = payload.new as Message;
+          
+          // Only add if it's not from current user (to avoid duplicates)
+          if (msg.sender_id === user.id) return;
           
           // Load sender info
           const { data: sender } = await supabase
@@ -279,23 +276,9 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           
           const enrichedMsg = { ...msg, sender };
           
-          // Add to messages if it's the active conversation
           if (msg.conversation_id === activeConversation) {
-            setMessages(prev => {
-              // Avoid duplicates
-              if (prev.some(m => m.id === msg.id)) return prev;
-              return [...prev, enrichedMsg];
-            });
+            setMessages(prev => [...prev, enrichedMsg]);
           }
-          
-          // Always reload conversations to update last message and unread counts
-          loadConversations();
-        }
-      )
-      .on('postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'conversation_participants' },
-        () => {
-          // Reload conversations when participants are updated (unread counts, etc.)
           loadConversations();
         }
       )
