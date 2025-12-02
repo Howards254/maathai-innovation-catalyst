@@ -224,16 +224,17 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (!user) return;
 
     try {
+      // Use the original schema format
       const messageData = {
-        conversation_id: conversationId,
         sender_id: user.id,
+        recipient_id: conversationId, // This might need to be the other user's ID
         content: content || '',
-        media_urls: mediaUrls || null,
-        media_type: mediaUrls?.length ? 'image' : null,
-        is_deleted: false
+        message_type: mediaUrls?.length ? 'image' : 'text',
+        media_url: mediaUrls?.[0] || null, // Use first URL only
+        is_read: false
       };
       
-      console.log('Sending message with data:', messageData);
+      console.log('Sending message with data:', JSON.stringify(messageData, null, 2));
       
       const { data, error } = await supabase
         .from('messages')
@@ -242,7 +243,7 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         .single();
 
       if (error) {
-        console.error('Database error:', error);
+        console.error('Database error:', JSON.stringify(error, null, 2));
         throw error;
       }
 
@@ -251,7 +252,7 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setMessages(prev => [...prev, data]);
       }
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('Error sending message:', JSON.stringify(error, null, 2));
       throw error;
     }
   };
