@@ -56,6 +56,7 @@ import Terms from './pages/Terms';
 import Stories from './pages/Stories';
 import EnhancedStories from './pages/EnhancedStories';
 import Messages from './pages/Messages';
+import EnhancedMessages from './pages/EnhancedMessages';
 import Groups from './pages/Groups';
 import LiveStreams from './pages/LiveStreams';
 import LiveFeed from './pages/LiveFeed';
@@ -146,7 +147,8 @@ const App: React.FC = () => {
           {/* Social Features */}
           <Route path="stories" element={<EnhancedStories />} />
           <Route path="stories/legacy" element={<Stories />} />
-          <Route path="messages" element={<Messages />} />
+          <Route path="messages" element={<EnhancedMessages />} />
+          <Route path="messages/legacy" element={<Messages />} />
           <Route path="groups" element={<Groups />} />
           
           {/* Live Features */}
