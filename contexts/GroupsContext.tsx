@@ -7,11 +7,19 @@ interface Group {
   name: string;
   description?: string;
   cover_image_url?: string;
+  banner_image_url?: string;
   category: string;
-  is_private: boolean;
+  visibility?: 'public' | 'private' | 'secret';
+  is_private?: boolean;
   creator_id: string;
   member_count: number;
+  post_count?: number;
+  tags?: string[];
+  location?: string;
+  rules_text?: string;
+  activity_level?: string;
   created_at: string;
+  updated_at?: string;
   is_member?: boolean;
   user_role?: 'admin' | 'moderator' | 'member';
 }
@@ -45,6 +53,8 @@ interface GroupsContextType {
   leaveGroup: (groupId: string) => Promise<void>;
   loadGroupPosts: (groupId: string) => Promise<void>;
   createGroupPost: (groupId: string, data: Partial<GroupPost>) => Promise<void>;
+  likePost?: (postId: string) => Promise<void>;
+  addComment?: (postId: string, content: string) => Promise<void>;
   loadGroups: () => Promise<void>;
   loadMyGroups: () => Promise<void>;
 }
@@ -230,6 +240,67 @@ export const GroupsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
+  const likePost = async (postId: string) => {
+    if (!user?.id || user.id === 'user-1') return;
+
+    try {
+      // Check if already liked
+      const { data: existingLike } = await supabase
+        .from('group_post_likes')
+        .select('id')
+        .eq('post_id', postId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (existingLike) {
+        // Unlike
+        await supabase
+          .from('group_post_likes')
+          .delete()
+          .eq('post_id', postId)
+          .eq('user_id', user.id);
+      } else {
+        // Like
+        await supabase
+          .from('group_post_likes')
+          .insert({
+            post_id: postId,
+            user_id: user.id
+          });
+      }
+
+      // Refresh posts to get updated counts
+      const currentGroup = groupPosts[0]?.group_id;
+      if (currentGroup) {
+        await loadGroupPosts(currentGroup);
+      }
+    } catch (error) {
+      console.error('Error liking post:', error);
+    }
+  };
+
+  const addComment = async (postId: string, content: string) => {
+    if (!user?.id || user.id === 'user-1' || !content.trim()) return;
+
+    try {
+      await supabase
+        .from('group_post_comments')
+        .insert({
+          post_id: postId,
+          author_id: user.id,
+          content: content.trim()
+        });
+
+      // Refresh posts to get updated counts
+      const currentGroup = groupPosts[0]?.group_id;
+      if (currentGroup) {
+        await loadGroupPosts(currentGroup);
+      }
+    } catch (error) {
+      console.error('Error adding comment:', error);
+    }
+  };
+
   const createGroupPost = async (groupId: string, postData: Partial<GroupPost>) => {
     if (!user?.id || user.id === 'user-1') return;
 
@@ -266,6 +337,8 @@ export const GroupsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       leaveGroup,
       loadGroupPosts,
       createGroupPost,
+      likePost,
+      addComment,
       loadGroups,
       loadMyGroups
     }}>
