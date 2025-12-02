@@ -151,7 +151,7 @@ const EnhancedMessages: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-900">{user?.full_name}</h1>
             <button
               onClick={() => setShowNewChat(true)}
-              className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+              className="p-2 bg-green-100 hover:bg-green-200 rounded-full transition-colors"
             >
               <Plus className="w-5 h-5 text-gray-600" />
             </button>
@@ -165,7 +165,7 @@ const EnhancedMessages: React.FC = () => {
               placeholder="Search Messenger"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
             />
           </div>
         </div>
@@ -178,7 +178,7 @@ const EnhancedMessages: React.FC = () => {
               <p>No conversations yet</p>
               <button
                 onClick={() => setShowNewChat(true)}
-                className="mt-2 text-blue-500 hover:text-blue-600 font-medium"
+                className="mt-2 text-green-500 hover:text-green-600 font-medium"
               >
                 Start a new chat
               </button>
@@ -189,7 +189,7 @@ const EnhancedMessages: React.FC = () => {
                 key={conversation.id}
                 onClick={() => loadConversation(conversation.id)}
                 className={`p-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-                  activeConversation === conversation.id ? 'bg-blue-50' : ''
+                  activeConversation === conversation.id ? 'bg-green-50' : ''
                 }`}
               >
                 <div className="flex items-center space-x-3">
@@ -269,15 +269,15 @@ const EnhancedMessages: React.FC = () => {
               
               {/* Action buttons */}
               <div className="flex items-center space-x-2">
-                <button className="p-2 text-blue-500 hover:bg-blue-50 rounded-full">
+                <button className="p-2 text-green-500 hover:bg-green-50 rounded-full">
                   <Phone className="w-5 h-5" />
                 </button>
-                <button className="p-2 text-blue-500 hover:bg-blue-50 rounded-full">
+                <button className="p-2 text-green-500 hover:bg-green-50 rounded-full">
                   <Video className="w-5 h-5" />
                 </button>
                 <button 
                   onClick={() => setShowUserInfo(!showUserInfo)}
-                  className="p-2 text-blue-500 hover:bg-blue-50 rounded-full"
+                  className="p-2 text-green-500 hover:bg-green-50 rounded-full"
                 >
                   <Info className="w-5 h-5" />
                 </button>
@@ -288,7 +288,7 @@ const EnhancedMessages: React.FC = () => {
             <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-gray-50">
               {loading ? (
                 <div className="flex justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
                 </div>
               ) : (
                 messages.map((message, index) => {
@@ -313,7 +313,7 @@ const EnhancedMessages: React.FC = () => {
                       )}
                       <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
                         isOwn 
-                          ? 'bg-blue-500 text-white' 
+                          ? 'bg-green-500 text-white' 
                           : 'bg-white text-gray-900 border border-gray-200'
                       } ${
                         isOwn 
@@ -329,7 +329,7 @@ const EnhancedMessages: React.FC = () => {
                           </div>
                         )}
                         {isLastInGroup && (
-                          <p className={`text-xs mt-1 ${isOwn ? 'text-blue-100' : 'text-gray-500'}`}>
+                          <p className={`text-xs mt-1 ${isOwn ? 'text-green-100' : 'text-gray-500'}`}>
                             {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </p>
                         )}
@@ -344,7 +344,7 @@ const EnhancedMessages: React.FC = () => {
             {/* Message Input */}
             <div className="bg-white border-t border-gray-200 p-4">
               <form onSubmit={handleSendMessage} className="flex items-center space-x-3">
-                <label className="cursor-pointer p-2 text-blue-500 hover:bg-blue-50 rounded-full">
+                <label className="cursor-pointer p-2 text-green-500 hover:bg-green-50 rounded-full">
                   <Image className="w-5 h-5" />
                   <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="hidden" />
                 </label>
@@ -356,7 +356,7 @@ const EnhancedMessages: React.FC = () => {
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder="Aa"
                     disabled={uploading}
-                    className="w-full px-4 py-2 bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
                   <button
                     type="button"
@@ -369,7 +369,7 @@ const EnhancedMessages: React.FC = () => {
                 <button
                   type="submit"
                   disabled={!newMessage.trim() || uploading}
-                  className="p-2 text-blue-500 hover:bg-blue-50 rounded-full disabled:opacity-50"
+                  className="p-2 text-green-500 hover:bg-green-50 rounded-full disabled:opacity-50"
                 >
                   <Send className="w-5 h-5" />
                 </button>
@@ -379,14 +379,14 @@ const EnhancedMessages: React.FC = () => {
         ) : (
           <div className="flex-1 flex items-center justify-center bg-gray-50">
             <div className="text-center">
-              <div className="w-24 h-24 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
                 <MessageCircle className="w-12 h-12 text-white" />
               </div>
               <h3 className="text-xl font-medium text-gray-900 mb-2">Your Messages</h3>
               <p className="text-gray-500 mb-4">Send private messages to friends and connections</p>
               <button
                 onClick={() => setShowNewChat(true)}
-                className="px-6 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors"
+                className="px-6 py-2 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors"
               >
                 Send Message
               </button>
@@ -414,7 +414,7 @@ const EnhancedMessages: React.FC = () => {
                 placeholder="Search people..."
                 value={userSearchTerm}
                 onChange={(e) => setUserSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-green-500"
               />
             </div>
             

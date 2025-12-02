@@ -218,7 +218,7 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (!user) return;
 
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('messages')
         .insert({
           conversation_id: conversationId,
@@ -230,7 +230,15 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         .select('*, sender:profiles!messages_sender_id_fkey(id, full_name, avatar_url)')
         .single();
 
-      if (data) setMessages(prev => [...prev, data]);
+      if (error) throw error;
+      
+      // Update conversation timestamp
+      await supabase
+        .from('conversations')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', conversationId);
+        
+      // The real-time subscription will handle adding the message to state
     } catch (error) {
       console.error('Error sending message:', error);
     }
@@ -256,7 +264,7 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (!user) return () => {};
 
     const channel = supabase
-      .channel('messages')
+      .channel('realtime-messages')
       .on('postgres_changes', 
         { event: 'INSERT', schema: 'public', table: 'messages' }, 
         async (payload) => {
@@ -271,9 +279,23 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           
           const enrichedMsg = { ...msg, sender };
           
+          // Add to messages if it's the active conversation
           if (msg.conversation_id === activeConversation) {
-            setMessages(prev => [...prev, enrichedMsg]);
+            setMessages(prev => {
+              // Avoid duplicates
+              if (prev.some(m => m.id === msg.id)) return prev;
+              return [...prev, enrichedMsg];
+            });
           }
+          
+          // Always reload conversations to update last message and unread counts
+          loadConversations();
+        }
+      )
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'conversation_participants' },
+        () => {
+          // Reload conversations when participants are updated (unread counts, etc.)
           loadConversations();
         }
       )
