@@ -1,8 +1,10 @@
 -- Fix real-time messaging by enabling realtime for authenticated users
 -- This allows Supabase real-time to work properly
 
--- Enable realtime on messages table for all authenticated users
+-- Enable realtime on messages and conversations tables for all authenticated users
 ALTER PUBLICATION supabase_realtime ADD TABLE messages;
+ALTER PUBLICATION supabase_realtime ADD TABLE conversations;
+ALTER PUBLICATION supabase_realtime ADD TABLE conversation_participants;
 
 -- Grant necessary permissions for realtime
 GRANT SELECT ON messages TO authenticated;

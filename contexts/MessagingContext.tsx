@@ -263,7 +263,7 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const subscribeToMessages = () => {
     if (!user) return () => {};
 
-    const channel = supabase
+    const messagesChannel = supabase
       .channel(`messages-${user.id}`, {
         config: {
           broadcast: { self: false },
@@ -303,11 +303,32 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
       )
       .subscribe((status) => {
-        console.log('Realtime subscription status:', status);
+        console.log('Messages realtime status:', status);
+      });
+
+    const conversationsChannel = supabase
+      .channel(`conversations-${user.id}`)
+      .on('postgres_changes', 
+        { event: 'UPDATE', schema: 'public', table: 'conversations' }, 
+        () => {
+          console.log('Conversation updated, reloading...');
+          loadConversations();
+        }
+      )
+      .on('postgres_changes', 
+        { event: 'INSERT', schema: 'public', table: 'conversations' }, 
+        () => {
+          console.log('New conversation created, reloading...');
+          loadConversations();
+        }
+      )
+      .subscribe((status) => {
+        console.log('Conversations realtime status:', status);
       });
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(messagesChannel);
+      supabase.removeChannel(conversationsChannel);
     };
   };
 

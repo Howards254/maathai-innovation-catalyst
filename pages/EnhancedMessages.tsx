@@ -111,15 +111,24 @@ const EnhancedMessages: React.FC = () => {
 
     setUploading(true);
     try {
-      const urls = await Promise.all(
-        Array.from(files).map(file => uploadMedia(file, 'messages'))
-      );
-      await sendMessage(activeConversation, '', urls);
+      const urls = [];
+      for (const file of Array.from(files)) {
+        console.log('Uploading file:', file.name, file.size);
+        const url = await uploadMedia(file, 'messages');
+        console.log('Upload result:', url);
+        urls.push(url);
+      }
+      
+      if (urls.length > 0) {
+        await sendMessage(activeConversation, '', urls);
+      }
     } catch (error) {
       console.error('Upload failed:', error);
-      setUploadError('Upload failed. Please try again.');
+      setUploadError(`Upload failed: ${error instanceof Error ? error.message : 'Please try again.'}`);
     } finally {
       setUploading(false);
+      // Reset file input
+      e.target.value = '';
     }
   };
 
@@ -387,7 +396,14 @@ const EnhancedMessages: React.FC = () => {
               <form onSubmit={handleSendMessage} className="flex items-center space-x-3">
                 <label className="cursor-pointer p-2 text-green-500 hover:bg-green-50 rounded-full">
                   <Image className="w-5 h-5" />
-                  <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="hidden" />
+                  <input 
+                    type="file" 
+                    multiple 
+                    accept="image/*,video/*" 
+                    onChange={handleImageUpload} 
+                    className="hidden"
+                    disabled={uploading}
+                  />
                 </label>
                 
                 <div className="flex-1 relative emoji-picker-container">
