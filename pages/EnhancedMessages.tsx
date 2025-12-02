@@ -27,7 +27,7 @@ const EnhancedMessages: React.FC = () => {
   const [showUserInfo, setShowUserInfo] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [uploadError, setUploadError] = useState('');
-  const [userFilter, setUserFilter] = useState<'friends' | 'followers' | 'following' | 'all'>('friends');
+  const [userFilter, setUserFilter] = useState<'friends' | 'followers' | 'following'>('friends');
   const [friends, setFriends] = useState<User[]>([]);
   const [followers, setFollowers] = useState<User[]>([]);
   const [following, setFollowing] = useState<User[]>([]);
@@ -75,9 +75,6 @@ const EnhancedMessages: React.FC = () => {
       case 'following':
         sourceUsers = following;
         break;
-      case 'all':
-        sourceUsers = allUsers;
-        break;
     }
     
     if (userSearchTerm.trim()) {
@@ -115,22 +112,36 @@ const EnhancedMessages: React.FC = () => {
     if (!user) return;
     
     try {
-      // Get mutual follows (friends)
-      const { data, error } = await supabase
+      // Get users who follow me AND I follow them (mutual follows = friends)
+      const { data: myFollowing } = await supabase
         .from('follows')
-        .select(`
-          followed_id,
-          profiles!follows_followed_id_fkey(id, full_name, username, avatar_url, is_online, last_seen)
-        `)
-        .eq('follower_id', user.id)
-        .eq('is_mutual', true);
+        .select('followed_id')
+        .eq('follower_id', user.id);
       
-      if (!error && data) {
-        const friendsData = data.map(f => f.profiles).filter(Boolean);
-        setFriends(friendsData);
+      const { data: myFollowers } = await supabase
+        .from('follows')
+        .select('follower_id')
+        .eq('followed_id', user.id);
+      
+      if (myFollowing && myFollowers) {
+        const followingIds = myFollowing.map(f => f.followed_id);
+        const followerIds = myFollowers.map(f => f.follower_id);
+        const friendIds = followingIds.filter(id => followerIds.includes(id));
+        
+        if (friendIds.length > 0) {
+          const { data: friendsData } = await supabase
+            .from('profiles')
+            .select('id, full_name, username, avatar_url, is_online, last_seen')
+            .in('id', friendIds);
+          
+          setFriends(friendsData || []);
+        } else {
+          setFriends([]);
+        }
       }
     } catch (error) {
       console.error('Error loading friends:', error);
+      setFriends([]);
     }
   };
 
@@ -138,20 +149,25 @@ const EnhancedMessages: React.FC = () => {
     if (!user) return;
     
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('follows')
-        .select(`
-          follower_id,
-          profiles!follows_follower_id_fkey(id, full_name, username, avatar_url, is_online, last_seen)
-        `)
+        .select('follower_id')
         .eq('followed_id', user.id);
       
-      if (!error && data) {
-        const followersData = data.map(f => f.profiles).filter(Boolean);
-        setFollowers(followersData);
+      if (data && data.length > 0) {
+        const followerIds = data.map(f => f.follower_id);
+        const { data: followersData } = await supabase
+          .from('profiles')
+          .select('id, full_name, username, avatar_url, is_online, last_seen')
+          .in('id', followerIds);
+        
+        setFollowers(followersData || []);
+      } else {
+        setFollowers([]);
       }
     } catch (error) {
       console.error('Error loading followers:', error);
+      setFollowers([]);
     }
   };
 
@@ -159,20 +175,25 @@ const EnhancedMessages: React.FC = () => {
     if (!user) return;
     
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('follows')
-        .select(`
-          followed_id,
-          profiles!follows_followed_id_fkey(id, full_name, username, avatar_url, is_online, last_seen)
-        `)
+        .select('followed_id')
         .eq('follower_id', user.id);
       
-      if (!error && data) {
-        const followingData = data.map(f => f.profiles).filter(Boolean);
-        setFollowing(followingData);
+      if (data && data.length > 0) {
+        const followingIds = data.map(f => f.followed_id);
+        const { data: followingData } = await supabase
+          .from('profiles')
+          .select('id, full_name, username, avatar_url, is_online, last_seen')
+          .in('id', followingIds);
+        
+        setFollowing(followingData || []);
+      } else {
+        setFollowing([]);
       }
     } catch (error) {
       console.error('Error loading following:', error);
+      setFollowing([]);
     }
   };
 
@@ -213,24 +234,13 @@ const EnhancedMessages: React.FC = () => {
         formData.append('upload_preset', 'ml_default'); // Use your Cloudinary upload preset
         formData.append('folder', 'greenverse/messages');
         
-        // Upload to Cloudinary directly
-        const response = await fetch(
-          `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'your-cloud-name'}/auto/upload`,
-          {
-            method: 'POST',
-            body: formData,
-          }
-        );
-        
-        if (!response.ok) {
-          throw new Error(`Upload failed: ${response.statusText}`);
-        }
-        
-        const result = await response.json();
-        console.log('Upload successful:', result.secure_url);
+        // Use the existing uploadMedia function instead of direct Cloudinary
+        const url = await uploadMedia(file, 'messages');
+        console.log('Upload successful:', url);
         
         // Send message with uploaded media immediately
-        await sendMessage(activeConversation, '', [result.secure_url]);
+        await sendMessage(activeConversation, '', [url]);
+
       }
     } catch (error) {
       console.error('Upload failed:', error);
@@ -599,8 +609,7 @@ const EnhancedMessages: React.FC = () => {
               {[
                 { key: 'friends', label: 'Friends', count: friends.length },
                 { key: 'followers', label: 'Followers', count: followers.length },
-                { key: 'following', label: 'Following', count: following.length },
-                { key: 'all', label: 'All Users', count: allUsers.length }
+                { key: 'following', label: 'Following', count: following.length }
               ].map(({ key, label, count }) => (
                 <button
                   key={key}
