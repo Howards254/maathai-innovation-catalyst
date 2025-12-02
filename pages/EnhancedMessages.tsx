@@ -27,12 +27,21 @@ const EnhancedMessages: React.FC = () => {
   const [showUserInfo, setShowUserInfo] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const [userFilter, setUserFilter] = useState<'friends' | 'followers' | 'following' | 'all'>('friends');
+  const [friends, setFriends] = useState<User[]>([]);
+  const [followers, setFollowers] = useState<User[]>([]);
+  const [following, setFollowing] = useState<User[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const emojis = ['😀', '😂', '😍', '🥰', '😊', '😎', '🤔', '😢', '😡', '👍', '👎', '❤️', '🔥', '💯', '🎉', '🌱', '🌍', '♻️', '🌳', '🌿', '💚', '✨', '⭐', '🙌', '👏', '💪', '🤝', '🙏', '✅', '❌', '⚡', '💡', '🎯', '🚀', '🌟', '💎', '🏆', '🎊', '🎈', '🎁', '☀️', '🌈', '🌸', '🌺', '🍀', '🌻', '🦋', '🐝', '🌊', '⛰️'];
 
   useEffect(() => {
-    if (user) loadAllUsers();
+    if (user) {
+      loadAllUsers();
+      loadFriends();
+      loadFollowers();
+      loadFollowing();
+    }
   }, [user]);
 
   useEffect(() => {
@@ -54,16 +63,33 @@ const EnhancedMessages: React.FC = () => {
   }, [showEmojiPicker]);
 
   useEffect(() => {
+    let sourceUsers: User[] = [];
+    
+    switch (userFilter) {
+      case 'friends':
+        sourceUsers = friends;
+        break;
+      case 'followers':
+        sourceUsers = followers;
+        break;
+      case 'following':
+        sourceUsers = following;
+        break;
+      case 'all':
+        sourceUsers = allUsers;
+        break;
+    }
+    
     if (userSearchTerm.trim()) {
-      const filtered = allUsers.filter(u => 
+      const filtered = sourceUsers.filter(u => 
         u.full_name.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
         u.username.toLowerCase().includes(userSearchTerm.toLowerCase())
       );
       setSearchUsers(filtered);
     } else {
-      setSearchUsers(allUsers.slice(0, 20)); // Show first 20 users
+      setSearchUsers(sourceUsers.slice(0, 20));
     }
-  }, [userSearchTerm, allUsers]);
+  }, [userSearchTerm, userFilter, friends, followers, following, allUsers]);
 
   const loadAllUsers = async () => {
     if (!user) return;
@@ -79,10 +105,74 @@ const EnhancedMessages: React.FC = () => {
       
       if (!error && data) {
         setAllUsers(data);
-        setSearchUsers(data.slice(0, 20));
       }
     } catch (error) {
       console.error('Error loading users:', error);
+    }
+  };
+
+  const loadFriends = async () => {
+    if (!user) return;
+    
+    try {
+      // Get mutual follows (friends)
+      const { data, error } = await supabase
+        .from('follows')
+        .select(`
+          followed_id,
+          profiles!follows_followed_id_fkey(id, full_name, username, avatar_url, is_online, last_seen)
+        `)
+        .eq('follower_id', user.id)
+        .eq('is_mutual', true);
+      
+      if (!error && data) {
+        const friendsData = data.map(f => f.profiles).filter(Boolean);
+        setFriends(friendsData);
+      }
+    } catch (error) {
+      console.error('Error loading friends:', error);
+    }
+  };
+
+  const loadFollowers = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('follows')
+        .select(`
+          follower_id,
+          profiles!follows_follower_id_fkey(id, full_name, username, avatar_url, is_online, last_seen)
+        `)
+        .eq('followed_id', user.id);
+      
+      if (!error && data) {
+        const followersData = data.map(f => f.profiles).filter(Boolean);
+        setFollowers(followersData);
+      }
+    } catch (error) {
+      console.error('Error loading followers:', error);
+    }
+  };
+
+  const loadFollowing = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('follows')
+        .select(`
+          followed_id,
+          profiles!follows_followed_id_fkey(id, full_name, username, avatar_url, is_online, last_seen)
+        `)
+        .eq('follower_id', user.id);
+      
+      if (!error && data) {
+        const followingData = data.map(f => f.profiles).filter(Boolean);
+        setFollowing(followingData);
+      }
+    } catch (error) {
+      console.error('Error loading following:', error);
     }
   };
 
@@ -105,29 +195,48 @@ const EnhancedMessages: React.FC = () => {
     const oversizedFiles = Array.from(files).filter(file => file.size > maxSize);
     
     if (oversizedFiles.length > 0) {
-      setUploadError(`File(s) too large. Maximum size is 10MB. Found: ${oversizedFiles.map(f => f.name).join(', ')}`);
+      setUploadError(`File(s) too large. Maximum size is 10MB.`);
+      e.target.value = '';
       return;
     }
 
     setUploading(true);
+    
     try {
-      const urls = [];
+      // Upload files one by one like WhatsApp
       for (const file of Array.from(files)) {
-        console.log('Uploading file:', file.name, file.size);
-        const url = await uploadMedia(file, 'messages');
-        console.log('Upload result:', url);
-        urls.push(url);
-      }
-      
-      if (urls.length > 0) {
-        await sendMessage(activeConversation, '', urls);
+        console.log('Uploading:', file.name, `${(file.size / 1024 / 1024).toFixed(2)}MB`);
+        
+        // Create FormData for Cloudinary upload
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', 'ml_default'); // Use your Cloudinary upload preset
+        formData.append('folder', 'greenverse/messages');
+        
+        // Upload to Cloudinary directly
+        const response = await fetch(
+          `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'your-cloud-name'}/auto/upload`,
+          {
+            method: 'POST',
+            body: formData,
+          }
+        );
+        
+        if (!response.ok) {
+          throw new Error(`Upload failed: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        console.log('Upload successful:', result.secure_url);
+        
+        // Send message with uploaded media immediately
+        await sendMessage(activeConversation, '', [result.secure_url]);
       }
     } catch (error) {
       console.error('Upload failed:', error);
       setUploadError(`Upload failed: ${error instanceof Error ? error.message : 'Please try again.'}`);
     } finally {
       setUploading(false);
-      // Reset file input
       e.target.value = '';
     }
   };
@@ -485,12 +594,34 @@ const EnhancedMessages: React.FC = () => {
               </button>
             </div>
             
+            {/* Filter tabs */}
+            <div className="flex mb-4 bg-gray-100 rounded-lg p-1">
+              {[
+                { key: 'friends', label: 'Friends', count: friends.length },
+                { key: 'followers', label: 'Followers', count: followers.length },
+                { key: 'following', label: 'Following', count: following.length },
+                { key: 'all', label: 'All Users', count: allUsers.length }
+              ].map(({ key, label, count }) => (
+                <button
+                  key={key}
+                  onClick={() => setUserFilter(key as any)}
+                  className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    userFilter === key
+                      ? 'bg-white text-green-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  {label} ({count})
+                </button>
+              ))}
+            </div>
+            
             {/* Search users */}
             <div className="relative mb-4">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Search people..."
+                placeholder={`Search ${userFilter}...`}
                 value={userSearchTerm}
                 onChange={(e) => setUserSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-green-500"
