@@ -224,23 +224,35 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (!user) return;
 
     try {
-      const { data } = await supabase
+      const messageData = {
+        conversation_id: conversationId,
+        sender_id: user.id,
+        content: content || '',
+        media_urls: mediaUrls || null,
+        media_type: mediaUrls?.length ? 'image' : null,
+        is_deleted: false
+      };
+      
+      console.log('Sending message with data:', messageData);
+      
+      const { data, error } = await supabase
         .from('messages')
-        .insert({
-          conversation_id: conversationId,
-          sender_id: user.id,
-          content,
-          media_urls: mediaUrls,
-          media_type: mediaUrls?.length ? 'image' : undefined
-        })
+        .insert(messageData)
         .select('*, sender:profiles!messages_sender_id_fkey(id, full_name, avatar_url)')
         .single();
 
+      if (error) {
+        console.error('Database error:', error);
+        throw error;
+      }
+
       if (data) {
+        console.log('Message sent successfully:', data);
         setMessages(prev => [...prev, data]);
       }
     } catch (error) {
       console.error('Error sending message:', error);
+      throw error;
     }
   };
 
