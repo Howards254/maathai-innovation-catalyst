@@ -75,52 +75,73 @@ const EnhancedStories: React.FC = () => {
 
   const loadStories = async () => {
     try {
-      // Use regular query (RPC functions may not be available)
-      const { data, error } = await supabase
+      // Load stories with author info
+      const { data: storiesData, error: storiesError } = await supabase
         .from('stories')
         .select(`
           *,
           author:profiles!stories_author_id_fkey(id, full_name, username, avatar_url)
         `)
-
         .order('created_at', { ascending: false })
         .limit(50);
       
-      if (error) throw error;
+      if (storiesError) throw storiesError;
       
-      // Filter expired stories and format for enhanced UI
-      const activeStories = data?.filter(story => {
+      // Filter expired stories
+      const activeStories = storiesData?.filter(story => {
         if (!story.expires_at) return true;
         return new Date(story.expires_at) > new Date();
       }) || [];
       
-      const formattedStories = activeStories.map(story => {
-        const reactionCount = story.reactions?.length || 0;
-        const commentCount = story.comments?.length || 0;
-        const userReaction = story.reactions?.find((r: any) => r.user_id === user?.id)?.reaction_type || null;
-        
-        return {
-          ...story,
-          author_name: story.author?.full_name || 'Unknown User',
-          author_username: story.author?.username || 'unknown',
-          author_avatar: story.author?.avatar_url,
-          views_count: story.views_count || 0,
-          reactions_count: reactionCount,
-          comments_count: commentCount,
-          has_viewed: false,
-          user_reaction: userReaction
-        };
-      });
+      if (activeStories.length === 0) {
+        setStories([]);
+        setLoading(false);
+        return;
+      }
       
-      // Load user reactions into state
+      const storyIds = activeStories.map(s => s.id);
+      
+      // Load reactions count for each story
+      const { data: reactionsData } = await supabase
+        .from('story_reactions')
+        .select('story_id, reaction_type, user_id')
+        .in('story_id', storyIds);
+      
+      // Load comments count for each story
+      const { data: commentsData } = await supabase
+        .from('story_comments')
+        .select('story_id')
+        .in('story_id', storyIds);
+      
+      // Process reactions and comments
+      const reactionCounts: Record<string, number> = {};
       const userReactions: Record<string, string> = {};
-      formattedStories.forEach(story => {
-        if (story.user_reaction) {
-          userReactions[story.id] = story.user_reaction;
+      const commentCounts: Record<string, number> = {};
+      
+      reactionsData?.forEach(reaction => {
+        reactionCounts[reaction.story_id] = (reactionCounts[reaction.story_id] || 0) + 1;
+        if (reaction.user_id === user?.id) {
+          userReactions[reaction.story_id] = reaction.reaction_type;
         }
       });
-      setStoryReactions(userReactions);
       
+      commentsData?.forEach(comment => {
+        commentCounts[comment.story_id] = (commentCounts[comment.story_id] || 0) + 1;
+      });
+      
+      const formattedStories = activeStories.map(story => ({
+        ...story,
+        author_name: story.author?.full_name || 'Unknown User',
+        author_username: story.author?.username || 'unknown',
+        author_avatar: story.author?.avatar_url,
+        views_count: story.views_count || 0,
+        reactions_count: reactionCounts[story.id] || 0,
+        comments_count: commentCounts[story.id] || 0,
+        has_viewed: false,
+        user_reaction: userReactions[story.id] || null
+      }));
+      
+      setStoryReactions(userReactions);
       setStories(formattedStories);
     } catch (error) {
       console.error('Error loading stories:', error);
@@ -159,32 +180,45 @@ const EnhancedStories: React.FC = () => {
       const existingReaction = storyReactions[storyId];
       
       if (existingReaction === reactionType) {
-        await supabase
+        // Remove reaction
+        const { error } = await supabase
           .from('story_reactions')
           .delete()
           .eq('story_id', storyId)
           .eq('user_id', user.id);
         
-        setStoryReactions(prev => ({ ...prev, [storyId]: null }));
+        if (!error) {
+          setStoryReactions(prev => ({ ...prev, [storyId]: null }));
+          setStories(prev => prev.map(story => {
+            if (story.id === storyId) {
+              return { ...story, reactions_count: Math.max(0, story.reactions_count - 1) };
+            }
+            return story;
+          }));
+        }
       } else {
-        await supabase
+        // Add or update reaction
+        const { error } = await supabase
           .from('story_reactions')
           .upsert({
             story_id: storyId,
             user_id: user.id,
             reaction_type: reactionType
+          }, {
+            onConflict: 'story_id,user_id'
           });
         
-        setStoryReactions(prev => ({ ...prev, [storyId]: reactionType }));
-      }
-      
-      setStories(prev => prev.map(story => {
-        if (story.id === storyId) {
-          const increment = existingReaction === reactionType ? -1 : (existingReaction ? 0 : 1);
-          return { ...story, reactions_count: Math.max(0, story.reactions_count + increment) };
+        if (!error) {
+          setStoryReactions(prev => ({ ...prev, [storyId]: reactionType }));
+          setStories(prev => prev.map(story => {
+            if (story.id === storyId) {
+              const increment = existingReaction ? 0 : 1; // Only increment if no previous reaction
+              return { ...story, reactions_count: story.reactions_count + increment };
+            }
+            return story;
+          }));
         }
-        return story;
-      }));
+      }
     } catch (error) {
       console.error('Error reacting to story:', error);
     }
@@ -194,7 +228,7 @@ const EnhancedStories: React.FC = () => {
     if (!user || !content.trim()) return;
     
     try {
-      await supabase
+      const { error } = await supabase
         .from('story_comments')
         .insert({
           story_id: storyId,
@@ -202,15 +236,17 @@ const EnhancedStories: React.FC = () => {
           content: content.trim()
         });
       
-      setStories(prev => prev.map(story => {
-        if (story.id === storyId) {
-          return { ...story, comments_count: story.comments_count + 1 };
-        }
-        return story;
-      }));
-      
-      setCommentText('');
-      setShowComments(false);
+      if (!error) {
+        setStories(prev => prev.map(story => {
+          if (story.id === storyId) {
+            return { ...story, comments_count: story.comments_count + 1 };
+          }
+          return story;
+        }));
+        
+        setCommentText('');
+        setShowComments(false);
+      }
     } catch (error) {
       console.error('Error adding comment:', error);
     }
