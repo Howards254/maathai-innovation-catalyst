@@ -100,14 +100,32 @@ export const GroupsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         !group.visibility
       );
 
-      // Set groups without membership check for now
-      const groupsWithDefaults = publicGroups.map(group => ({
-        ...group,
-        is_member: false,
-        user_role: undefined
-      }));
+      // Check membership status
+      const groupsWithMembership = await Promise.all(
+        publicGroups.map(async (group) => {
+          if (!user) return { ...group, is_member: false };
 
-      setGroups(groupsWithDefaults);
+          try {
+            const { data: membership } = await supabase
+              .from('group_members')
+              .select('role')
+              .eq('group_id', group.id)
+              .eq('user_id', user.id)
+              .single();
+
+            return {
+              ...group,
+              is_member: !!membership,
+              user_role: membership?.role
+            };
+          } catch (error) {
+            // If error (like table doesn't exist), default to not a member
+            return { ...group, is_member: false };
+          }
+        })
+      );
+
+      setGroups(groupsWithMembership);
     } catch (error) {
       console.error('Error loading groups:', error);
       setGroups([]);
@@ -177,7 +195,21 @@ export const GroupsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!user?.id || user.id === 'user-1') return;
 
     try {
-      await supabase
+      // Check if already a member
+      const { data: existingMember } = await supabase
+        .from('group_members')
+        .select('id')
+        .eq('group_id', groupId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (existingMember) {
+        console.log('Already a member of this group');
+        return;
+      }
+
+      // Join group
+      const { error: joinError } = await supabase
         .from('group_members')
         .insert({
           group_id: groupId,
@@ -185,19 +217,7 @@ export const GroupsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           role: 'member'
         });
 
-      // Update member count
-      const { data: groupData } = await supabase
-        .from('groups')
-        .select('member_count')
-        .eq('id', groupId)
-        .single();
-      
-      if (groupData) {
-        await supabase
-          .from('groups')
-          .update({ member_count: (groupData.member_count || 0) + 1 })
-          .eq('id', groupId);
-      }
+      if (joinError) throw joinError;
 
       await loadGroups();
       await loadMyGroups();
@@ -210,23 +230,24 @@ export const GroupsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!user?.id || user.id === 'user-1') return;
 
     try {
+      // Remove membership
       await supabase
         .from('group_members')
         .delete()
         .eq('group_id', groupId)
         .eq('user_id', user.id);
 
-      // Update member count
-      const { data: groupData } = await supabase
-        .from('groups')
-        .select('member_count')
-        .eq('id', groupId)
-        .single();
-      
-      if (groupData) {
+      // Check if group has any members left
+      const { data: remainingMembers } = await supabase
+        .from('group_members')
+        .select('id')
+        .eq('group_id', groupId);
+
+      // If no members left, delete the group
+      if (!remainingMembers || remainingMembers.length === 0) {
         await supabase
           .from('groups')
-          .update({ member_count: Math.max((groupData.member_count || 0) - 1, 0) })
+          .delete()
           .eq('id', groupId);
       }
 
