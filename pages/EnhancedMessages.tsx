@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, Send, Search, Image, Users, X, Phone, Video, Info, Plus, Smile } from 'lucide-react';
+import { MessageCircle, Send, Search, Image, Users, X, Phone, Video, Info, Plus, Smile, AlertCircle } from 'lucide-react';
 import { useMessaging } from '../contexts/MessagingContext';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -25,7 +25,11 @@ const EnhancedMessages: React.FC = () => {
   const [searchUsers, setSearchUsers] = useState<User[]>([]);
   const [userSearchTerm, setUserSearchTerm] = useState('');
   const [showUserInfo, setShowUserInfo] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [uploadError, setUploadError] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const emojis = ['😀', '😂', '😍', '🥰', '😊', '😎', '🤔', '😢', '😡', '👍', '👎', '❤️', '🔥', '💯', '🎉', '🌱', '🌍', '♻️', '🌳', '🌿', '💚', '✨', '⭐', '🙌', '👏', '💪', '🤝', '🙏', '✅', '❌', '⚡', '💡', '🎯', '🚀', '🌟', '💎', '🏆', '🎊', '🎈', '🎁', '☀️', '🌈', '🌸', '🌺', '🍀', '🌻', '🦋', '🐝', '🌊', '⛰️'];
 
   useEffect(() => {
     if (user) loadAllUsers();
@@ -34,6 +38,20 @@ const EnhancedMessages: React.FC = () => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showEmojiPicker) {
+        const target = event.target as Element;
+        if (!target.closest('.emoji-picker-container')) {
+          setShowEmojiPicker(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showEmojiPicker]);
 
   useEffect(() => {
     if (userSearchTerm.trim()) {
@@ -80,6 +98,17 @@ const EnhancedMessages: React.FC = () => {
     const files = e.target.files;
     if (!files?.length || !activeConversation) return;
 
+    setUploadError('');
+    
+    // Check file sizes (10MB limit)
+    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+    const oversizedFiles = Array.from(files).filter(file => file.size > maxSize);
+    
+    if (oversizedFiles.length > 0) {
+      setUploadError(`File(s) too large. Maximum size is 10MB. Found: ${oversizedFiles.map(f => f.name).join(', ')}`);
+      return;
+    }
+
     setUploading(true);
     try {
       const urls = await Promise.all(
@@ -88,6 +117,7 @@ const EnhancedMessages: React.FC = () => {
       await sendMessage(activeConversation, '', urls);
     } catch (error) {
       console.error('Upload failed:', error);
+      setUploadError('Upload failed. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -320,7 +350,7 @@ const EnhancedMessages: React.FC = () => {
                           ? (isLastInGroup ? 'rounded-br-md' : 'rounded-br-lg')
                           : (isLastInGroup ? 'rounded-bl-md' : 'rounded-bl-lg')
                       }`}>
-                        {message.content && <p className="break-words">{message.content}</p>}
+                        {message.content && message.content.trim() && <p className="break-words">{message.content}</p>}
                         {message.media_urls?.length > 0 && (
                           <div className="grid grid-cols-2 gap-1 mt-2">
                             {message.media_urls.map((url, i) => (
@@ -343,13 +373,24 @@ const EnhancedMessages: React.FC = () => {
 
             {/* Message Input */}
             <div className="bg-white border-t border-gray-200 p-4">
+              {/* Upload Error */}
+              {uploadError && (
+                <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700 text-sm">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span>{uploadError}</span>
+                  <button onClick={() => setUploadError('')} className="ml-auto text-red-500 hover:text-red-700">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+              
               <form onSubmit={handleSendMessage} className="flex items-center space-x-3">
                 <label className="cursor-pointer p-2 text-green-500 hover:bg-green-50 rounded-full">
                   <Image className="w-5 h-5" />
                   <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="hidden" />
                 </label>
                 
-                <div className="flex-1 relative">
+                <div className="flex-1 relative emoji-picker-container">
                   <input
                     type="text"
                     value={newMessage}
@@ -360,10 +401,32 @@ const EnhancedMessages: React.FC = () => {
                   />
                   <button
                     type="button"
+                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
                     <Smile className="w-5 h-5" />
                   </button>
+                  
+                  {/* Emoji Picker */}
+                  {showEmojiPicker && (
+                    <div className="absolute bottom-full right-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg p-3 w-64 max-h-48 overflow-y-auto z-10">
+                      <div className="grid grid-cols-8 gap-1">
+                        {emojis.map((emoji, index) => (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => {
+                              setNewMessage(prev => prev + emoji);
+                              setShowEmojiPicker(false);
+                            }}
+                            className="text-lg hover:bg-gray-100 rounded p-1 transition-colors"
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 
                 <button
