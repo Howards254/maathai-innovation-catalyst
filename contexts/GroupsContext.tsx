@@ -108,28 +108,15 @@ export const GroupsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       console.log('Public groups:', publicGroups);
 
-      // Check membership status
-      const groupsWithMembership = await Promise.all(
-        publicGroups.map(async (group) => {
-          if (!user) return { ...group, is_member: false };
+      // Set groups without membership check for now
+      const groupsWithDefaults = publicGroups.map(group => ({
+        ...group,
+        is_member: false,
+        user_role: undefined
+      }));
 
-          const { data: membership } = await supabase
-            .from('group_members')
-            .select('role')
-            .eq('group_id', group.id)
-            .eq('user_id', user.id)
-            .single();
-
-          return {
-            ...group,
-            is_member: !!membership,
-            user_role: membership?.role
-          };
-        })
-      );
-
-      console.log('Groups with membership:', groupsWithMembership);
-      setGroups(groupsWithMembership);
+      console.log('Groups with defaults:', groupsWithDefaults);
+      setGroups(groupsWithDefaults);
     } catch (error) {
       console.error('Error loading groups:', error);
       setGroups([]);
