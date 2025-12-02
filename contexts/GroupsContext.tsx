@@ -146,7 +146,11 @@ export const GroupsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         `)
         .eq('user_id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading my groups:', error);
+        setMyGroups([]);
+        return;
+      }
 
       const myGroupsData = (data || []).map(item => ({
         ...item.groups,
@@ -157,6 +161,7 @@ export const GroupsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setMyGroups(myGroupsData);
     } catch (error) {
       console.error('Error loading my groups:', error);
+      setMyGroups([]);
     }
   };
 
@@ -259,6 +264,12 @@ export const GroupsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const loadGroupPosts = async (groupId: string) => {
+    if (!groupId || groupId === 'undefined') {
+      console.error('Invalid groupId:', groupId);
+      setGroupPosts([]);
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from('group_posts')
@@ -275,6 +286,7 @@ export const GroupsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setGroupPosts(data || []);
     } catch (error) {
       console.error('Error loading group posts:', error);
+      setGroupPosts([]);
     }
   };
 

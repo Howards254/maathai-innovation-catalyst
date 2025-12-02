@@ -49,6 +49,10 @@ const Groups: React.FC = () => {
   });
 
   const handleGroupClick = (group: any) => {
+    if (!group || !group.id) {
+      console.error('Invalid group data:', group);
+      return;
+    }
     setSelectedGroup(group);
     setActiveTab('group-detail');
     loadGroupPosts(group.id);
@@ -638,7 +642,7 @@ const Groups: React.FC = () => {
                                 </span>
                               )}
                               <span className="text-sm text-gray-500">
-                                {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+                                {post.created_at ? formatDistanceToNow(new Date(post.created_at), { addSuffix: true }) : 'Recently'}
                               </span>
                             </div>
                             <button className="text-gray-400 hover:text-gray-600">
