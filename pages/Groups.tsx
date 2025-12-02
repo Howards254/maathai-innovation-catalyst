@@ -4,7 +4,7 @@ import { useGroups } from '../contexts/GroupsContext';
 import { formatDistanceToNow } from 'date-fns';
 
 const Groups: React.FC = () => {
-  const { groups, myGroups, groupPosts, loading, createGroup, joinGroup, leaveGroup, loadGroupPosts, createGroupPost, likePost, addComment } = useGroups();
+  const { groups, myGroups, groupPosts, loading, createGroup, joinGroup, leaveGroup, loadGroupPosts, createGroupPost, likePost, addComment, loadGroups, loadMyGroups } = useGroups();
   const [activeTab, setActiveTab] = useState<'discover' | 'my-groups' | 'group-detail'>('discover');
   const [selectedGroup, setSelectedGroup] = useState<any>(null);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
@@ -20,11 +20,18 @@ const Groups: React.FC = () => {
   const categories = ['Environmental Action', 'Tree Planting', 'Climate Change', 'Sustainability', 'Conservation', 'Education'];
   const allCategories = ['all', ...categories];
 
+  // Load groups on component mount
+  useEffect(() => {
+    loadGroups();
+  }, []);
+
   useEffect(() => {
     if (activeTab === 'discover') {
-      // Load groups when switching to discover tab
+      loadGroups();
+    } else if (activeTab === 'my-groups') {
+      loadMyGroups();
     }
-  }, [activeTab]);
+  }, [activeTab, loadGroups, loadMyGroups]);
 
   const filteredGroups = groups.filter(group => {
     const matchesSearch = group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

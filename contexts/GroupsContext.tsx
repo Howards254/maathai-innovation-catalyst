@@ -69,8 +69,10 @@ export const GroupsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Disabled to prevent ERR_INSUFFICIENT_RESOURCES
-    setLoading(false);
+    if (user) {
+      loadGroups();
+      loadMyGroups();
+    }
   }, [user]);
 
   const loadGroups = async () => {
