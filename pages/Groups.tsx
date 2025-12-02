@@ -26,12 +26,10 @@ const Groups: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (activeTab === 'discover') {
-      loadGroups();
-    } else if (activeTab === 'my-groups') {
+    if (activeTab === 'my-groups') {
       loadMyGroups();
     }
-  }, [activeTab, loadGroups, loadMyGroups]);
+  }, [activeTab]);
 
   const filteredGroups = groups.filter(group => {
     const matchesSearch = group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
