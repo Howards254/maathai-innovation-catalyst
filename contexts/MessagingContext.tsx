@@ -224,14 +224,14 @@ export const MessagingProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (!user) return;
 
     try {
-      // Use the original schema format
+      // Use the modern schema format from database-messaging-system.sql
       const messageData = {
+        conversation_id: conversationId,
         sender_id: user.id,
-        recipient_id: conversationId, // This might need to be the other user's ID
         content: content || '',
-        message_type: mediaUrls?.length ? 'image' : 'text',
-        media_url: mediaUrls?.[0] || null, // Use first URL only
-        is_read: false
+        media_urls: mediaUrls || null,
+        media_type: mediaUrls?.length ? 'image' : null,
+        is_deleted: false
       };
       
       console.log('Sending message with data:', JSON.stringify(messageData, null, 2));
