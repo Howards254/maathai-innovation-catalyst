@@ -47,6 +47,8 @@ const EnhancedStories: React.FC = () => {
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [storyReactions, setStoryReactions] = useState<Record<string, any>>({});
+  const [storyComments, setStoryComments] = useState<any[]>([]);
+  const [loadingComments, setLoadingComments] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const progressInterval = useRef<NodeJS.Timeout>();
 
@@ -224,19 +226,46 @@ const EnhancedStories: React.FC = () => {
     }
   };
 
+  const loadComments = async (storyId: string) => {
+    setLoadingComments(true);
+    try {
+      const { data, error } = await supabase
+        .from('story_comments')
+        .select(`
+          *,
+          author:profiles!story_comments_author_id_fkey(id, full_name, username, avatar_url)
+        `)
+        .eq('story_id', storyId)
+        .order('created_at', { ascending: true });
+      
+      if (!error) {
+        setStoryComments(data || []);
+      }
+    } catch (error) {
+      console.error('Error loading comments:', error);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
   const addComment = async (storyId: string, content: string) => {
     if (!user || !content.trim()) return;
     
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('story_comments')
         .insert({
           story_id: storyId,
           author_id: user.id,
           content: content.trim()
-        });
+        })
+        .select(`
+          *,
+          author:profiles!story_comments_author_id_fkey(id, full_name, username, avatar_url)
+        `);
       
-      if (!error) {
+      if (!error && data) {
+        setStoryComments(prev => [...prev, data[0]]);
         setStories(prev => prev.map(story => {
           if (story.id === storyId) {
             return { ...story, comments_count: story.comments_count + 1 };
@@ -245,7 +274,6 @@ const EnhancedStories: React.FC = () => {
         }));
         
         setCommentText('');
-        setShowComments(false);
       }
     } catch (error) {
       console.error('Error adding comment:', error);
@@ -646,7 +674,10 @@ const EnhancedStories: React.FC = () => {
         </div>
 
         <button 
-          onClick={() => setShowComments(true)}
+          onClick={() => {
+            setShowComments(true);
+            loadComments(currentStory.id);
+          }}
           className="w-12 h-12 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
         >
           <MessageCircle className="w-6 h-6 text-white" />
@@ -715,13 +746,43 @@ const EnhancedStories: React.FC = () => {
           <div className="bg-white w-full max-h-[70vh] rounded-t-2xl p-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Comments</h3>
-              <button onClick={() => setShowComments(false)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => {
+                setShowComments(false);
+                setStoryComments([]);
+              }} className="text-gray-400 hover:text-gray-600">
                 <X className="w-6 h-6" />
               </button>
             </div>
             
             <div className="flex-1 mb-4 max-h-60 overflow-y-auto">
-              <p className="text-gray-500 text-center py-8">No comments yet. Be the first to comment!</p>
+              {loadingComments ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600"></div>
+                </div>
+              ) : storyComments.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">No comments yet. Be the first to comment!</p>
+              ) : (
+                <div className="space-y-3">
+                  {storyComments.map((comment) => (
+                    <div key={comment.id} className="flex gap-3">
+                      <img
+                        src={comment.author?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.author?.full_name || 'User')}&background=10b981&color=fff`}
+                        alt={comment.author?.full_name}
+                        className="w-8 h-8 rounded-full flex-shrink-0"
+                      />
+                      <div className="flex-1">
+                        <div className="bg-gray-100 rounded-lg px-3 py-2">
+                          <p className="font-medium text-sm">{comment.author?.full_name || 'Anonymous'}</p>
+                          <p className="text-gray-800">{comment.content}</p>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {new Date(comment.created_at).toLocaleTimeString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             
             <div className="flex gap-2">
