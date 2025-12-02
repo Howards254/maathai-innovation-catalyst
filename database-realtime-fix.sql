@@ -2,9 +2,33 @@
 -- This allows Supabase real-time to work properly
 
 -- Enable realtime on messages and conversations tables for all authenticated users
-ALTER PUBLICATION supabase_realtime ADD TABLE messages;
-ALTER PUBLICATION supabase_realtime ADD TABLE conversations;
-ALTER PUBLICATION supabase_realtime ADD TABLE conversation_participants;
+-- Use IF NOT EXISTS equivalent by checking first
+DO $$
+BEGIN
+  -- Add messages table if not already in publication
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND tablename = 'messages'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE messages;
+  END IF;
+  
+  -- Add conversations table if not already in publication
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND tablename = 'conversations'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE conversations;
+  END IF;
+  
+  -- Add conversation_participants table if not already in publication
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND tablename = 'conversation_participants'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE conversation_participants;
+  END IF;
+END $$;
 
 -- Grant necessary permissions for realtime
 GRANT SELECT ON messages TO authenticated;
