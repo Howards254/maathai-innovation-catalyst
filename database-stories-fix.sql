@@ -11,11 +11,11 @@ ALTER TABLE stories ADD COLUMN IF NOT EXISTS location TEXT;
 ALTER TABLE stories ADD COLUMN IF NOT EXISTS tags TEXT[];
 ALTER TABLE stories ADD COLUMN IF NOT EXISTS views_count INTEGER DEFAULT 0;
 
--- Copy user_id to author_id if author_id is null
-UPDATE stories SET author_id = user_id WHERE author_id IS NULL;
+-- Set author_id to a default if null (will be updated when stories are created)
+-- UPDATE stories SET author_id = user_id WHERE author_id IS NULL;
 
--- Copy view_count to views_count if views_count is 0
-UPDATE stories SET views_count = view_count WHERE views_count = 0 OR views_count IS NULL;
+-- Copy view_count to views_count if views_count is 0  
+-- UPDATE stories SET views_count = view_count WHERE views_count = 0 OR views_count IS NULL;
 
 -- Copy content to title if title is null
 UPDATE stories SET title = COALESCE(content, 'Untitled Story') WHERE title IS NULL;
@@ -66,7 +66,7 @@ BEGIN
   RETURN QUERY
   SELECT 
     s.id,
-    COALESCE(s.author_id, s.user_id) as author_id,
+    s.author_id,
     COALESCE(s.title, s.content, 'Untitled') as title,
     s.description,
     s.media_url,
@@ -75,7 +75,7 @@ BEGIN
     COALESCE(s.story_type, 'general') as story_type,
     s.location,
     s.tags,
-    COALESCE(s.views_count, s.view_count, 0) as views_count,
+    COALESCE(s.views_count, 0) as views_count,
     s.created_at,
     s.expires_at,
     p.full_name as author_name,
@@ -85,7 +85,7 @@ BEGIN
     COALESCE(c.comment_count, 0) as comments_count,
     ur.reaction_type as user_reaction
   FROM stories s
-  JOIN profiles p ON COALESCE(s.author_id, s.user_id) = p.id
+  JOIN profiles p ON s.author_id = p.id
   LEFT JOIN (
     SELECT 
       story_id, 
