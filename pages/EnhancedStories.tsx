@@ -49,8 +49,11 @@ const EnhancedStories: React.FC = () => {
   const [storyReactions, setStoryReactions] = useState<Record<string, any>>({});
   const [storyComments, setStoryComments] = useState<any[]>([]);
   const [loadingComments, setLoadingComments] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const progressInterval = useRef<NodeJS.Timeout>();
+  const observerRef = useRef<IntersectionObserver>();
 
   useEffect(() => {
     loadStories();
@@ -75,81 +78,96 @@ const EnhancedStories: React.FC = () => {
     }
   }, [showComments, isPaused]);
 
-  const loadStories = async () => {
+  const loadStories = async (pageNum = 0, append = false) => {
+    if (!append) setLoading(true);
+    
     try {
-      // Load stories with author info
-      const { data: storiesData, error: storiesError } = await supabase
-        .from('stories')
-        .select(`
-          *,
-          author:profiles!stories_author_id_fkey(id, full_name, username, avatar_url)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(50);
+      const limit = 20;
+      const offset = pageNum * limit;
       
-      if (storiesError) throw storiesError;
+      // Single optimized query with pagination
+      const { data: storiesData, error } = await supabase
+        .rpc('get_stories_with_stats', {
+          current_user_id: user?.id || null,
+          limit_count: limit,
+          offset_count: offset
+        });
       
-      // Filter expired stories
-      const activeStories = storiesData?.filter(story => {
-        if (!story.expires_at) return true;
-        return new Date(story.expires_at) > new Date();
-      }) || [];
-      
-      if (activeStories.length === 0) {
-        setStories([]);
-        setLoading(false);
+      if (error) {
+        // Fallback to basic query if RPC doesn't exist
+        const { data: basicData, error: basicError } = await supabase
+          .from('stories')
+          .select(`
+            id, title, description, media_url, media_type, duration, story_type,
+            location, tags, views_count, created_at, expires_at, author_id,
+            author:profiles!stories_author_id_fkey(id, full_name, username, avatar_url)
+          `)
+          .gt('expires_at', new Date().toISOString())
+          .order('created_at', { ascending: false })
+          .range(offset, offset + limit - 1);
+        
+        if (basicError) throw basicError;
+        
+        const formattedStories = basicData?.map(story => ({
+          ...story,
+          author_name: story.author?.full_name || 'Unknown User',
+          author_username: story.author?.username || 'unknown',
+          author_avatar: story.author?.avatar_url,
+          reactions_count: 0,
+          comments_count: 0,
+          has_viewed: false,
+          user_reaction: null
+        })) || [];
+        
+        if (append) {
+          setStories(prev => [...prev, ...formattedStories]);
+        } else {
+          setStories(formattedStories);
+        }
+        
+        setHasMore(formattedStories.length === limit);
         return;
       }
       
-      const storyIds = activeStories.map(s => s.id);
+      // Process RPC results
+      const formattedStories = storiesData?.map((story: any) => ({
+        ...story,
+        author_name: story.author_name || 'Unknown User',
+        author_username: story.author_username || 'unknown',
+        author_avatar: story.author_avatar,
+        has_viewed: false
+      })) || [];
       
-      // Load reactions count for each story
-      const { data: reactionsData } = await supabase
-        .from('story_reactions')
-        .select('story_id, reaction_type, user_id')
-        .in('story_id', storyIds);
-      
-      // Load comments count for each story
-      const { data: commentsData } = await supabase
-        .from('story_comments')
-        .select('story_id')
-        .in('story_id', storyIds);
-      
-      // Process reactions and comments
-      const reactionCounts: Record<string, number> = {};
+      // Set user reactions for UI state
       const userReactions: Record<string, string> = {};
-      const commentCounts: Record<string, number> = {};
-      
-      reactionsData?.forEach(reaction => {
-        reactionCounts[reaction.story_id] = (reactionCounts[reaction.story_id] || 0) + 1;
-        if (reaction.user_id === user?.id) {
-          userReactions[reaction.story_id] = reaction.reaction_type;
+      formattedStories.forEach((story: any) => {
+        if (story.user_reaction) {
+          userReactions[story.id] = story.user_reaction;
         }
       });
       
-      commentsData?.forEach(comment => {
-        commentCounts[comment.story_id] = (commentCounts[comment.story_id] || 0) + 1;
-      });
+      if (append) {
+        setStoryReactions(prev => ({ ...prev, ...userReactions }));
+        setStories(prev => [...prev, ...formattedStories]);
+      } else {
+        setStoryReactions(userReactions);
+        setStories(formattedStories);
+      }
       
-      const formattedStories = activeStories.map(story => ({
-        ...story,
-        author_name: story.author?.full_name || 'Unknown User',
-        author_username: story.author?.username || 'unknown',
-        author_avatar: story.author?.avatar_url,
-        views_count: story.views_count || 0,
-        reactions_count: reactionCounts[story.id] || 0,
-        comments_count: commentCounts[story.id] || 0,
-        has_viewed: false,
-        user_reaction: userReactions[story.id] || null
-      }));
-      
-      setStoryReactions(userReactions);
-      setStories(formattedStories);
+      setHasMore(formattedStories.length === limit);
     } catch (error) {
       console.error('Error loading stories:', error);
-      setStories([]);
+      if (!append) setStories([]);
     } finally {
       setLoading(false);
+    }
+  };
+  
+  const loadMoreStories = () => {
+    if (hasMore && !loading) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      loadStories(nextPage, true);
     }
   };
 
@@ -356,8 +374,21 @@ const EnhancedStories: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-white border-b">
+          <div className="flex gap-4 p-4 overflow-x-auto">
+            {/* Loading skeleton for stories ring */}
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="flex-shrink-0 text-center">
+                <div className="w-16 h-16 bg-gray-200 rounded-full animate-pulse"></div>
+                <div className="w-12 h-3 bg-gray-200 rounded mt-2 animate-pulse"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="flex items-center justify-center p-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+        </div>
       </div>
     );
   }
@@ -491,12 +522,16 @@ const EnhancedStories: React.FC = () => {
                       src={story.media_url}
                       className="w-full h-full object-cover"
                       muted
+                      preload="metadata"
+                      loading="lazy"
                     />
                   ) : (
                     <img
                       src={story.media_url}
                       alt={story.title}
                       className="w-full h-full object-cover"
+                      loading="lazy"
+                      decoding="async"
                     />
                   )}
                   
@@ -510,6 +545,7 @@ const EnhancedStories: React.FC = () => {
                         src={story.author_avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(story.author_name)}&background=10b981&color=fff`}
                         alt={story.author_name}
                         className="w-6 h-6 rounded-full"
+                        loading="lazy"
                       />
                       <span className="text-white text-sm font-medium">{story.author_name}</span>
                     </div>
@@ -540,6 +576,19 @@ const EnhancedStories: React.FC = () => {
                 ))
               ))}
             </div>
+            
+            {/* Load More Button */}
+            {hasMore && (
+              <div className="text-center mt-8">
+                <button
+                  onClick={loadMoreStories}
+                  disabled={loading}
+                  className="px-6 py-3 bg-green-600 text-white rounded-full font-medium hover:bg-green-700 disabled:opacity-50 transition-colors"
+                >
+                  {loading ? 'Loading...' : 'Load More Stories'}
+                </button>
+              </div>
+            )}
           )}
         </div>
 

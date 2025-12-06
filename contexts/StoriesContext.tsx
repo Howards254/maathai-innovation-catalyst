@@ -49,25 +49,32 @@ export const StoriesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const loadStories = async () => {
     setLoading(true);
     try {
+      // Use optimized RPC function
       const { data, error } = await supabase
-        .from('stories')
-        .select(`
-          *,
-          author:profiles!stories_author_id_fkey(id, full_name, username, avatar_url),
-          reactions:story_reactions(id, user_id, reaction_type),
-          comments:story_comments(id, author_id, content)
-        `)
-        .order('created_at', { ascending: false });
+        .rpc('get_stories_with_stats', {
+          current_user_id: user?.id || null,
+          limit_count: 30
+        });
 
-      if (error) throw error;
+      if (error) {
+        // Fallback to basic query
+        const { data: basicData, error: basicError } = await supabase
+          .from('stories')
+          .select(`
+            id, title, description, media_url, media_type, duration, story_type,
+            location, tags, views_count, created_at, expires_at, author_id,
+            author:profiles!stories_author_id_fkey(id, full_name, username, avatar_url)
+          `)
+          .gt('expires_at', new Date().toISOString())
+          .order('created_at', { ascending: false })
+          .limit(30);
+        
+        if (basicError) throw basicError;
+        setStories(basicData || []);
+        return;
+      }
       
-      // Filter expired stories on client side if expires_at exists
-      const activeStories = data?.filter(story => {
-        if (!story.expires_at) return true; // Show stories without expiration
-        return new Date(story.expires_at) > new Date();
-      }) || [];
-      
-      setStories(activeStories);
+      setStories(data || []);
     } catch (error) {
       console.error('Error loading stories:', error);
       setStories([]);
