@@ -215,24 +215,41 @@ const EnhancedStories: React.FC = () => {
             }
             return story;
           }));
+        } else {
+          console.error('Error removing reaction:', error);
         }
       } else {
-        // Add or update reaction
+        // Add or update reaction - use insert with conflict handling
         const { error } = await supabase
           .from('story_reactions')
-          .upsert({
+          .insert({
             story_id: storyId,
             user_id: user.id,
             reaction_type: reactionType
-          }, {
-            onConflict: 'story_id,user_id'
           });
         
-        if (!error) {
+        if (error) {
+          // If conflict, update existing reaction
+          if (error.code === '23505') {
+            const { error: updateError } = await supabase
+              .from('story_reactions')
+              .update({ reaction_type: reactionType })
+              .eq('story_id', storyId)
+              .eq('user_id', user.id);
+            
+            if (!updateError) {
+              setStoryReactions(prev => ({ ...prev, [storyId]: reactionType }));
+            } else {
+              console.error('Error updating reaction:', updateError);
+            }
+          } else {
+            console.error('Error adding reaction:', error);
+          }
+        } else {
           setStoryReactions(prev => ({ ...prev, [storyId]: reactionType }));
           setStories(prev => prev.map(story => {
             if (story.id === storyId) {
-              const increment = existingReaction ? 0 : 1; // Only increment if no previous reaction
+              const increment = existingReaction ? 0 : 1;
               return { ...story, reactions_count: story.reactions_count + increment };
             }
             return story;
