@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import ErrorBoundary from './components/ErrorBoundary';
 import { clearOldDataOnce } from './utils/clearStorage';
 import { AuthProvider } from './contexts/AuthContext';
@@ -78,6 +79,7 @@ const App: React.FC = () => {
 
   return (
     <ErrorBoundary>
+      <Analytics />
       <AuthProvider>
         <NotificationProvider>
           <UserProvider>
