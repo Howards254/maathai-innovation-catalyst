@@ -525,6 +525,7 @@ const EnhancedStories: React.FC = () => {
               </button>
             </div>
           ) : (
+            <>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {storyGroups.map((group) => (
                 group.stories.map((story: any, storyIndex: number) => (
@@ -606,6 +607,7 @@ const EnhancedStories: React.FC = () => {
                 </button>
               </div>
             )}
+            </>
           )}
         </div>
 
