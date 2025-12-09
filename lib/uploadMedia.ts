@@ -28,3 +28,4 @@ export const uploadMedia = async (file: File, folder: string = 'discussions'): P
 };
 
 export const uploadDiscussionMedia = (file: File) => uploadMedia(file, 'discussions');
+export const uploadToCloudinary = uploadMedia; // Alias for compatibility
