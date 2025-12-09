@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
-import { uploadToCloudinary } from '../lib/uploadMedia';
+import { uploadMedia } from '../lib/uploadMedia';
 
 interface ImageUploadProps {
   onUploadComplete: (url: string) => void;
@@ -48,7 +48,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       reader.readAsDataURL(file);
 
       // Upload to Cloudinary
-      const url = await uploadToCloudinary(file, folder);
+      const url = await uploadMedia(file, folder);
       onUploadComplete(url);
     } catch (err) {
       setError('Failed to upload image. Please try again.');
