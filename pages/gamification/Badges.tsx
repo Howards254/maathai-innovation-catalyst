@@ -31,34 +31,39 @@ const Badges: React.FC = () => {
       // Get user's current points
       const { data: profile } = await supabase
         .from('profiles')
-        .select('total_points')
+        .select('points')
         .eq('id', user.id)
         .single();
       
-      setUserPoints(profile?.total_points || 0);
+      setUserPoints(profile?.points || 0);
 
-      // Get all badges with user's earned status
-      const { data: allBadges, error } = await supabase
-        .from('badges')
-        .select('*')
-        .order('points_required', { ascending: true });
-
-      if (error) throw error;
+      // Define badge levels
+      const badgeLevels = [
+        { name: 'Tree Hugger', level: 1, points_required: 100, icon: '🌱', description: 'Earned 100 points' },
+        { name: 'Eco Warrior', level: 2, points_required: 500, icon: '🌿', description: 'Earned 500 points' },
+        { name: 'Green Champion', level: 3, points_required: 1500, icon: '🌳', description: 'Earned 1,500 points' },
+        { name: 'Earth Guardian', level: 4, points_required: 3000, icon: '🏆', description: 'Earned 3,000 points' },
+        { name: 'Environmental Champion', level: 5, points_required: 5000, icon: '👑', description: 'Earned 5,000 points' }
+      ];
 
       // Get user's earned badges
       const { data: userBadges } = await supabase
         .from('user_badges')
-        .select('badge_id, earned_at')
+        .select('badge_name, badge_level, earned_at')
         .eq('user_id', user.id);
 
-      const earnedBadgeIds = new Set(userBadges?.map(ub => ub.badge_id) || []);
-      const earnedBadgesMap = new Map(userBadges?.map(ub => [ub.badge_id, ub.earned_at]) || []);
+      const earnedBadgesSet = new Set(userBadges?.map(ub => `${ub.badge_name}_${ub.badge_level}`) || []);
+      const earnedBadgesMap = new Map(userBadges?.map(ub => [`${ub.badge_name}_${ub.badge_level}`, ub.earned_at]) || []);
 
-      const badgesWithStatus = allBadges?.map(badge => ({
-        ...badge,
-        earned: earnedBadgeIds.has(badge.id),
-        earned_at: earnedBadgesMap.get(badge.id)
-      })) || [];
+      const badgesWithStatus = badgeLevels.map(badge => ({
+        id: `${badge.name}_${badge.level}`,
+        name: badge.name,
+        description: badge.description,
+        icon: badge.icon,
+        points_required: badge.points_required,
+        earned: earnedBadgesSet.has(`${badge.name}_${badge.level}`),
+        earned_at: earnedBadgesMap.get(`${badge.name}_${badge.level}`)
+      }));
 
       setBadges(badgesWithStatus);
     } catch (error) {
