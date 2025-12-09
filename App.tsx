@@ -69,6 +69,7 @@ import GreenMatchmaking from './pages/GreenMatchmaking';
 import Marketplace from './pages/marketplace/Marketplace';
 import CreateListing from './pages/marketplace/CreateListing';
 import MyListings from './pages/marketplace/MyListings';
+import ListingDetail from './pages/marketplace/ListingDetail';
 
 // Placeholder components for routes not fully detailed yet
 const Placeholder = ({ title }: { title: string }) => (
@@ -172,6 +173,7 @@ const App: React.FC = () => {
           <Route path="marketplace" element={<Marketplace />} />
           <Route path="marketplace/create" element={<CreateListing />} />
           <Route path="marketplace/my-listings" element={<MyListings />} />
+          <Route path="marketplace/:id" element={<ListingDetail />} />
         </Route>
       </Routes>
           </HashRouter>
