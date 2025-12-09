@@ -141,18 +141,8 @@ const CreateCampaign: React.FC = () => {
                 <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                   📍 Campaign Location
                 </label>
-                <input
-                  type="text"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all mb-3"
-                  placeholder="e.g., Nairobi, Kenya"
-                  required
-                />
                 <MapPicker
-                  initialLat={formData.latitude}
-                  initialLng={formData.longitude}
+                  initialPosition={formData.latitude && formData.longitude ? [formData.latitude, formData.longitude] : undefined}
                   onLocationSelect={(lat, lng, address) => {
                     setFormData(prev => ({
                       ...prev,
@@ -162,7 +152,13 @@ const CreateCampaign: React.FC = () => {
                     }));
                   }}
                 />
-                <p className="text-sm text-gray-500 mt-2">Click on the map to select campaign location</p>
+                {formData.location && (
+                  <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-sm text-green-800">
+                      <span className="font-semibold">Selected:</span> {formData.location}
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div>

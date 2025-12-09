@@ -102,7 +102,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
 
   return (
     <div className="space-y-3">
-      <div className="relative">
+      <div className="relative z-50">
         <div className="relative">
           <span className="absolute left-3 top-3 text-gray-400 text-lg">📍</span>
           <input
@@ -110,7 +110,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
             value={searchQuery}
             onChange={(e) => handleSearchInput(e.target.value)}
             placeholder="Type location: Central Park, Nairobi, etc."
-            className="w-full pl-10 pr-10 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+            className="w-full pl-10 pr-10 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-white"
           />
           {searching && (
             <div className="absolute right-3 top-3">
@@ -119,7 +119,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
           )}
         </div>
         {suggestions.length > 0 && (
-          <div className="absolute z-50 w-full mt-2 bg-white border-2 border-green-500 rounded-xl shadow-2xl max-h-80 overflow-y-auto">
+          <div className="absolute z-[9999] w-full mt-2 bg-white border-2 border-green-500 rounded-xl shadow-2xl max-h-80 overflow-y-auto">
             <div className="p-2 bg-green-50 border-b border-green-200">
               <p className="text-xs font-semibold text-green-700">📍 Select a location</p>
             </div>
