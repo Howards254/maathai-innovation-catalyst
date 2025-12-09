@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useCampaigns } from '../../contexts/CampaignContext';
 import MapPicker from '../../components/MapPicker';
 import ImageUpload from '../../components/ImageUpload';
@@ -30,17 +31,26 @@ const CreateCampaign: React.FC = () => {
     setLoading(true);
 
     try {
+      if (!formData.imageUrl) {
+        toast.error('Please upload a campaign image');
+        setLoading(false);
+        return;
+      }
+
       const campaignData = {
         ...formData,
         tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-        imageUrl: formData.imageUrl || `https://picsum.photos/600/400?random=${Date.now()}`,
         status: 'active' as const
       };
       
       await createCampaign(campaignData);
+      toast.success('🌳 Campaign created successfully!');
       navigate('/app/campaigns');
-    } catch (err) {
-      setError('Failed to create campaign. Please try again.');
+    } catch (err: any) {
+      console.error('Campaign creation error:', err);
+      const errorMsg = err?.message || 'Failed to create campaign. Please check your database setup.';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }

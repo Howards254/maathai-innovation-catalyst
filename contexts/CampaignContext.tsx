@@ -152,7 +152,9 @@ export const CampaignProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const createCampaign = async (campaignData: Omit<Campaign, 'id' | 'plantedTrees' | 'daysLeft' | 'organizerId' | 'organizerAvatar' | 'participants' | 'pendingParticipants' | 'updates' | 'completionPhotos' | 'isCompletionPending' | 'createdAt'>) => {
-    if (!user) return;
+    if (!user) {
+      throw new Error('You must be logged in to create a campaign');
+    }
 
     try {
       const { error } = await supabase
@@ -174,9 +176,15 @@ export const CampaignProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           tags: campaignData.tags
         });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        if (error.message.includes('current_trees')) {
+          throw new Error('Database not set up. Please run database-campaigns-complete.sql in Supabase');
+        }
+        throw new Error(error.message || 'Failed to create campaign');
+      }
       await loadCampaigns();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating campaign:', error);
       throw error;
     }
