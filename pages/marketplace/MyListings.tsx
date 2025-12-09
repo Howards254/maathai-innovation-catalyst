@@ -188,6 +188,14 @@ const MyListings: React.FC = () => {
                           View
                         </Link>
                         
+                        <Link
+                          to={`/app/marketplace/${listing.id}/edit`}
+                          className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium flex items-center gap-1"
+                        >
+                          <Edit className="w-4 h-4" />
+                          Edit
+                        </Link>
+                        
                         {listing.status === 'available' && (
                           <button
                             onClick={() => updateStatus(listing.id, 'sold')}

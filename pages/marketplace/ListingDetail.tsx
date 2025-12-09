@@ -268,10 +268,16 @@ const ListingDetail: React.FC = () => {
                 {isOwner && (
                   <div className="space-y-2">
                     <Link
+                      to={`/app/marketplace/${listing.id}/edit`}
+                      className="block w-full text-center px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+                    >
+                      Edit Listing
+                    </Link>
+                    <Link
                       to="/app/marketplace/my-listings"
                       className="block w-full text-center px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium"
                     >
-                      Manage Listing
+                      My Listings
                     </Link>
                   </div>
                 )}
