@@ -260,7 +260,7 @@ const ListingDetail: React.FC = () => {
 
                 {!isOwner && (
                   <Link
-                    to={`/app/marketplace/${listing.id}/chat`}
+                    to={`/app/messages?user=${listing.seller.id}&listing=${listing.id}`}
                     className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium"
                   >
                     <MessageCircle className="w-5 h-5" />
