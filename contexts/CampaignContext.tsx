@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Campaign, CampaignUpdate, TreePlantingSubmission } from '../types';
 import { useAuth } from './AuthContext';
-import { useUsers } from './UserContext';
-import { getCampaignImage, getOrganizerAvatar } from '../utils/imageUtils';
+import { supabase } from '../lib/supabase';
 
 interface CampaignContextType {
   campaigns: Campaign[];
@@ -42,237 +41,348 @@ export const CampaignProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const { user } = useAuth();
   const { awardPoints } = useUsers();
 
-  // Load campaigns from localStorage only (no mock data)
+  // Load campaigns from Supabase
   useEffect(() => {
-    const saved = localStorage.getItem('campaigns');
-    const savedSubmissions = localStorage.getItem('submissions');
-    
-    if (saved) {
-      setCampaigns(JSON.parse(saved));
-    } else {
-      setCampaigns([]);
+    if (user) {
+      loadCampaigns();
+      loadSubmissions();
+      
+      // Real-time subscriptions
+      const campaignsSubscription = supabase
+        .channel('campaigns_changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'campaigns' }, () => {
+          loadCampaigns();
+        })
+        .subscribe();
+      
+      const submissionsSubscription = supabase
+        .channel('submissions_changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'tree_submissions' }, () => {
+          loadSubmissions();
+        })
+        .subscribe();
+      
+      return () => {
+        campaignsSubscription.unsubscribe();
+        submissionsSubscription.unsubscribe();
+      };
     }
-    
-    if (savedSubmissions) {
-      setSubmissions(JSON.parse(savedSubmissions));
-    }
-    
-    setLoading(false);
-  }, []);
+  }, [user]);
 
-  const saveCampaigns = (newCampaigns: Campaign[]) => {
-    setCampaigns(newCampaigns);
-    localStorage.setItem('campaigns', JSON.stringify(newCampaigns));
+  const loadCampaigns = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('campaigns')
+        .select(`
+          *,
+          organizer:profiles!campaigns_organizer_id_fkey(id, full_name, username, avatar_url),
+          participants:campaign_participants(user_id)
+        `)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      const formattedCampaigns = data?.map(campaign => ({
+        id: campaign.id,
+        title: campaign.title,
+        description: campaign.description,
+        targetTrees: campaign.goal_trees,
+        plantedTrees: campaign.current_trees,
+        location: campaign.location,
+        latitude: campaign.latitude,
+        longitude: campaign.longitude,
+        startDate: campaign.start_date,
+        endDate: campaign.end_date,
+        status: campaign.status,
+        imageUrl: campaign.image_url,
+        organizerId: campaign.organizer_id,
+        organizer: campaign.organizer?.full_name || 'Unknown',
+        organizerAvatar: campaign.organizer?.avatar_url || '',
+        isPublic: campaign.is_public,
+        tags: campaign.tags || [],
+        participants: campaign.participants?.map((p: any) => p.user_id) || [],
+        pendingParticipants: [],
+        updates: [],
+        completionPhotos: campaign.completion_photos || [],
+        isCompletionPending: campaign.is_completion_pending,
+        createdAt: campaign.created_at,
+        daysLeft: Math.max(0, Math.ceil((new Date(campaign.end_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+      })) || [];
+      
+      setCampaigns(formattedCampaigns);
+    } catch (error) {
+      console.error('Error loading campaigns:', error);
+    } finally {
+      setLoading(false);
+    }
   };
-
-  const saveSubmissions = (newSubmissions: TreePlantingSubmission[]) => {
-    setSubmissions(newSubmissions);
-    localStorage.setItem('submissions', JSON.stringify(newSubmissions));
+  
+  const loadSubmissions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tree_submissions')
+        .select(`
+          *,
+          user:profiles!tree_submissions_user_id_fkey(id, full_name, username, avatar_url)
+        `)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      const formattedSubmissions = data?.map(sub => ({
+        id: sub.id,
+        campaignId: sub.campaign_id,
+        userId: sub.user_id,
+        userName: sub.user?.full_name || 'Unknown',
+        userAvatar: sub.user?.avatar_url || '',
+        treesCount: sub.trees_count,
+        location: sub.location,
+        latitude: sub.latitude,
+        longitude: sub.longitude,
+        description: sub.description,
+        photoUrl: sub.photo_url,
+        status: sub.status,
+        approvedAt: sub.approved_at,
+        createdAt: sub.created_at
+      })) || [];
+      
+      setSubmissions(formattedSubmissions);
+    } catch (error) {
+      console.error('Error loading submissions:', error);
+    }
   };
 
   const createCampaign = async (campaignData: Omit<Campaign, 'id' | 'plantedTrees' | 'daysLeft' | 'organizerId' | 'organizerAvatar' | 'participants' | 'pendingParticipants' | 'updates' | 'completionPhotos' | 'isCompletionPending' | 'createdAt'>) => {
     if (!user) return;
 
-    const endDate = new Date(campaignData.endDate);
-    const startDate = new Date(campaignData.startDate);
-    const daysLeft = Math.max(0, Math.ceil((endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
-
-    const campaignId = `c${Date.now()}`;
-    const newCampaign: Campaign = {
-      ...campaignData,
-      id: campaignId,
-      imageUrl: campaignData.imageUrl || getCampaignImage(campaignId),
-      plantedTrees: 0,
-      daysLeft,
-      organizerId: user.id,
-      organizerAvatar: getOrganizerAvatar(user.id),
-      participants: [],
-      pendingParticipants: [],
-      updates: [],
-      completionPhotos: [],
-      isCompletionPending: false,
-      createdAt: new Date().toISOString()
-    };
-    
-    const newCampaigns = [newCampaign, ...campaigns];
-    saveCampaigns(newCampaigns);
+    try {
+      const { error } = await supabase
+        .from('campaigns')
+        .insert({
+          title: campaignData.title,
+          description: campaignData.description,
+          goal_trees: campaignData.targetTrees,
+          current_trees: 0,
+          location: campaignData.location,
+          latitude: campaignData.latitude,
+          longitude: campaignData.longitude,
+          start_date: campaignData.startDate,
+          end_date: campaignData.endDate,
+          status: campaignData.status,
+          image_url: campaignData.imageUrl,
+          organizer_id: user.id,
+          is_public: campaignData.isPublic,
+          tags: campaignData.tags
+        });
+      
+      if (error) throw error;
+      await loadCampaigns();
+    } catch (error) {
+      console.error('Error creating campaign:', error);
+      throw error;
+    }
   };
 
   const joinCampaign = async (campaignId: string) => {
     if (!user) return;
 
-    const newCampaigns = campaigns.map(campaign => {
-      if (campaign.id === campaignId) {
-        if (campaign.isPublic) {
-          return {
-            ...campaign,
-            participants: [...campaign.participants, user.id]
-          };
-        } else {
-          return {
-            ...campaign,
-            pendingParticipants: [...campaign.pendingParticipants, user.id]
-          };
-        }
-      }
-      return campaign;
-    });
-    saveCampaigns(newCampaigns);
+    try {
+      const { error } = await supabase
+        .from('campaign_participants')
+        .insert({
+          campaign_id: campaignId,
+          user_id: user.id
+        });
+      
+      if (error) throw error;
+      await loadCampaigns();
+    } catch (error) {
+      console.error('Error joining campaign:', error);
+      throw error;
+    }
   };
 
   const approveMember = async (campaignId: string, userId: string) => {
-    const newCampaigns = campaigns.map(campaign => {
-      if (campaign.id === campaignId) {
-        return {
-          ...campaign,
-          participants: [...campaign.participants, userId],
-          pendingParticipants: campaign.pendingParticipants.filter(id => id !== userId)
-        };
-      }
-      return campaign;
-    });
-    saveCampaigns(newCampaigns);
+    try {
+      const { error } = await supabase
+        .from('campaign_participants')
+        .insert({
+          campaign_id: campaignId,
+          user_id: userId
+        });
+      
+      if (error) throw error;
+      await loadCampaigns();
+    } catch (error) {
+      console.error('Error approving member:', error);
+      throw error;
+    }
   };
 
   const rejectMember = async (campaignId: string, userId: string) => {
-    const newCampaigns = campaigns.map(campaign => {
-      if (campaign.id === campaignId) {
-        return {
-          ...campaign,
-          pendingParticipants: campaign.pendingParticipants.filter(id => id !== userId)
-        };
-      }
-      return campaign;
-    });
-    saveCampaigns(newCampaigns);
+    // For now, just a placeholder since we need pending_participants table
+    console.log('Reject member:', userId);
   };
 
   const submitTreePlanting = async (submissionData: Omit<TreePlantingSubmission, 'id' | 'createdAt' | 'status' | 'userName' | 'userAvatar'>) => {
     if (!user) return;
 
-    const newSubmission: TreePlantingSubmission = {
-      ...submissionData,
-      id: `s${Date.now()}`,
-      userName: user.fullName,
-      userAvatar: user.avatarUrl,
-      status: 'pending',
-      createdAt: new Date().toISOString()
-    };
-
-    const newSubmissions = [newSubmission, ...submissions];
-    saveSubmissions(newSubmissions);
+    try {
+      const { error } = await supabase
+        .from('tree_submissions')
+        .insert({
+          campaign_id: submissionData.campaignId,
+          user_id: user.id,
+          trees_count: submissionData.treesCount,
+          location: submissionData.location,
+          latitude: submissionData.latitude,
+          longitude: submissionData.longitude,
+          description: submissionData.description,
+          photo_url: submissionData.photoUrl,
+          status: 'pending'
+        });
+      
+      if (error) throw error;
+      await loadSubmissions();
+    } catch (error) {
+      console.error('Error submitting tree planting:', error);
+      throw error;
+    }
   };
 
   const approveSubmission = async (submissionId: string) => {
-    const submission = submissions.find(s => s.id === submissionId);
-    if (!submission) return;
-
-    const newSubmissions = submissions.map(s => 
-      s.id === submissionId 
-        ? { ...s, status: 'approved' as const, approvedAt: new Date().toISOString() }
-        : s
-    );
-    saveSubmissions(newSubmissions);
-
-    const newCampaigns = campaigns.map(campaign => {
-      if (campaign.id === submission.campaignId) {
-        return {
-          ...campaign,
-          plantedTrees: campaign.plantedTrees + submission.treesCount
-        };
+    try {
+      const { error } = await supabase
+        .from('tree_submissions')
+        .update({ 
+          status: 'approved',
+          approved_at: new Date().toISOString()
+        })
+        .eq('id', submissionId);
+      
+      if (error) throw error;
+      
+      // Award points via user_activities
+      const submission = submissions.find(s => s.id === submissionId);
+      if (submission) {
+        await supabase.from('user_activities').insert({
+          user_id: submission.userId,
+          activity_type: 'tree_planting',
+          points_earned: submission.treesCount * 10,
+          description: `Planted ${submission.treesCount} trees`,
+          reference_id: submissionId
+        });
       }
-      return campaign;
-    });
-    saveCampaigns(newCampaigns);
-
-    // Award points for tree planting (10 points per tree)
-    const pointsEarned = submission.treesCount * 10;
-    awardPoints(submission.userId, pointsEarned, 'tree_planting');
+      
+      await loadSubmissions();
+      await loadCampaigns();
+    } catch (error) {
+      console.error('Error approving submission:', error);
+      throw error;
+    }
   };
 
   const rejectSubmission = async (submissionId: string) => {
-    const newSubmissions = submissions.map(s => 
-      s.id === submissionId 
-        ? { ...s, status: 'rejected' as const }
-        : s
-    );
-    saveSubmissions(newSubmissions);
+    try {
+      const { error } = await supabase
+        .from('tree_submissions')
+        .update({ status: 'rejected' })
+        .eq('id', submissionId);
+      
+      if (error) throw error;
+      await loadSubmissions();
+    } catch (error) {
+      console.error('Error rejecting submission:', error);
+      throw error;
+    }
   };
 
   const addUpdate = async (campaignId: string, updateData: Omit<CampaignUpdate, 'id' | 'campaignId' | 'createdAt'>) => {
-    const newUpdate: CampaignUpdate = {
-      ...updateData,
-      id: `u${Date.now()}`,
-      campaignId,
-      createdAt: new Date().toISOString()
-    };
-
-    const newCampaigns = campaigns.map(campaign => {
-      if (campaign.id === campaignId) {
-        return {
-          ...campaign,
-          updates: [newUpdate, ...campaign.updates]
-        };
-      }
-      return campaign;
-    });
-    saveCampaigns(newCampaigns);
+    try {
+      const { error } = await supabase
+        .from('campaign_updates')
+        .insert({
+          campaign_id: campaignId,
+          title: updateData.title,
+          description: updateData.description,
+          image_url: updateData.imageUrl
+        });
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error adding update:', error);
+      throw error;
+    }
   };
 
   const editCampaign = async (campaignId: string, updates: Partial<Campaign>) => {
-    const newCampaigns = campaigns.map(campaign => 
-      campaign.id === campaignId 
-        ? { ...campaign, ...updates }
-        : campaign
-    );
-    saveCampaigns(newCampaigns);
+    try {
+      const { error } = await supabase
+        .from('campaigns')
+        .update({
+          title: updates.title,
+          description: updates.description,
+          goal_trees: updates.targetTrees,
+          location: updates.location,
+          image_url: updates.imageUrl,
+          tags: updates.tags
+        })
+        .eq('id', campaignId);
+      
+      if (error) throw error;
+      await loadCampaigns();
+    } catch (error) {
+      console.error('Error editing campaign:', error);
+      throw error;
+    }
   };
 
   const cancelCampaign = async (campaignId: string) => {
-    const newCampaigns = campaigns.map(campaign => 
-      campaign.id === campaignId 
-        ? { ...campaign, status: 'cancelled' as const }
-        : campaign
-    );
-    saveCampaigns(newCampaigns);
+    try {
+      const { error } = await supabase
+        .from('campaigns')
+        .update({ status: 'cancelled' })
+        .eq('id', campaignId);
+      
+      if (error) throw error;
+      await loadCampaigns();
+    } catch (error) {
+      console.error('Error cancelling campaign:', error);
+      throw error;
+    }
   };
 
   const completeCampaign = async (campaignId: string, completionPhotos: string[]) => {
-    const newCampaigns = campaigns.map(campaign => 
-      campaign.id === campaignId 
-        ? { 
-            ...campaign, 
-            status: 'completed' as const,
-            completionPhotos,
-            isCompletionPending: true
-          }
-        : campaign
-    );
-    saveCampaigns(newCampaigns);
+    try {
+      const { error } = await supabase
+        .from('campaigns')
+        .update({ 
+          status: 'completed',
+          completion_photos: completionPhotos,
+          is_completion_pending: true
+        })
+        .eq('id', campaignId);
+      
+      if (error) throw error;
+      await loadCampaigns();
+    } catch (error) {
+      console.error('Error completing campaign:', error);
+      throw error;
+    }
   };
 
   const approveCompletion = async (campaignId: string) => {
-    const campaign = campaigns.find(c => c.id === campaignId);
-    if (!campaign) return;
-
-    const newCampaigns = campaigns.map(c => 
-      c.id === campaignId 
-        ? { ...c, isCompletionPending: false }
-        : c
-    );
-    saveCampaigns(newCampaigns);
-
-    // Award points to all participants
-    const pointsPerParticipant = Math.floor(campaign.plantedTrees * 2);
-    campaign.participants.forEach(participantId => {
-      if (participantId === user?.id) {
-        awardPoints(user.id, pointsPerParticipant, 'campaign_completed');
-      }
-    });
-    
-    // Award organizer bonus points
-    if (campaign.organizerId === user?.id) {
-      awardPoints(user.id, pointsPerParticipant * 2, 'campaign_organized');
+    try {
+      const { error } = await supabase
+        .from('campaigns')
+        .update({ is_completion_pending: false })
+        .eq('id', campaignId);
+      
+      if (error) throw error;
+      await loadCampaigns();
+    } catch (error) {
+      console.error('Error approving completion:', error);
+      throw error;
     }
   };
 

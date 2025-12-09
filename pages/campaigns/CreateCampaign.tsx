@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCampaigns } from '../../contexts/CampaignContext';
+import MapPicker from '../../components/MapPicker';
+import ImageUpload from '../../components/ImageUpload';
 
 const CreateCampaign: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -8,7 +10,8 @@ const CreateCampaign: React.FC = () => {
     description: '',
     targetTrees: 100,
     location: '',
-    organizer: '',
+    latitude: -1.2921,
+    longitude: 36.8219,
     imageUrl: '',
     tags: '',
     startDate: '',
@@ -109,51 +112,47 @@ const CreateCampaign: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                    🌳 Target Trees
-                  </label>
-                  <input
-                    type="number"
-                    name="targetTrees"
-                    value={formData.targetTrees}
-                    onChange={handleChange}
-                    min="1"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-lg"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                    📍 Location
-                  </label>
-                  <input
-                    type="text"
-                    name="location"
-                    value={formData.location}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                    placeholder="e.g., Nairobi, Kenya"
-                    required
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  🌳 Target Trees
+                </label>
+                <input
+                  type="number"
+                  name="targetTrees"
+                  value={formData.targetTrees}
+                  onChange={handleChange}
+                  min="1"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all text-lg"
+                  required
+                />
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                  👤 Organizer
+                  📍 Campaign Location
                 </label>
                 <input
                   type="text"
-                  name="organizer"
-                  value={formData.organizer}
+                  name="location"
+                  value={formData.location}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                  placeholder="Organization or individual name"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all mb-3"
+                  placeholder="e.g., Nairobi, Kenya"
                   required
                 />
+                <MapPicker
+                  initialLat={formData.latitude}
+                  initialLng={formData.longitude}
+                  onLocationSelect={(lat, lng, address) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      latitude: lat,
+                      longitude: lng,
+                      location: address || prev.location
+                    }));
+                  }}
+                />
+                <p className="text-sm text-gray-500 mt-2">Click on the map to select campaign location</p>
               </div>
 
               <div>
@@ -248,22 +247,14 @@ const CreateCampaign: React.FC = () => {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                  🖼️ Campaign Image
-                </label>
-                <input
-                  type="url"
-                  name="imageUrl"
-                  value={formData.imageUrl}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                  placeholder="https://example.com/image.jpg"
-                />
-                <p className="text-sm text-gray-500 mt-2 flex items-center gap-1">
-                  💡 Leave empty for a beautiful auto-generated image
-                </p>
-              </div>
+              <ImageUpload
+                label="🖼️ Campaign Banner Image"
+                folder="campaigns"
+                currentImage={formData.imageUrl}
+                onUploadComplete={(url) => {
+                  setFormData(prev => ({ ...prev, imageUrl: url }));
+                }}
+              />
 
             </div>
             
