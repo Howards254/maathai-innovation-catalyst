@@ -39,7 +39,6 @@ export const CampaignProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [submissions, setSubmissions] = useState<TreePlantingSubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  const { awardPoints } = useUsers();
 
   // Load campaigns from Supabase
   useEffect(() => {
