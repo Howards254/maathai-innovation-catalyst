@@ -60,10 +60,16 @@ const Marketplace: React.FC = () => {
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading listings:', error);
+        setListings([]);
+        return;
+      }
+      
       setListings(data || []);
     } catch (error) {
       console.error('Error loading listings:', error);
+      setListings([]);
     } finally {
       setLoading(false);
     }
