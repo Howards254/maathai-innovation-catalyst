@@ -1,0 +1,18 @@
+/* Mobile responsive improvements */
+@media (max-width: 640px) {
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+  
+  .p-8 { padding: 1rem !important; }
+  .px-8 { padding-left: 1rem !important; padding-right: 1rem !important; }
+  .py-6 { padding-top: 1rem !important; padding-bottom: 1rem !important; }
+  .space-y-8 > * + * { margin-top: 1.5rem !important; }
+  .gap-6 { gap: 1rem !important; }
+  .text-2xl { font-size: 1.25rem !important; }
+  .text-lg { font-size: 1rem !important; }
+  
+  .grid-cols-2, .grid-cols-3, .md\:grid-cols-2, .md\:grid-cols-3 {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  }
+}

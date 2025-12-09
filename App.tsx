@@ -3,6 +3,7 @@ import { HashRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-
 import { Analytics } from '@vercel/analytics/react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import './src/styles/mobile.css';
 import ErrorBoundary from './components/ErrorBoundary';
 import { clearOldDataOnce } from './utils/clearStorage';
 import { AuthProvider } from './contexts/AuthContext';
