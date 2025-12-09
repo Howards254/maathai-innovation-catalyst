@@ -1,0 +1,111 @@
+/* Story Modal Mobile Responsive */
+@media (max-width: 768px) {
+  .story-modal-container {
+    max-width: 100% !important;
+    max-height: 95vh !important;
+    margin: 0.5rem !important;
+  }
+
+  .story-modal-container > div:first-child {
+    padding: 0.75rem 1rem !important;
+  }
+
+  .story-modal-container h2 {
+    font-size: 1.125rem !important;
+  }
+
+  .story-modal-content {
+    flex-direction: column !important;
+    height: auto !important;
+    max-height: calc(95vh - 60px) !important;
+  }
+
+  /* Upload step */
+  .story-modal-content .flex-1 {
+    padding: 1.5rem 1rem !important;
+  }
+
+  .story-modal-content .grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+
+  .story-modal-content .grid button {
+    padding: 1rem !important;
+  }
+
+  /* Edit step - stack vertically */
+  .story-modal-content > div {
+    width: 100% !important;
+  }
+
+  .story-modal-content .bg-black {
+    max-height: 250px !important;
+    min-height: 200px !important;
+  }
+
+  .story-modal-content .overflow-y-auto {
+    padding: 1rem !important;
+    max-height: calc(95vh - 310px) !important;
+  }
+
+  /* Form elements */
+  .story-modal-content input,
+  .story-modal-content textarea {
+    font-size: 16px !important;
+    padding: 0.625rem 0.75rem !important;
+  }
+
+  .story-modal-content .grid button {
+    padding: 0.75rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  /* Tags section */
+  .story-modal-content .flex.gap-2 {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+
+  .story-modal-content .flex.gap-2 button {
+    width: 100% !important;
+  }
+
+  /* Action buttons */
+  .story-modal-content .flex.gap-3 {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  .story-modal-content .flex.gap-3 button {
+    width: 100% !important;
+  }
+
+  /* Icons */
+  .story-modal-content .w-20 {
+    width: 4rem !important;
+    height: 4rem !important;
+  }
+
+  .story-modal-content .w-16 {
+    width: 3.5rem !important;
+    height: 3.5rem !important;
+  }
+
+  .story-modal-content .text-2xl {
+    font-size: 1.25rem !important;
+  }
+
+  .story-modal-content .text-xl {
+    font-size: 1.125rem !important;
+  }
+
+  /* Publish step */
+  .story-modal-content .flex-1.p-8 {
+    padding: 1.5rem 1rem !important;
+  }
+
+  .story-modal-content .bg-gray-50 {
+    padding: 1rem !important;
+  }
+}

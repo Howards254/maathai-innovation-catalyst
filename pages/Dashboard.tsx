@@ -4,7 +4,7 @@ import { useCampaigns } from '../contexts/CampaignContext';
 import { useDiscussions } from '../contexts/DiscussionContext';
 import { useUser } from '../contexts/UserContext';
 import { Play, ThumbsUp, ThumbsDown, Camera, ArrowUp, ArrowDown } from 'lucide-react';
-import CreateStoryModal from '../components/CreateStoryModal';
+import EnhancedCreateStoryModal from '../components/EnhancedCreateStoryModal';
 import SuggestedUsers from '../components/SuggestedUsers';
 import FriendsActivityFeed from '../components/FriendsActivityFeed';
 
@@ -382,7 +382,7 @@ const Dashboard: React.FC = () => {
         </div>
         
         {/* Create Story Modal */}
-        <CreateStoryModal isOpen={showCreateStory} onClose={() => setShowCreateStory(false)} />
+        <EnhancedCreateStoryModal isOpen={showCreateStory} onClose={() => setShowCreateStory(false)} />
     </div>
   );
 };
