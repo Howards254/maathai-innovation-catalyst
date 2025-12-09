@@ -66,6 +66,8 @@ import Groups from './pages/Groups';
 import LiveStreams from './pages/LiveStreams';
 import LiveFeed from './pages/LiveFeed';
 import GreenMatchmaking from './pages/GreenMatchmaking';
+import Marketplace from './pages/marketplace/Marketplace';
+import CreateListing from './pages/marketplace/CreateListing';
 
 // Placeholder components for routes not fully detailed yet
 const Placeholder = ({ title }: { title: string }) => (
@@ -166,7 +168,8 @@ const App: React.FC = () => {
           <Route path="matchmaking" element={<GreenMatchmaking />} />
           
           {/* Marketplace */}
-          <Route path="marketplace" element={<Placeholder title="Tree Exchange Marketplace" />} />
+          <Route path="marketplace" element={<Marketplace />} />
+          <Route path="marketplace/create" element={<CreateListing />} />
         </Route>
       </Routes>
           </HashRouter>
