@@ -88,7 +88,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
     }
     searchTimeoutRef.current = setTimeout(() => {
       handleSearch(value);
-    }, 500);
+    }, 300);
   };
 
   const selectSuggestion = (suggestion: any) => {
@@ -103,29 +103,38 @@ const MapPicker: React.FC<MapPickerProps> = ({
   return (
     <div className="space-y-3">
       <div className="relative">
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => handleSearchInput(e.target.value)}
-          placeholder="🔍 Search for a location (e.g., Central Park, Nairobi)"
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-        />
-        {searching && (
-          <div className="absolute right-3 top-3">
-            <div className="w-5 h-5 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-          </div>
-        )}
+        <div className="relative">
+          <span className="absolute left-3 top-3 text-gray-400 text-lg">📍</span>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => handleSearchInput(e.target.value)}
+            placeholder="Type location: Central Park, Nairobi, etc."
+            className="w-full pl-10 pr-10 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+          />
+          {searching && (
+            <div className="absolute right-3 top-3">
+              <div className="w-5 h-5 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          )}
+        </div>
         {suggestions.length > 0 && (
-          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+          <div className="absolute z-50 w-full mt-2 bg-white border-2 border-green-500 rounded-xl shadow-2xl max-h-80 overflow-y-auto">
+            <div className="p-2 bg-green-50 border-b border-green-200">
+              <p className="text-xs font-semibold text-green-700">📍 Select a location</p>
+            </div>
             {suggestions.map((suggestion, index) => (
               <button
                 key={index}
                 onClick={() => selectSuggestion(suggestion)}
-                className="w-full px-4 py-3 text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors"
+                className="w-full px-4 py-3 text-left hover:bg-green-50 border-b border-gray-100 last:border-b-0 transition-all group"
               >
-                <div className="flex items-start gap-2">
-                  <span className="text-gray-400 mt-1">📍</span>
-                  <span className="text-sm text-gray-700">{suggestion.display_name}</span>
+                <div className="flex items-start gap-3">
+                  <span className="text-green-500 text-xl group-hover:scale-110 transition-transform">📍</span>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900 group-hover:text-green-600">{suggestion.display_name.split(',')[0]}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{suggestion.display_name}</p>
+                  </div>
                 </div>
               </button>
             ))}

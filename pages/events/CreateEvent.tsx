@@ -178,25 +178,10 @@ const CreateEvent: React.FC = () => {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                  📍 Location
-                </label>
-                <input
-                  type="text"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                  placeholder="e.g., Central Park, Nairobi or Online via Zoom"
-                  required
-                />
-              </div>
-
               {formData.type !== 'Online' && (
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                    🗺️ Select Location on Map
+                    📍 Event Location
                   </label>
                   <MapPicker
                     onLocationSelect={(lat, lng, address) => {
@@ -208,6 +193,30 @@ const CreateEvent: React.FC = () => {
                       }));
                     }}
                     initialPosition={formData.latitude && formData.longitude ? [formData.latitude, formData.longitude] : undefined}
+                  />
+                  {formData.location && (
+                    <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <p className="text-sm text-green-800">
+                        <span className="font-semibold">Selected:</span> {formData.location}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {formData.type === 'Online' && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    📍 Location
+                  </label>
+                  <input
+                    type="text"
+                    name="location"
+                    value={formData.location}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                    placeholder="Online"
+                    required
                   />
                 </div>
               )}
