@@ -1,14 +1,21 @@
 -- Complete Events Schema for Luma/Eventbrite-like functionality
 -- Run this in Supabase SQL Editor
 
+-- Drop existing tables
+DROP TABLE IF EXISTS event_reminders CASCADE;
+DROP TABLE IF EXISTS event_updates CASCADE;
+DROP TABLE IF EXISTS event_rsvps CASCADE;
+DROP TABLE IF EXISTS recurring_events CASCADE;
+DROP TABLE IF EXISTS events CASCADE;
+
 -- Enhanced events table
-CREATE TABLE IF NOT EXISTS events (
+CREATE TABLE events (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     title TEXT NOT NULL,
     description TEXT NOT NULL,
     slug TEXT UNIQUE,
     date DATE NOT NULL,
-    time TIME NOT NULL,
+    "time" TIME NOT NULL,
     end_time TIME,
     timezone TEXT DEFAULT 'UTC',
     location TEXT NOT NULL,
@@ -29,7 +36,7 @@ CREATE TABLE IF NOT EXISTS events (
 );
 
 -- Event RSVPs with waitlist support
-CREATE TABLE IF NOT EXISTS event_rsvps (
+CREATE TABLE event_rsvps (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     event_id UUID REFERENCES events(id) ON DELETE CASCADE,
     user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
@@ -42,7 +49,7 @@ CREATE TABLE IF NOT EXISTS event_rsvps (
 );
 
 -- Event updates/announcements
-CREATE TABLE IF NOT EXISTS event_updates (
+CREATE TABLE event_updates (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     event_id UUID REFERENCES events(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
@@ -51,7 +58,7 @@ CREATE TABLE IF NOT EXISTS event_updates (
 );
 
 -- Event reminders
-CREATE TABLE IF NOT EXISTS event_reminders (
+CREATE TABLE event_reminders (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     event_id UUID REFERENCES events(id) ON DELETE CASCADE,
     user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
@@ -61,7 +68,7 @@ CREATE TABLE IF NOT EXISTS event_reminders (
 );
 
 -- Recurring events
-CREATE TABLE IF NOT EXISTS recurring_events (
+CREATE TABLE recurring_events (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     parent_event_id UUID REFERENCES events(id) ON DELETE CASCADE,
     recurrence_pattern TEXT CHECK (recurrence_pattern IN ('daily', 'weekly', 'monthly')) NOT NULL,
@@ -202,7 +209,7 @@ RETURNS TABLE (
     description TEXT,
     slug TEXT,
     date DATE,
-    time TIME,
+    "time" TIME,
     end_time TIME,
     timezone TEXT,
     location TEXT,
@@ -233,7 +240,7 @@ BEGIN
         e.description,
         e.slug,
         e.date,
-        e.time,
+        e."time",
         e.end_time,
         e.timezone,
         e.location,
@@ -259,7 +266,7 @@ BEGIN
     LEFT JOIN profiles p ON e.organizer_id = p.id
     LEFT JOIN event_rsvps r ON e.id = r.event_id
     GROUP BY e.id, p.full_name, p.avatar_url
-    ORDER BY e.date ASC, e.time ASC;
+    ORDER BY e.date ASC, e."time" ASC;
 END;
 $$ LANGUAGE plpgsql;
 
