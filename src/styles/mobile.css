@@ -1,18 +1,49 @@
-/* Mobile responsive improvements */
+/* Mobile responsive improvements for forms and campaign details */
 @media (max-width: 640px) {
+  /* Prevent iOS zoom on inputs */
   input, textarea, select {
     font-size: 16px !important;
   }
   
-  .p-8 { padding: 1rem !important; }
-  .px-8 { padding-left: 1rem !important; padding-right: 1rem !important; }
-  .py-6 { padding-top: 1rem !important; padding-bottom: 1rem !important; }
-  .space-y-8 > * + * { margin-top: 1.5rem !important; }
-  .gap-6 { gap: 1rem !important; }
-  .text-2xl { font-size: 1.25rem !important; }
-  .text-lg { font-size: 1rem !important; }
+  /* Form padding adjustments */
+  form .p-8 { padding: 1rem !important; }
+  form .px-8 { padding-left: 1rem !important; padding-right: 1rem !important; }
+  form .py-6 { padding-top: 1rem !important; padding-bottom: 1rem !important; }
+  form .space-y-8 > * + * { margin-top: 1.5rem !important; }
+  form .gap-6 { gap: 1rem !important; }
   
-  .grid-cols-2, .grid-cols-3, .md\:grid-cols-2, .md\:grid-cols-3 {
+  /* Campaign details mobile fixes */
+  .max-w-6xl { padding-left: 0.75rem; padding-right: 0.75rem; }
+  
+  /* Tabs horizontal scroll */
+  nav.flex { 
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  nav.flex button {
+    white-space: nowrap;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Grid to single column in campaign details */
+  .grid-cols-2 {
     grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
   }
+  
+  /* Button groups stack vertically */
+  .flex.gap-2 {
+    flex-direction: column;
+  }
+  .flex.gap-2 button {
+    width: 100%;
+  }
+  
+  /* Smaller text on mobile */
+  h1.text-3xl { font-size: 1.5rem !important; }
+  h3.text-lg { font-size: 1rem !important; }
+  
+  /* Image heights */
+  .h-64 { height: 12rem !important; }
+  .h-48 { height: 10rem !important; }
 }
