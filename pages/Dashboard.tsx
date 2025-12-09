@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCampaigns } from '../contexts/CampaignContext';
 import { useDiscussions } from '../contexts/DiscussionContext';
 import { useUser } from '../contexts/UserContext';
 import { Play, ThumbsUp, ThumbsDown, Camera, ArrowUp, ArrowDown } from 'lucide-react';
+import CreateStoryModal from '../components/CreateStoryModal';
 import EnhancedCreateStoryModal from '../components/EnhancedCreateStoryModal';
 import SuggestedUsers from '../components/SuggestedUsers';
 import FriendsActivityFeed from '../components/FriendsActivityFeed';
@@ -17,6 +18,13 @@ const Dashboard: React.FC = () => {
   const [reactions, setReactions] = useState<Record<string, string>>({});
   const [showReactionPicker, setShowReactionPicker] = useState<string | null>(null);
   const [showCreateStory, setShowCreateStory] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const reactionEmojis = [
     { emoji: '👍', label: 'Like' },
@@ -382,7 +390,11 @@ const Dashboard: React.FC = () => {
         </div>
         
         {/* Create Story Modal */}
-        <EnhancedCreateStoryModal isOpen={showCreateStory} onClose={() => setShowCreateStory(false)} />
+        {isMobile ? (
+          <CreateStoryModal isOpen={showCreateStory} onClose={() => setShowCreateStory(false)} />
+        ) : (
+          <EnhancedCreateStoryModal isOpen={showCreateStory} onClose={() => setShowCreateStory(false)} />
+        )}
     </div>
   );
 };

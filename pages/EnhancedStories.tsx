@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Camera, Plus, Heart, MessageCircle, Share2, Eye, Clock, Music, Sparkles, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import CreateStoryModal from '../components/CreateStoryModal';
 import EnhancedCreateStoryModal from '../components/EnhancedCreateStoryModal';
 
 interface Story {
@@ -51,12 +52,16 @@ const EnhancedStories: React.FC = () => {
   const [loadingComments, setLoadingComments] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const videoRef = useRef<HTMLVideoElement>(null);
   const progressInterval = useRef<NodeJS.Timeout>();
   const observerRef = useRef<IntersectionObserver>();
 
   useEffect(() => {
     loadStories();
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   useEffect(() => {
@@ -611,7 +616,11 @@ const EnhancedStories: React.FC = () => {
           )}
         </div>
 
-        <EnhancedCreateStoryModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} />
+        {isMobile ? (
+          <CreateStoryModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} />
+        ) : (
+          <EnhancedCreateStoryModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} />
+        )}
       </div>
     );
   }
@@ -874,7 +883,11 @@ const EnhancedStories: React.FC = () => {
         </div>
       )}
 
-      <EnhancedCreateStoryModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} />
+      {isMobile ? (
+        <CreateStoryModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} />
+      ) : (
+        <EnhancedCreateStoryModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} />
+      )}
     </div>
   );
 };
