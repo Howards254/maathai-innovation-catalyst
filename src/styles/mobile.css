@@ -1,4 +1,4 @@
-/* Mobile responsive improvements for forms and campaign details */
+/* Mobile responsive improvements for forms, campaign details, and modals */
 @media (max-width: 640px) {
   /* Prevent iOS zoom on inputs */
   input, textarea, select {
@@ -46,4 +46,28 @@
   /* Image heights */
   .h-64 { height: 12rem !important; }
   .h-48 { height: 10rem !important; }
+  
+  /* Modal improvements */
+  .fixed.inset-0 > div {
+    max-height: 90vh;
+    overflow-y: auto;
+    margin: 1rem;
+  }
+  
+  .max-w-2xl {
+    max-width: 100% !important;
+  }
+  
+  /* Modal form spacing */
+  .fixed .space-y-4 > * + * {
+    margin-top: 1rem !important;
+  }
+  
+  /* Modal buttons */
+  .fixed .flex.gap-3 {
+    flex-direction: column;
+  }
+  .fixed .flex.gap-3 button {
+    width: 100%;
+  }
 }
