@@ -31,11 +31,11 @@ const Badges: React.FC = () => {
       // Get user's current points
       const { data: profile } = await supabase
         .from('profiles')
-        .select('points')
+        .select('impact_points')
         .eq('id', user.id)
         .single();
       
-      setUserPoints(profile?.points || 0);
+      setUserPoints(profile?.impact_points || 0);
 
       // Define badge levels
       const badgeLevels = [
