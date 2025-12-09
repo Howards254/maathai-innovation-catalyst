@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCampaigns } from '../../contexts/CampaignContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { useUsers } from '../../contexts/UserContext';
+import MapPicker from '../../components/MapPicker';
+import ImageUpload from '../../components/ImageUpload';
 
 const CampaignDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { getUserById } = useUsers();
   const { 
     getCampaign, 
     joinCampaign, 
@@ -26,7 +26,20 @@ const CampaignDetails: React.FC = () => {
 
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showPlantModal, setShowPlantModal] = useState(false);
+  const [plantingData, setPlantingData] = useState({
+    treesCount: 1,
+    location: '',
+    latitude: -1.2921,
+    longitude: 36.8219,
+    description: '',
+    photoUrl: ''
+  });
   const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [updateData, setUpdateData] = useState({
+    title: '',
+    description: '',
+    imageUrl: ''
+  });
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'updates' | 'submissions' | 'members'>('overview');
@@ -60,31 +73,36 @@ const CampaignDetails: React.FC = () => {
 
   const handlePlantSubmission = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+    
+    if (!plantingData.photoUrl) {
+      alert('Please upload a photo of your tree planting');
+      return;
+    }
     
     await submitTreePlanting({
       campaignId: campaign.id,
       userId: user!.id,
-      photoUrl: formData.get('photo') as string || 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400',
-      description: formData.get('description') as string,
-      location: formData.get('location') as string,
-      treesCount: parseInt(formData.get('treesCount') as string)
+      ...plantingData
     });
     
     setShowPlantModal(false);
+    setPlantingData({
+      treesCount: 1,
+      location: '',
+      latitude: -1.2921,
+      longitude: 36.8219,
+      description: '',
+      photoUrl: ''
+    });
   };
 
   const handleAddUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
     
-    await addUpdate(campaign.id, {
-      title: formData.get('title') as string,
-      description: formData.get('description') as string,
-      imageUrl: formData.get('imageUrl') as string || undefined
-    });
+    await addUpdate(campaign.id, updateData);
     
     setShowUpdateModal(false);
+    setUpdateData({ title: '', description: '', imageUrl: '' });
   };
 
   const handleComplete = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -341,18 +359,17 @@ const CampaignDetails: React.FC = () => {
                 <div>
                   <h4 className="font-semibold mb-3">Participants ({campaign.participants?.length || 0})</h4>
                   <div className="space-y-2">
-                    {(campaign.participants || []).map(participantId => {
-                      const participant = getUserById(participantId);
-                      return participant ? (
-                        <div key={participantId} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
-                          <img src={participant.avatarUrl} alt={participant.fullName} className="w-10 h-10 rounded-full" />
-                          <div>
-                            <p className="font-medium">{participant.fullName}</p>
-                            <p className="text-sm text-gray-500">@{participant.username}</p>
-                          </div>
+                    {(campaign.participants || []).map(participantId => (
+                      <div key={participantId} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
+                        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-semibold">
+                          {participantId.substring(0, 2).toUpperCase()}
                         </div>
-                      ) : null;
-                    })}
+                        <div>
+                          <p className="font-medium">Participant</p>
+                          <p className="text-sm text-gray-500">Member</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -361,34 +378,33 @@ const CampaignDetails: React.FC = () => {
                 <div>
                   <h4 className="font-semibold mb-3">Pending Requests ({campaign.pendingParticipants?.length || 0})</h4>
                   <div className="space-y-2">
-                    {(campaign.pendingParticipants || []).map(userId => {
-                      const user = getUserById(userId);
-                      return user ? (
-                        <div key={userId} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <img src={user.avatarUrl} alt={user.fullName} className="w-10 h-10 rounded-full" />
-                            <div>
-                              <p className="font-medium">{user.fullName}</p>
-                              <p className="text-sm text-gray-500">@{user.username}</p>
-                            </div>
+                    {(campaign.pendingParticipants || []).map(userId => (
+                      <div key={userId} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-semibold">
+                            {userId.substring(0, 2).toUpperCase()}
                           </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => approveMember(campaign.id, userId)}
-                              className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
-                            >
-                              Approve
-                            </button>
-                            <button
-                              onClick={() => rejectMember(campaign.id, userId)}
-                              className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
-                            >
-                              Reject
-                            </button>
+                          <div>
+                            <p className="font-medium">Pending User</p>
+                            <p className="text-sm text-gray-500">Awaiting approval</p>
                           </div>
                         </div>
-                      ) : null;
-                    })}
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => approveMember(campaign.id, userId)}
+                            className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => rejectMember(campaign.id, userId)}
+                            className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -429,57 +445,90 @@ const CampaignDetails: React.FC = () => {
       )}
 
       {showPlantModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 my-8">
             <h3 className="text-lg font-semibold mb-4">Submit Tree Planting</h3>
             <form onSubmit={handlePlantSubmission} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Number of Trees</label>
                 <input
                   type="number"
-                  name="treesCount"
+                  value={plantingData.treesCount}
+                  onChange={(e) => setPlantingData(prev => ({ ...prev, treesCount: parseInt(e.target.value) }))}
                   min="1"
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Planting Location</label>
                 <input
                   type="text"
-                  name="location"
+                  value={plantingData.location}
+                  onChange={(e) => setPlantingData(prev => ({ ...prev, location: e.target.value }))}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent mb-2"
+                  placeholder="e.g., Karura Forest, Nairobi"
                 />
+                <MapPicker
+                  initialLat={plantingData.latitude}
+                  initialLng={plantingData.longitude}
+                  height="300px"
+                  onLocationSelect={(lat, lng, address) => {
+                    setPlantingData(prev => ({
+                      ...prev,
+                      latitude: lat,
+                      longitude: lng,
+                      location: address || prev.location
+                    }));
+                  }}
+                />
+                <p className="text-sm text-gray-500 mt-2">Click on the map to mark where you planted</p>
               </div>
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <textarea
-                  name="description"
+                  value={plantingData.description}
+                  onChange={(e) => setPlantingData(prev => ({ ...prev, description: e.target.value }))}
                   rows={3}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder="Describe your tree planting activity..."
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Photo URL</label>
-                <input
-                  type="url"
-                  name="photo"
-                  placeholder="https://example.com/photo.jpg"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
-              </div>
-              <div className="flex gap-3">
+              
+              <ImageUpload
+                label="Tree Planting Photo (Required)"
+                folder="tree-submissions"
+                currentImage={plantingData.photoUrl}
+                onUploadComplete={(url) => {
+                  setPlantingData(prev => ({ ...prev, photoUrl: url }));
+                }}
+              />
+              
+              <div className="flex gap-3 pt-2">
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                  disabled={!plantingData.photoUrl}
+                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Submit
+                  Submit Planting
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowPlantModal(false)}
+                  onClick={() => {
+                    setShowPlantModal(false);
+                    setPlantingData({
+                      treesCount: 1,
+                      location: '',
+                      latitude: -1.2921,
+                      longitude: 36.8219,
+                      description: '',
+                      photoUrl: ''
+                    });
+                  }}
                   className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
                 >
                   Cancel
@@ -491,37 +540,41 @@ const CampaignDetails: React.FC = () => {
       )}
 
       {showUpdateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 my-8">
             <h3 className="text-lg font-semibold mb-4">Add Campaign Update</h3>
             <form onSubmit={handleAddUpdate} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
                 <input
                   type="text"
-                  name="title"
+                  value={updateData.title}
+                  onChange={(e) => setUpdateData(prev => ({ ...prev, title: e.target.value }))}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder="e.g., Week 1 Progress Update"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <textarea
-                  name="description"
+                  value={updateData.description}
+                  onChange={(e) => setUpdateData(prev => ({ ...prev, description: e.target.value }))}
                   rows={4}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder="Share progress, achievements, or challenges..."
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Image URL (optional)</label>
-                <input
-                  type="url"
-                  name="imageUrl"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                />
-              </div>
-              <div className="flex gap-3">
+              <ImageUpload
+                label="Update Image (Optional)"
+                folder="campaign-updates"
+                currentImage={updateData.imageUrl}
+                onUploadComplete={(url) => {
+                  setUpdateData(prev => ({ ...prev, imageUrl: url }));
+                }}
+              />
+              <div className="flex gap-3 pt-2">
                 <button
                   type="submit"
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -530,7 +583,10 @@ const CampaignDetails: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowUpdateModal(false)}
+                  onClick={() => {
+                    setShowUpdateModal(false);
+                    setUpdateData({ title: '', description: '', imageUrl: '' });
+                  }}
                   className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
                 >
                   Cancel
