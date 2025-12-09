@@ -102,7 +102,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
 
   return (
     <div className="space-y-3">
-      <div className="relative z-50">
+      <div className="relative" style={{ zIndex: 1000 }}>
         <div className="relative">
           <span className="absolute left-3 top-3 text-gray-400 text-lg">📍</span>
           <input
@@ -110,16 +110,16 @@ const MapPicker: React.FC<MapPickerProps> = ({
             value={searchQuery}
             onChange={(e) => handleSearchInput(e.target.value)}
             placeholder="Type location: Central Park, Nairobi, etc."
-            className="w-full pl-10 pr-10 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-white"
+            className="w-full pl-10 pr-10 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-white relative z-10"
           />
           {searching && (
-            <div className="absolute right-3 top-3">
+            <div className="absolute right-3 top-3 z-20">
               <div className="w-5 h-5 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
           )}
         </div>
         {suggestions.length > 0 && (
-          <div className="absolute z-[9999] w-full mt-2 bg-white border-2 border-green-500 rounded-xl shadow-2xl max-h-80 overflow-y-auto">
+          <div className="absolute w-full mt-2 bg-white border-2 border-green-500 rounded-xl shadow-2xl max-h-80 overflow-y-auto" style={{ zIndex: 1001 }}>
             <div className="p-2 bg-green-50 border-b border-green-200">
               <p className="text-xs font-semibold text-green-700">📍 Select a location</p>
             </div>
@@ -141,11 +141,12 @@ const MapPicker: React.FC<MapPickerProps> = ({
           </div>
         )}
       </div>
-      <div style={{ height, width: '100%' }} className="rounded-lg overflow-hidden border border-gray-300">
+      <div style={{ height, width: '100%', position: 'relative', zIndex: 1 }} className="rounded-lg overflow-hidden border border-gray-300">
         <MapContainer
           center={position}
           zoom={13}
           style={{ height: '100%', width: '100%' }}
+          zoomControl={true}
         >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
