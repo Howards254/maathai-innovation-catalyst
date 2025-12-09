@@ -92,13 +92,21 @@ const Marketplace: React.FC = () => {
                 </h1>
                 <p className="text-gray-600 text-sm">Buy and sell eco-friendly items</p>
               </div>
-              <Link
-                to="/app/marketplace/create"
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                Create Listing
-              </Link>
+              <div className="flex gap-2">
+                <Link
+                  to="/app/marketplace/my-listings"
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
+                >
+                  My Listings
+                </Link>
+                <Link
+                  to="/app/marketplace/create"
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Create Listing
+                </Link>
+              </div>
             </div>
 
             <div className="relative">

@@ -14,6 +14,7 @@ const CreateListing: React.FC = () => {
     title: '',
     description: '',
     price: '',
+    currency: 'KES',
     category: 'seedlings',
     condition: 'new',
     location: '',
@@ -21,6 +22,16 @@ const CreateListing: React.FC = () => {
     longitude: undefined as number | undefined,
     images: [] as string[]
   });
+
+  const currencies = [
+    { code: 'KES', symbol: 'KSh', name: 'Kenyan Shilling' },
+    { code: 'USD', symbol: '$', name: 'US Dollar' },
+    { code: 'EUR', symbol: '€', name: 'Euro' },
+    { code: 'GBP', symbol: '£', name: 'British Pound' },
+    { code: 'ZAR', symbol: 'R', name: 'South African Rand' },
+    { code: 'NGN', symbol: '₦', name: 'Nigerian Naira' },
+    { code: 'GHS', symbol: '₵', name: 'Ghanaian Cedi' }
+  ];
 
   const categories = [
     { id: 'seedlings', label: 'Tree Seedlings', icon: '🌱' },
@@ -50,6 +61,7 @@ const CreateListing: React.FC = () => {
           title: formData.title,
           description: formData.description,
           price: parseFloat(formData.price),
+          currency: formData.currency,
           category: formData.category,
           condition: formData.condition,
           location: formData.location,
@@ -118,9 +130,9 @@ const CreateListing: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Price ($) *</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Price *</label>
                   <input
                     type="number"
                     name="price"
@@ -132,6 +144,23 @@ const CreateListing: React.FC = () => {
                     placeholder="0.00"
                     required
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Currency *</label>
+                  <select
+                    name="currency"
+                    value={formData.currency}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    required
+                  >
+                    {currencies.map(curr => (
+                      <option key={curr.code} value={curr.code}>
+                        {curr.symbol} {curr.name} ({curr.code})
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
