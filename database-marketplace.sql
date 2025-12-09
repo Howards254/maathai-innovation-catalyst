@@ -34,6 +34,14 @@ CREATE INDEX IF NOT EXISTS idx_marketplace_listings_status ON marketplace_listin
 CREATE INDEX IF NOT EXISTS idx_marketplace_listings_location ON marketplace_listings(latitude, longitude);
 CREATE INDEX IF NOT EXISTS idx_marketplace_messages_listing ON marketplace_messages(listing_id);
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Anyone can view available listings" ON marketplace_listings;
+DROP POLICY IF EXISTS "Users can create listings" ON marketplace_listings;
+DROP POLICY IF EXISTS "Users can update own listings" ON marketplace_listings;
+DROP POLICY IF EXISTS "Users can delete own listings" ON marketplace_listings;
+DROP POLICY IF EXISTS "Users can view their messages" ON marketplace_messages;
+DROP POLICY IF EXISTS "Users can send messages" ON marketplace_messages;
+
 -- RLS Policies
 ALTER TABLE marketplace_listings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE marketplace_messages ENABLE ROW LEVEL SECURITY;
@@ -61,3 +69,6 @@ CREATE POLICY "Users can view their messages" ON marketplace_messages
 -- Users can send messages
 CREATE POLICY "Users can send messages" ON marketplace_messages
     FOR INSERT WITH CHECK (auth.uid() = sender_id);
+
+-- Refresh schema cache
+NOTIFY pgrst, 'reload schema';
