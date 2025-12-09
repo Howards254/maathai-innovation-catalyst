@@ -70,4 +70,63 @@
   .fixed .flex.gap-3 button {
     width: 100%;
   }
+  
+  /* Navbar improvements */
+  nav .max-w-\[1800px\] {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  
+  /* Card grids responsive */
+  .grid-cols-1.lg\:grid-cols-2,
+  .grid-cols-1.md\:grid-cols-2,
+  .lg\:grid-cols-2,
+  .md\:grid-cols-2 {
+    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  }
+  
+  /* Smaller card padding */
+  .bg-white.rounded-xl .p-6 {
+    padding: 1rem !important;
+  }
+  
+  /* Responsive text in cards */
+  .text-3xl {
+    font-size: 1.5rem !important;
+    line-height: 2rem !important;
+  }
+  
+  .text-xl {
+    font-size: 1.125rem !important;
+    line-height: 1.75rem !important;
+  }
+  
+  /* Dashboard cards */
+  .max-w-6xl,
+  .max-w-4xl {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  
+  /* Sticky headers */
+  .sticky.top-16 {
+    top: 4rem;
+  }
+  
+  /* Better spacing */
+  .space-y-6 > * + * {
+    margin-top: 1rem !important;
+  }
+  
+  /* Flex wrap for action buttons */
+  .flex.items-center.gap-4 {
+    flex-wrap: wrap;
+    gap: 0.5rem !important;
+  }
+  
+  /* Full width buttons in action groups */
+  .flex.justify-between .flex.gap-2 {
+    width: 100%;
+    flex-direction: column;
+  }
 }
