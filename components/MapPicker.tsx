@@ -101,8 +101,9 @@ const MapPicker: React.FC<MapPickerProps> = ({
   };
 
   return (
-    <div className="space-y-3">
-      <div className="relative" style={{ zIndex: 1000 }}>
+    <>
+      {/* Search Section - Completely separate */}
+      <div className="relative mb-4">
         <div className="relative">
           <span className="absolute left-3 top-3 text-gray-400 text-lg">📍</span>
           <input
@@ -110,16 +111,16 @@ const MapPicker: React.FC<MapPickerProps> = ({
             value={searchQuery}
             onChange={(e) => handleSearchInput(e.target.value)}
             placeholder="Type location: Central Park, Nairobi, etc."
-            className="w-full pl-10 pr-10 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-white relative z-10"
+            className="w-full pl-10 pr-10 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-white"
           />
           {searching && (
-            <div className="absolute right-3 top-3 z-20">
+            <div className="absolute right-3 top-3">
               <div className="w-5 h-5 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
           )}
         </div>
         {suggestions.length > 0 && (
-          <div className="absolute w-full mt-2 bg-white border-2 border-green-500 rounded-xl shadow-2xl max-h-80 overflow-y-auto" style={{ zIndex: 1001 }}>
+          <div className="absolute w-full mt-2 bg-white border-2 border-green-500 rounded-xl shadow-2xl max-h-80 overflow-y-auto z-[9999]">
             <div className="p-2 bg-green-50 border-b border-green-200">
               <p className="text-xs font-semibold text-green-700">📍 Select a location</p>
             </div>
@@ -141,7 +142,9 @@ const MapPicker: React.FC<MapPickerProps> = ({
           </div>
         )}
       </div>
-      <div style={{ height, width: '100%', position: 'relative', zIndex: 1 }} className="rounded-lg overflow-hidden border border-gray-300">
+
+      {/* Map Section - Completely separate */}
+      <div style={{ height, width: '100%' }} className="rounded-lg overflow-hidden border border-gray-300 mb-2">
         <MapContainer
           center={position}
           zoom={13}
@@ -156,8 +159,9 @@ const MapPicker: React.FC<MapPickerProps> = ({
           <MapUpdater position={position} />
         </MapContainer>
       </div>
+      
       <p className="text-sm text-gray-500">💡 Type to search or click on the map to select location</p>
-    </div>
+    </>
   );
 };
 
