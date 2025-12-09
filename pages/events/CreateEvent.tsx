@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEvents } from '../../contexts/EventContext';
+import MapPicker from '../../components/MapPicker';
+import ImageUpload from '../../components/ImageUpload';
+import { toast } from 'react-toastify';
 
 const CreateEvent: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -8,10 +11,19 @@ const CreateEvent: React.FC = () => {
     description: '',
     date: '',
     time: '',
+    endTime: '',
+    timezone: 'UTC',
     location: '',
-    type: 'In-Person' as 'Online' | 'In-Person',
+    latitude: undefined as number | undefined,
+    longitude: undefined as number | undefined,
+    type: 'In-Person' as 'Online' | 'In-Person' | 'Hybrid',
+    meetingUrl: '',
     maxAttendees: '',
-    imageUrl: ''
+    imageUrl: '',
+    isPublic: true,
+    tags: [] as string[],
+    agenda: undefined,
+    faqs: undefined
   });
   const [loading, setLoading] = useState(false);
   
@@ -20,6 +32,12 @@ const CreateEvent: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.imageUrl) {
+      toast.error('Please upload an event image');
+      return;
+    }
+    
     setLoading(true);
     
     try {
@@ -27,9 +45,11 @@ const CreateEvent: React.FC = () => {
         ...formData,
         maxAttendees: formData.maxAttendees ? parseInt(formData.maxAttendees) : undefined
       });
+      toast.success('Event submitted for review!');
       navigate('/app/events');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create event:', error);
+      toast.error(error.message || 'Failed to create event');
     } finally {
       setLoading(false);
     }
@@ -114,7 +134,7 @@ const CreateEvent: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                    ⏰ Time
+                    ⏰ Start Time
                   </label>
                   <input
                     type="time"
@@ -124,6 +144,37 @@ const CreateEvent: React.FC = () => {
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                     required
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    ⏰ End Time
+                  </label>
+                  <input
+                    type="time"
+                    name="endTime"
+                    value={formData.endTime}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    🌍 Timezone
+                  </label>
+                  <select
+                    name="timezone"
+                    value={formData.timezone}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                  >
+                    <option value="UTC">UTC</option>
+                    <option value="Africa/Nairobi">East Africa Time (EAT)</option>
+                    <option value="America/New_York">Eastern Time (ET)</option>
+                    <option value="America/Los_Angeles">Pacific Time (PT)</option>
+                    <option value="Europe/London">London (GMT)</option>
+                  </select>
                 </div>
               </div>
 
@@ -142,12 +193,47 @@ const CreateEvent: React.FC = () => {
                 />
               </div>
 
+              {formData.type !== 'Online' && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    🗺️ Select Location on Map
+                  </label>
+                  <MapPicker
+                    onLocationSelect={(lat, lng, address) => {
+                      setFormData(prev => ({
+                        ...prev,
+                        latitude: lat,
+                        longitude: lng,
+                        location: address || prev.location
+                      }));
+                    }}
+                    initialPosition={formData.latitude && formData.longitude ? [formData.latitude, formData.longitude] : undefined}
+                  />
+                </div>
+              )}
+
+              {(formData.type === 'Online' || formData.type === 'Hybrid') && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    🔗 Meeting URL
+                  </label>
+                  <input
+                    type="url"
+                    name="meetingUrl"
+                    value={formData.meetingUrl}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                    placeholder="https://zoom.us/j/..."
+                  />
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
                     🌐 Event Type
                   </label>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-3 gap-3">
                     <label className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all ${
                       formData.type === 'In-Person' 
                         ? 'border-green-500 bg-green-50 text-green-700' 
@@ -159,11 +245,9 @@ const CreateEvent: React.FC = () => {
                         value="In-Person"
                         checked={formData.type === 'In-Person'}
                         onChange={handleChange}
-                        className="mr-3 text-green-600"
+                        className="mr-2 text-green-600"
                       />
-                      <div>
-                        <div className="font-semibold">🏢 In-Person</div>
-                      </div>
+                      <div className="font-semibold text-sm">🏢 In-Person</div>
                     </label>
                     <label className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all ${
                       formData.type === 'Online' 
@@ -176,11 +260,24 @@ const CreateEvent: React.FC = () => {
                         value="Online"
                         checked={formData.type === 'Online'}
                         onChange={handleChange}
-                        className="mr-3 text-blue-600"
+                        className="mr-2 text-blue-600"
                       />
-                      <div>
-                        <div className="font-semibold">💻 Online</div>
-                      </div>
+                      <div className="font-semibold text-sm">💻 Online</div>
+                    </label>
+                    <label className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-all ${
+                      formData.type === 'Hybrid' 
+                        ? 'border-purple-500 bg-purple-50 text-purple-700' 
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}>
+                      <input
+                        type="radio"
+                        name="type"
+                        value="Hybrid"
+                        checked={formData.type === 'Hybrid'}
+                        onChange={handleChange}
+                        className="mr-2 text-purple-600"
+                      />
+                      <div className="font-semibold text-sm">🌐 Hybrid</div>
                     </label>
                   </div>
                 </div>
@@ -204,19 +301,13 @@ const CreateEvent: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                  🖼️ Event Image
+                  🖼️ Event Image *
                 </label>
-                <input
-                  type="url"
-                  name="imageUrl"
-                  value={formData.imageUrl}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
-                  placeholder="https://example.com/image.jpg"
+                <ImageUpload
+                  onUpload={(url) => setFormData(prev => ({ ...prev, imageUrl: url }))}
+                  currentImage={formData.imageUrl}
+                  folder="events"
                 />
-                <p className="text-sm text-gray-500 mt-2 flex items-center gap-1">
-                  💡 Leave empty for a beautiful auto-generated image
-                </p>
               </div>
 
             </div>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useEvents } from '../../contexts/EventContext';
 import { useAuth } from '../../contexts/AuthContext';
 import ShareButton from '../../components/ShareButton';
+import { downloadICSFile } from '../../utils/calendarUtils';
 
 const EventsList: React.FC = () => {
   const { getApprovedEvents, loading, rsvpEvent, unrsvpEvent } = useEvents();
@@ -53,6 +54,7 @@ const EventsList: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {events.map(event => {
             const isRsvped = user && event.attendees.includes(user.id);
+            const isWaitlisted = user && event.waitlist?.includes(user.id);
             const isFull = event.maxAttendees && event.attendees.length >= event.maxAttendees;
             
             return (
@@ -82,35 +84,50 @@ const EventsList: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                       👥 <span>{event.attendees.length} attending{event.maxAttendees ? ` / ${event.maxAttendees} max` : ''}</span>
+                      {event.waitlist && event.waitlist.length > 0 && (
+                        <span className="text-yellow-600">+ {event.waitlist.length} waitlist</span>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                       👤 <span>by {event.organizerName}</span>
                     </div>
                   </div>
                   
-                  <div className="flex gap-2">
-                    <Link
-                      to={`/app/events/${event.id}`}
-                      className="flex-1 text-center px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors"
-                    >
-                      View Details
-                    </Link>
-                    {user && (
-                      <button 
-                        onClick={() => isRsvped ? unrsvpEvent(event.id) : rsvpEvent(event.id)}
-                        disabled={!isRsvped && isFull}
-                        className={`flex-1 px-4 py-2 font-medium rounded-lg transition-all duration-200 ${
-                          isRsvped 
-                            ? 'bg-red-500 text-white hover:bg-red-600 hover:scale-105' 
-                            : isFull
-                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                            : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:shadow-lg hover:scale-105'
-                        }`}
+                  <div className="space-y-2">
+                    {isRsvped && (
+                      <button
+                        onClick={() => downloadICSFile(event)}
+                        className="w-full px-4 py-2 bg-blue-50 text-blue-700 font-medium rounded-lg hover:bg-blue-100 transition-colors text-sm flex items-center justify-center gap-2"
                       >
-                        {isRsvped ? '❌ Cancel RSVP' : isFull ? '🚫 Event Full' : '✅ RSVP'}
+                        📅 Add to Calendar
                       </button>
                     )}
-                    <ShareButton type="event" data={event} size="lg" className="!w-10 !h-10 border border-gray-300 bg-white hover:bg-gray-50" />
+                    <div className="flex gap-2">
+                      <Link
+                        to={`/app/events/${event.id}`}
+                        className="flex-1 text-center px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                      >
+                        View Details
+                      </Link>
+                      {user && (
+                        <button 
+                          onClick={() => isRsvped ? unrsvpEvent(event.id) : rsvpEvent(event.id)}
+                          disabled={!isRsvped && !isWaitlisted && isFull}
+                          className={`flex-1 px-4 py-2 font-medium rounded-lg transition-all duration-200 ${
+                            isRsvped 
+                              ? 'bg-red-500 text-white hover:bg-red-600 hover:scale-105' 
+                              : isWaitlisted
+                              ? 'bg-yellow-500 text-white hover:bg-yellow-600 hover:scale-105'
+                              : isFull
+                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                              : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:shadow-lg hover:scale-105'
+                          }`}
+                        >
+                          {isRsvped ? '❌ Cancel' : isWaitlisted ? '⏳ Waitlist' : isFull ? '🚫 Full' : '✅ RSVP'}
+                        </button>
+                      )}
+                      <ShareButton type="event" data={event} size="lg" className="!w-10 !h-10 border border-gray-300 bg-white hover:bg-gray-50" />
+                    </div>
                   </div>
                 </div>
               </div>

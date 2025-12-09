@@ -88,16 +88,28 @@ export interface Event {
   id: string;
   title: string;
   description: string;
+  slug?: string;
   date: string;
   time: string;
+  endTime?: string;
+  timezone?: string;
   location: string;
+  latitude?: number;
+  longitude?: number;
   attendees: string[];
+  waitlist?: string[];
   maxAttendees?: number;
-  type: 'Online' | 'In-Person';
+  type: 'Online' | 'In-Person' | 'Hybrid';
+  meetingUrl?: string;
   imageUrl: string;
   organizerId: string;
   organizerName: string;
-  status: 'pending' | 'approved' | 'rejected';
+  organizerAvatar?: string;
+  status: 'draft' | 'pending' | 'approved' | 'cancelled' | 'completed';
+  isPublic?: boolean;
+  tags?: string[];
+  agenda?: any;
+  faqs?: any;
   createdAt: string;
 }
 

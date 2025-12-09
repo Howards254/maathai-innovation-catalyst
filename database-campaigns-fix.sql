@@ -7,15 +7,61 @@ FROM information_schema.columns
 WHERE table_name = 'campaigns' 
 ORDER BY ordinal_position;
 
--- Add missing columns if they don't exist
+-- Fix column names
 DO $$ 
 BEGIN
-    -- Add current_trees if it doesn't exist
-    IF NOT EXISTS (
+    -- Drop target_trees if both target_trees and goal_trees exist
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'campaigns' AND column_name = 'target_trees'
+    ) AND EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'campaigns' AND column_name = 'goal_trees'
+    ) THEN
+        ALTER TABLE campaigns DROP COLUMN target_trees;
+    END IF;
+    
+    -- Rename target_trees to goal_trees if only target_trees exists
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'campaigns' AND column_name = 'target_trees'
+    ) AND NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'campaigns' AND column_name = 'goal_trees'
+    ) THEN
+        ALTER TABLE campaigns RENAME COLUMN target_trees TO goal_trees;
+    END IF;
+    
+    -- Drop planted_trees if both planted_trees and current_trees exist
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'campaigns' AND column_name = 'planted_trees'
+    ) AND EXISTS (
         SELECT 1 FROM information_schema.columns 
         WHERE table_name = 'campaigns' AND column_name = 'current_trees'
     ) THEN
-        ALTER TABLE campaigns ADD COLUMN current_trees INTEGER DEFAULT 0;
+        ALTER TABLE campaigns DROP COLUMN planted_trees;
+    END IF;
+    
+    -- Rename planted_trees to current_trees if only planted_trees exists
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'campaigns' AND column_name = 'planted_trees'
+    ) AND NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'campaigns' AND column_name = 'current_trees'
+    ) THEN
+        ALTER TABLE campaigns RENAME COLUMN planted_trees TO current_trees;
+    END IF;
+
+
+
+    -- Add organizer_id if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'campaigns' AND column_name = 'organizer_id'
+    ) THEN
+        ALTER TABLE campaigns ADD COLUMN organizer_id UUID REFERENCES profiles(id);
     END IF;
 
     -- Add latitude if it doesn't exist
