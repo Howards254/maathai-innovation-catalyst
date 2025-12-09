@@ -4,21 +4,28 @@ import { useMessaging } from '../contexts/MessagingContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useFollow } from '../contexts/FollowContext';
 import { uploadMedia } from '../lib/uploadMedia';
+import { useSearchParams } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 
 const Messages: React.FC = () => {
   const { user } = useAuth();
   const { conversations, messages, activeConversation, loading, sendMessage, loadConversation, startDirectChat } = useMessaging();
   const { getFriends } = useFollow();
+  const [searchParams] = useSearchParams();
   const [newMessage, setNewMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [uploading, setUploading] = useState(false);
   const [showNewChat, setShowNewChat] = useState(false);
   const [friends, setFriends] = useState<any[]>([]);
+  const [listingInfo, setListingInfo] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (user) loadFriends();
-  }, [user]);
+    if (user) {
+      loadFriends();
+      handleMarketplaceChat();
+    }
+  }, [user, searchParams]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -30,12 +37,34 @@ const Messages: React.FC = () => {
     setFriends(data);
   };
 
+  const handleMarketplaceChat = async () => {
+    const sellerId = searchParams.get('user');
+    const listingId = searchParams.get('listing');
+    
+    if (!sellerId || !user) return;
+
+    // Load listing info if provided
+    if (listingId) {
+      const { data } = await supabase
+        .from('marketplace_listings')
+        .select('id, title, price, currency, images')
+        .eq('id', listingId)
+        .single();
+      
+      if (data) setListingInfo(data);
+    }
+
+    // Start or load conversation with seller
+    await handleStartChat(sellerId);
+  };
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !activeConversation) return;
 
     await sendMessage(activeConversation, newMessage.trim());
     setNewMessage('');
+    setListingInfo(null); // Clear listing info after first message
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -232,6 +261,21 @@ const Messages: React.FC = () => {
 
             {/* Message Input */}
             <div className="bg-white border-t border-gray-200 p-3 md:p-4">
+              {listingInfo && (
+                <div className="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="flex items-center gap-3">
+                    {listingInfo.images?.[0] && (
+                      <img src={listingInfo.images[0]} alt="" className="w-16 h-16 rounded-lg object-cover" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 truncate">{listingInfo.title}</p>
+                      <p className="text-sm text-green-600 font-semibold">
+                        {listingInfo.currency === 'KES' ? 'KSh' : listingInfo.currency} {listingInfo.price.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
               <form onSubmit={handleSendMessage} className="flex items-center space-x-2">
                 <label className="cursor-pointer p-2 text-gray-500 hover:text-gray-700">
                   <Image className="w-5 h-5" />
