@@ -337,7 +337,9 @@ const Navbar: React.FC = () => {
               <Link to="/app/campaigns" className="block px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-xl transition-colors" onClick={() => setIsMobileMenuOpen(false)}>🌳 Campaigns</Link>
               <Link to="/app/events" className="block px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-xl transition-colors" onClick={() => setIsMobileMenuOpen(false)}>📅 Events</Link>
               <Link to="/app/discussions" className="block px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-xl transition-colors" onClick={() => setIsMobileMenuOpen(false)}>💭 Discussions</Link>
+              <Link to="/app/marketplace" className="block px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-xl transition-colors" onClick={() => setIsMobileMenuOpen(false)}>🛒 Marketplace</Link>
               <Link to="/app/innovation" className="block px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-xl transition-colors" onClick={() => setIsMobileMenuOpen(false)}>💡 Innovation Hub</Link>
+              <Link to="/app/groups" className="block px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-xl transition-colors" onClick={() => setIsMobileMenuOpen(false)}>👥 Groups</Link>
               <Link to="/app/leaderboard" className="block px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-xl transition-colors" onClick={() => setIsMobileMenuOpen(false)}>🏆 Leaderboard</Link>
               <Link to="/app/badges" className="block px-3 py-3 text-gray-700 hover:bg-gray-100 rounded-xl transition-colors" onClick={() => setIsMobileMenuOpen(false)}>🎖️ Badges</Link>
             </div>
