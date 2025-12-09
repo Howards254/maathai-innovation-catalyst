@@ -194,13 +194,14 @@ const CreateListing: React.FC = () => {
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-3">Images *</label>
                 <ImageUpload
-                  onUpload={(url) => {
+                  onUploadComplete={(url) => {
                     setFormData(prev => ({
                       ...prev,
                       images: [...prev.images, url]
                     }));
                   }}
                   folder="marketplace"
+                  label="Upload product images"
                 />
                 {formData.images.length > 0 && (
                   <div className="mt-4 grid grid-cols-4 gap-2">
