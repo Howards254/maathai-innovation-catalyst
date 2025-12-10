@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
-import { ChevronRight, ChevronLeft, User, MapPin, Heart, Briefcase, Users, CheckCircle } from 'lucide-react';
+import { ChevronRight, ChevronLeft, User, MapPin, Heart, Briefcase, Users, CheckCircle, Home } from 'lucide-react';
 
 const Register: React.FC = () => {
   const { signUp } = useAuth();
@@ -159,6 +159,16 @@ const Register: React.FC = () => {
         </div>
 
         <div className="p-8">
+          {/* Home Button */}
+          <Link
+            to="/"
+            className="inline-flex items-center space-x-2 px-3 py-2 mb-4 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-all"
+            title="Go to Home"
+          >
+            <Home className="w-4 h-4" />
+            <span className="text-sm font-medium">Home</span>
+          </Link>
+          
           {/* Header */}
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Join the Movement</h1>

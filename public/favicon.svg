@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="leafGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10b981"/>
+      <stop offset="100%" style="stop-color:#059669"/>
+    </linearGradient>
+    <linearGradient id="circleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ecfdf5"/>
+      <stop offset="100%" style="stop-color:#d1fae5"/>
+    </linearGradient>
+  </defs>
+  <!-- Background circle -->
+  <circle cx="32" cy="32" r="30" fill="url(#circleGrad)" stroke="url(#leafGrad)" stroke-width="2"/>
+  <!-- Main leaf -->
+  <path d="M32 12 C20 20, 16 32, 20 44 C24 52, 32 54, 32 54 C32 54, 40 52, 44 44 C48 32, 44 20, 32 12 Z" 
+        fill="url(#leafGrad)" opacity="0.9"/>
+  <!-- Leaf vein center -->
+  <path d="M32 16 L32 50" stroke="#ecfdf5" stroke-width="2" stroke-linecap="round" opacity="0.8"/>
+  <!-- Leaf veins left -->
+  <path d="M32 24 L24 30" stroke="#ecfdf5" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+  <path d="M32 32 L22 36" stroke="#ecfdf5" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+  <path d="M32 40 L24 42" stroke="#ecfdf5" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+  <!-- Leaf veins right -->
+  <path d="M32 24 L40 30" stroke="#ecfdf5" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+  <path d="M32 32 L42 36" stroke="#ecfdf5" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+  <path d="M32 40 L40 42" stroke="#ecfdf5" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+  <!-- Small decorative elements -->
+  <circle cx="18" cy="18" r="3" fill="#10b981" opacity="0.3"/>
+  <circle cx="46" cy="46" r="2" fill="#10b981" opacity="0.3"/>
+</svg>

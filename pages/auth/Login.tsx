@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Mail, Lock, Eye, EyeOff, Leaf } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Leaf, Home } from 'lucide-react';
 
 const Login: React.FC = () => {
   const { signIn } = useAuth();
@@ -31,7 +31,16 @@ const Login: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-green-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-emerald-500 to-green-600 p-8 text-center">
+        <div className="bg-gradient-to-r from-emerald-500 to-green-600 p-8 text-center relative">
+          {/* Home Button */}
+          <Link
+            to="/"
+            className="absolute top-4 left-4 p-2 bg-white/20 hover:bg-white/30 rounded-full transition-all"
+            title="Go to Home"
+          >
+            <Home className="w-5 h-5 text-white" />
+          </Link>
+          
           <div className="flex items-center justify-center space-x-2 mb-4">
             <Leaf className="w-8 h-8 text-white" />
             <h1 className="text-2xl font-bold text-white">Welcome Back</h1>
