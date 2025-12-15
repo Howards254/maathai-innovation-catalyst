@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { X, Camera, Video, Upload, Music, Type, Sparkles, MapPin } from 'lucide-react';
 import { useStories } from '../contexts/StoriesContext';
+import { uploadMedia } from '../lib/uploadMedia';
 
 interface EnhancedCreateStoryModalProps {
   isOpen: boolean;
@@ -92,7 +93,6 @@ const EnhancedCreateStoryModal: React.FC<EnhancedCreateStoryModalProps> = ({ isO
         : 'https://api.cloudinary.com/v1_1/your-cloud-name/image/upload';
       
       // Use original working Cloudinary upload
-      const { uploadMedia } = await import('../lib/uploadMedia');
       const mediaUrl = await uploadMedia(mediaFile, 'stories');
       
       await createStory({
