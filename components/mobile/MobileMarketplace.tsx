@@ -64,19 +64,19 @@ const MobileMarketplace: React.FC = () => {
         </div>
 
         {/* Category Tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-2">
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           {categories.map((category) => (
             <button
               key={category.id}
               onClick={() => setSelectedCategory(category.id)}
-              className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              className={`flex-shrink-0 flex items-center gap-1 px-3 py-2 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
                 selectedCategory === category.id
                   ? 'bg-green-600 text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              <span>{category.icon}</span>
-              {category.label}
+              <span className="text-sm">{category.icon}</span>
+              <span className="hidden sm:inline">{category.label}</span>
             </button>
           ))}
         </div>
