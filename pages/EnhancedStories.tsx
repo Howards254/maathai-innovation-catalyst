@@ -64,9 +64,7 @@ const EnhancedStories: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  if (isMobile && !isFullScreen) {
-    return <MobileStories />;
-  }
+
 
   useEffect(() => {
     if (isFullScreen && !isPaused && !showComments) {
