@@ -23,15 +23,15 @@ const Landing = () => {
       {/* Header */}
       <header className="absolute top-0 left-0 right-0 z-50 py-3 px-4">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 md:flex-1">
             <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white font-bold border border-white/30">
               🌱
             </div>
             <span className="text-lg font-bold text-white">GreenVerse</span>
           </div>
-          <div className="flex items-center gap-3">
-            <Link to="/login" className="text-white/90 font-medium hover:text-white transition-colors text-sm">Sign In</Link>
-            <Link to="/register" className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-full font-medium hover:bg-white/30 transition-all border border-white/30 text-sm">
+          <div className="flex items-center gap-2 md:gap-3">
+            <Link to="/login" className="text-white/90 font-medium hover:text-white transition-colors text-sm px-2 py-1">Sign In</Link>
+            <Link to="/register" className="px-3 py-1.5 md:px-4 md:py-2 bg-white/20 backdrop-blur-sm text-white rounded-full font-medium hover:bg-white/30 transition-all border border-white/30 text-sm whitespace-nowrap">
               Join
             </Link>
           </div>
@@ -103,16 +103,18 @@ const Landing = () => {
             Join a global community restoring our planet through tree planting campaigns, environmental innovation, and collective action.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center animate-fade-in-up animation-delay-400 px-4">
-            <Link to="/register" className="inline-block">
-              <button className="group w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-white text-green-800 rounded-xl font-semibold text-base sm:text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2">
-                Start Your Journey
-                <ArrowRight className="w-4 sm:w-5 h-4 sm:h-5 group-hover:translate-x-1 transition-transform" />
+          <div className="flex flex-row gap-3 justify-center animate-fade-in-up animation-delay-400 px-4 max-w-lg mx-auto">
+            <Link to="/register" className="flex-1">
+              <button className="group w-full px-4 md:px-8 py-3 md:py-4 bg-white text-green-800 rounded-xl font-semibold text-sm md:text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2">
+                <span className="hidden sm:inline">Start Your Journey</span>
+                <span className="sm:hidden">Start</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>
             </Link>
-            <Link to="/app/campaigns" className="inline-block">
-              <button className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-white/10 backdrop-blur-md border-2 border-white/40 text-white rounded-xl font-semibold text-base sm:text-lg hover:bg-white hover:text-green-800 hover:scale-105 transition-all duration-300 shadow-xl">
-                Explore Campaigns
+            <Link to="/app/campaigns" className="flex-1">
+              <button className="w-full px-4 md:px-8 py-3 md:py-4 bg-white/10 backdrop-blur-md border-2 border-white/40 text-white rounded-xl font-semibold text-sm md:text-lg hover:bg-white hover:text-green-800 hover:scale-105 transition-all duration-300 shadow-xl">
+                <span className="hidden sm:inline">Explore Campaigns</span>
+                <span className="sm:hidden">Explore</span>
               </button>
             </Link>
           </div>
@@ -300,16 +302,18 @@ const Landing = () => {
             Every tree planted is a step toward a sustainable future. Start your environmental journey today.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/register" className="inline-block">
-              <button className="group px-8 py-4 bg-white text-green-800 rounded-xl font-semibold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center gap-2">
-                Create Account
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+          <div className="flex flex-row gap-4 justify-center max-w-lg mx-auto">
+            <Link to="/register" className="flex-1">
+              <button className="group w-full px-4 md:px-8 py-3 md:py-4 bg-white text-green-800 rounded-xl font-semibold text-sm md:text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2">
+                <span className="hidden sm:inline">Create Account</span>
+                <span className="sm:hidden">Create</span>
+                <ArrowRight className="w-4 md:w-5 h-4 md:h-5 group-hover:translate-x-1 transition-transform" />
               </button>
             </Link>
-            <Link to="/app/campaigns" className="inline-block">
-              <button className="px-8 py-4 bg-white/10 backdrop-blur-md border-2 border-white/40 text-white rounded-xl font-semibold text-lg hover:bg-white hover:text-green-800 hover:scale-105 transition-all duration-300 shadow-xl">
-                Browse Campaigns
+            <Link to="/app/campaigns" className="flex-1">
+              <button className="w-full px-4 md:px-8 py-3 md:py-4 bg-white/10 backdrop-blur-md border-2 border-white/40 text-white rounded-xl font-semibold text-sm md:text-lg hover:bg-white hover:text-green-800 hover:scale-105 transition-all duration-300 shadow-xl">
+                <span className="hidden sm:inline">Browse Campaigns</span>
+                <span className="sm:hidden">Browse</span>
               </button>
             </Link>
           </div>
