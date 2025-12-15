@@ -41,13 +41,13 @@ const MobileMarketplace: React.FC = () => {
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-4 py-4 sticky top-14 z-10">
         <div className="flex items-center justify-between mb-3">
-          <h1 className="text-xl font-bold text-gray-900">Marketplace</h1>
+          <h1 className="text-lg font-bold text-gray-900">Marketplace</h1>
           <Link
             to="/app/marketplace/create"
-            className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-full text-sm font-medium"
+            className="flex items-center gap-1 px-2 py-1.5 bg-green-600 text-white rounded-full text-xs font-medium"
           >
-            <Plus className="w-4 h-4" />
-            Sell
+            <Plus className="w-3 h-3" />
+            <span className="hidden xs:inline">Sell</span>
           </Link>
         </div>
 
@@ -64,19 +64,19 @@ const MobileMarketplace: React.FC = () => {
         </div>
 
         {/* Category Tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+        <div className="flex gap-1 overflow-x-auto pb-2 no-scrollbar">
           {categories.map((category) => (
             <button
               key={category.id}
               onClick={() => setSelectedCategory(category.id)}
-              className={`flex-shrink-0 flex items-center gap-1 px-3 py-2 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
+              className={`flex-shrink-0 w-12 h-8 flex items-center justify-center rounded-full text-xs font-medium transition-colors ${
                 selectedCategory === category.id
                   ? 'bg-green-600 text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
+              title={category.label}
             >
               <span className="text-sm">{category.icon}</span>
-              <span className="hidden sm:inline">{category.label}</span>
             </button>
           ))}
         </div>
