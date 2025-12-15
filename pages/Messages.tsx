@@ -6,6 +6,7 @@ import { useFollow } from '../contexts/FollowContext';
 import { uploadMedia } from '../lib/uploadMedia';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import MobileMessages from '../components/mobile/MobileMessages';
 
 const Messages: React.FC = () => {
   const { user } = useAuth();
@@ -18,7 +19,18 @@ const Messages: React.FC = () => {
   const [showNewChat, setShowNewChat] = useState(false);
   const [friends, setFriends] = useState<any[]>([]);
   const [listingInfo, setListingInfo] = useState<any>(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  if (isMobile) {
+    return <MobileMessages />;
+  }
 
   useEffect(() => {
     if (user) {

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { Plus, Search, MapPin, DollarSign } from 'lucide-react';
+import MobileMarketplace from '../../components/mobile/MobileMarketplace';
 
 interface Listing {
   id: string;
@@ -28,6 +29,17 @@ const Marketplace: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  if (isMobile) {
+    return <MobileMarketplace />;
+  }
 
   const categories = [
     { id: 'all', label: 'All Items', icon: '🛒' },
