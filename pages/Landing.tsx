@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { TreePine, Users, Heart, ArrowRight, MessageCircle, Camera, UserPlus, Award, Play, CheckCircle } from 'lucide-react';
+import { TreePine, Users, Heart, Sparkles, ArrowRight, Zap, MessageCircle, Camera, UserPlus, Globe2, Award, Calendar } from 'lucide-react';
 
 const Landing = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
