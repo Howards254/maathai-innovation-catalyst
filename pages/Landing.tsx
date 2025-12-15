@@ -21,21 +21,18 @@ const Landing = () => {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <header className="absolute top-0 left-0 right-0 z-50 py-4 px-4 sm:px-6">
-        <div className="flex items-center justify-between">
+      <header className="absolute top-0 left-0 right-0 z-50 py-3 px-4">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white font-bold border border-white/30">
+            <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white font-bold border border-white/30">
               🌱
             </div>
-            <span className="text-lg sm:text-xl font-bold text-white hidden sm:block">GreenVerse</span>
-            <span className="text-lg font-bold text-white sm:hidden">MIC</span>
+            <span className="text-lg font-bold text-white">GreenVerse</span>
           </div>
-          <div className="flex items-center gap-2 sm:gap-4">
-            <Link to="/about" className="text-white/90 font-medium hover:text-white transition-colors hidden sm:block">About</Link>
-            <Link to="/contact" className="text-white/90 font-medium hover:text-white transition-colors hidden sm:block">Contact</Link>
-            <Link to="/login" className="text-white/90 font-medium hover:text-white transition-colors text-sm sm:text-base">Log In</Link>
-            <Link to="/register" className="px-3 py-1.5 sm:px-6 sm:py-2 bg-white/20 backdrop-blur-sm text-white rounded-full font-medium hover:bg-white/30 transition-all border border-white/30 text-sm sm:text-base">
-              Join Now
+          <div className="flex items-center gap-3">
+            <Link to="/login" className="text-white/90 font-medium hover:text-white transition-colors text-sm">Sign In</Link>
+            <Link to="/register" className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-full font-medium hover:bg-white/30 transition-all border border-white/30 text-sm">
+              Join
             </Link>
           </div>
         </div>
@@ -98,39 +95,39 @@ const Landing = () => {
             <span className="text-sm font-medium">Inspired by Wangari Maathai</span>
           </div>
           
-          <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold mb-6 animate-fade-in-up leading-tight">
+          <h1 className="text-2xl sm:text-4xl md:text-6xl lg:text-7xl font-bold mb-4 sm:mb-6 animate-fade-in-up leading-tight">
             Where Green Meets <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-300">Social</span>
           </h1>
           
-          <p className="text-lg sm:text-xl md:text-2xl mb-8 text-green-100 max-w-3xl mx-auto animate-fade-in-up animation-delay-200">
+          <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-6 sm:mb-8 text-green-100 max-w-3xl mx-auto animate-fade-in-up animation-delay-200 px-4">
             Join a global community restoring our planet through tree planting campaigns, environmental innovation, and collective action.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up animation-delay-400">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center animate-fade-in-up animation-delay-400 px-4">
             <Link to="/register" className="inline-block">
-              <button className="group px-8 py-4 bg-white text-green-800 rounded-xl font-semibold text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center gap-2">
+              <button className="group w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-white text-green-800 rounded-xl font-semibold text-base sm:text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2">
                 Start Your Journey
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-4 sm:w-5 h-4 sm:h-5 group-hover:translate-x-1 transition-transform" />
               </button>
             </Link>
             <Link to="/app/campaigns" className="inline-block">
-              <button className="px-8 py-4 bg-white/10 backdrop-blur-md border-2 border-white/40 text-white rounded-xl font-semibold text-lg hover:bg-white hover:text-green-800 hover:scale-105 transition-all duration-300 shadow-xl">
+              <button className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-white/10 backdrop-blur-md border-2 border-white/40 text-white rounded-xl font-semibold text-base sm:text-lg hover:bg-white hover:text-green-800 hover:scale-105 transition-all duration-300 shadow-xl">
                 Explore Campaigns
               </button>
             </Link>
           </div>
 
-          <div className="grid grid-cols-3 gap-4 sm:gap-8 mt-12 sm:mt-16 max-w-2xl mx-auto animate-fade-in-up animation-delay-600">
+          <div className="grid grid-cols-3 gap-2 sm:gap-8 mt-8 sm:mt-16 max-w-2xl mx-auto animate-fade-in-up animation-delay-600 px-4">
             <div className="text-center">
-              <div className="text-xl sm:text-3xl font-bold text-green-300 mb-1">1.2M+</div>
+              <div className="text-lg sm:text-2xl lg:text-3xl font-bold text-green-300 mb-1">1.2M+</div>
               <div className="text-xs sm:text-sm text-green-200">Trees Planted</div>
             </div>
             <div className="text-center">
-              <div className="text-xl sm:text-3xl font-bold text-green-300 mb-1">50K+</div>
+              <div className="text-lg sm:text-2xl lg:text-3xl font-bold text-green-300 mb-1">50K+</div>
               <div className="text-xs sm:text-sm text-green-200">Members</div>
             </div>
             <div className="text-center">
-              <div className="text-xl sm:text-3xl font-bold text-green-300 mb-1">850+</div>
+              <div className="text-lg sm:text-2xl lg:text-3xl font-bold text-green-300 mb-1">850+</div>
               <div className="text-xs sm:text-sm text-green-200">Campaigns</div>
             </div>
           </div>
@@ -152,7 +149,7 @@ const Landing = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           <div className="group relative bg-gradient-to-br from-green-500 to-emerald-600 p-8 rounded-3xl text-white hover:scale-105 transition-all duration-300 shadow-xl">
             <div className="absolute inset-0 bg-black/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
             <div className="relative">
