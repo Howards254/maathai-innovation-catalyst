@@ -1,13 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useCampaigns } from '../../contexts/CampaignContext';
 import { useAuth } from '../../contexts/AuthContext';
 import ShareButton from '../../components/ShareButton';
+import MobileCampaigns from '../../components/mobile/MobileCampaigns';
 
 const CampaignList: React.FC = () => {
   const { campaigns, loading } = useCampaigns();
   const { user } = useAuth();
   const [filter, setFilter] = useState<'all' | 'active' | 'completed' | 'public' | 'private'>('all');
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Use mobile campaigns on small screens
+  if (isMobile) {
+    return <MobileCampaigns />;
+  }
 
   const filteredCampaigns = campaigns.filter(campaign => {
     switch (filter) {

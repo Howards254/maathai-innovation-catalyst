@@ -8,6 +8,7 @@ import CreateStoryModal from '../components/CreateStoryModal';
 import EnhancedCreateStoryModal from '../components/EnhancedCreateStoryModal';
 import SuggestedUsers from '../components/SuggestedUsers';
 import FriendsActivityFeed from '../components/FriendsActivityFeed';
+import MobileDashboard from '../components/mobile/MobileDashboard';
 
 const Dashboard: React.FC = () => {
   const { campaigns, loading: campaignsLoading } = useCampaigns();
@@ -25,6 +26,11 @@ const Dashboard: React.FC = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Use mobile dashboard on small screens
+  if (isMobile) {
+    return <MobileDashboard />;
+  }
 
   const reactionEmojis = [
     { emoji: '👍', label: 'Like' },
