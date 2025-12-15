@@ -23,15 +23,15 @@ const Landing = () => {
       {/* Header */}
       <header className="absolute top-0 left-0 right-0 z-50 py-3 px-4">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center gap-2 md:flex-1">
+          <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white font-bold border border-white/30">
               🌱
             </div>
             <span className="text-lg font-bold text-white">GreenVerse</span>
           </div>
-          <div className="flex items-center gap-2 md:gap-3">
-            <Link to="/login" className="text-white/90 font-medium hover:text-white transition-colors text-sm px-2 py-1">Sign In</Link>
-            <Link to="/register" className="px-3 py-1.5 md:px-4 md:py-2 bg-white/20 backdrop-blur-sm text-white rounded-full font-medium hover:bg-white/30 transition-all border border-white/30 text-sm whitespace-nowrap">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link to="/login" className="text-white/90 font-medium hover:text-white transition-colors text-xs sm:text-sm px-1 sm:px-0">Sign In</Link>
+            <Link to="/register" className="px-2 py-1 sm:px-4 sm:py-2 bg-white/20 backdrop-blur-sm text-white rounded-full font-medium hover:bg-white/30 transition-all border border-white/30 text-xs sm:text-sm">
               Join
             </Link>
           </div>
