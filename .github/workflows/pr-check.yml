@@ -144,7 +144,7 @@ jobs:
 
       - name: Comment PR with preview URL
         if: ${{ secrets.VERCEL_TOKEN != '' }}
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const previewUrl = '${{ steps.deploy.outputs.preview-url }}';
