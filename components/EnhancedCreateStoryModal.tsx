@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { toast } from 'react-toastify';
 import { X, Camera, Video, Upload, Music, Type, Sparkles, MapPin } from 'lucide-react';
 import { useStories } from '../contexts/StoriesContext';
 import { uploadMedia } from '../lib/uploadMedia';
@@ -108,14 +109,14 @@ const EnhancedCreateStoryModal: React.FC<EnhancedCreateStoryModalProps> = ({ isO
       });
 
       // Success notification and refresh
-      alert('Story published successfully! 🎉');
+      toast.success('Story published successfully! 🎉');
       window.location.reload();
       
       onClose();
       resetForm();
     } catch (error) {
       console.error('Error creating story:', error);
-      alert('Failed to create story. Please try again.');
+      toast.error('Failed to create story. Please try again.');
     } finally {
       setLoading(false);
     }

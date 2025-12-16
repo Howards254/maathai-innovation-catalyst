@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { ChevronRight, ChevronLeft, User, MapPin, Heart, Briefcase, Users, CheckCircle, Home } from 'lucide-react';
@@ -85,7 +86,13 @@ const Register: React.FC = () => {
         .from('profiles')
         .select('username')
         .eq('username', username)
-        .single();
+        .maybeSingle(); // Use maybeSingle() instead of single() to avoid error when no row found
+      
+      if (error) {
+        // If table doesn't exist or other DB error, assume username is available
+        console.warn('Username check error:', error.message);
+        return true;
+      }
       
       return !data; // Available if no data found
     } catch (error) {
@@ -96,18 +103,18 @@ const Register: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match');
+      toast.error('Passwords do not match');
       return;
     }
 
     // Validate username
     if (formData.username.length < 3) {
-      alert('Username must be at least 3 characters long');
+      toast.error('Username must be at least 3 characters long');
       return;
     }
 
     if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) {
-      alert('Username can only contain letters, numbers, and underscores');
+      toast.error('Username can only contain letters, numbers, and underscores');
       return;
     }
 
@@ -116,7 +123,7 @@ const Register: React.FC = () => {
       // Check username availability
       const isAvailable = await checkUsernameAvailability(formData.username);
       if (!isAvailable) {
-        alert('Username is already taken. Please choose another one.');
+        toast.error('Username is already taken. Please choose another one.');
         setLoading(false);
         return;
       }
@@ -124,10 +131,10 @@ const Register: React.FC = () => {
       await signUp(formData.email, formData.password, formData.fullName, formData.username);
       
       // Show success message for email confirmation
-      alert('Registration successful! Please check your email to confirm your account.');
+      toast.success('Registration successful! Please check your email to confirm your account.');
       navigate('/login');
     } catch (error: any) {
-      alert(error.message);
+      toast.error(error.message);
     } finally {
       setLoading(false);
     }

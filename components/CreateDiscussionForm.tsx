@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { toast } from 'react-toastify';
 import { useDiscussions } from '../contexts/DiscussionContext';
 import { Image, Video, Smile, X } from 'lucide-react';
 import { uploadMedia } from '../lib/uploadMedia';
@@ -27,7 +28,7 @@ const CreateDiscussionForm: React.FC<CreateDiscussionFormProps> = ({ onClose }) 
   const handleMediaSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length + mediaFiles.length > 4) {
-      alert('Maximum 4 media files allowed');
+      toast.error('Maximum 4 media files allowed');
       return;
     }
 
@@ -75,7 +76,7 @@ const CreateDiscussionForm: React.FC<CreateDiscussionFormProps> = ({ onClose }) 
       onClose();
     } catch (error) {
       console.error('Failed to create discussion:', error);
-      alert('Failed to create discussion. Please try again.');
+      toast.error('Failed to create discussion. Please try again.');
     } finally {
       setLoading(false);
     }

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { toast } from 'react-toastify';
 import { Camera, Plus, Heart, MessageCircle, Share2, Bookmark, Play, Volume2, VolumeX } from 'lucide-react';
 import { useStories } from '../contexts/StoriesContext';
 import CreateStoryModal from '../components/CreateStoryModal';
@@ -34,7 +35,7 @@ const Stories: React.FC = () => {
       });
     } else {
       navigator.clipboard.writeText(window.location.href);
-      alert('Link copied!');
+      toast.success('Link copied!');
     }
   };
 
@@ -180,7 +181,7 @@ const Stories: React.FC = () => {
             <div key={story.id} className="relative h-screen w-full snap-start flex items-center justify-center">
               {story.media_type === 'video' ? (
                 <video
-                  ref={el => videoRefs.current[index] = el}
+                  ref={el => { videoRefs.current[index] = el; }}
                   src={story.media_url}
                   className="w-full h-full object-contain"
                   style={{ maxWidth: '100vw', maxHeight: '100vh' }}

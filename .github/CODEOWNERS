@@ -1,0 +1,23 @@
+# Code Owners for Maathai Innovation Catalyst
+# These owners will be automatically requested for review
+
+# Default owners for everything
+* @Howards254
+
+# Frontend components
+/components/ @Howards254
+/pages/ @Howards254
+/contexts/ @Howards254
+
+# Configuration files
+*.config.js @Howards254
+*.config.ts @Howards254
+tsconfig.json @Howards254
+package.json @Howards254
+
+# CI/CD
+/.github/ @Howards254
+
+# Database
+/database/ @Howards254
+/supabase/ @Howards254

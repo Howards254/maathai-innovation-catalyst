@@ -2,10 +2,25 @@ export interface User {
   id: string;
   username: string;
   fullName: string;
+  full_name?: string;
   avatarUrl: string;
+  avatar_url?: string;
   impactPoints: number;
+  points?: number;
   badges: string[];
   role: 'user' | 'admin';
+  bio?: string;
+  location?: string;
+  website?: string;
+  cover_image_url?: string;
+  is_verified?: boolean;
+  follower_count?: number;
+  following_count?: number;
+  created_at?: string;
+  current_badge?: string;
+  treesPlanted?: number;
+  max_distance_km?: number;
+  level?: number;
 }
 
 export interface InnovationHubSettings {
@@ -25,6 +40,8 @@ export interface Campaign {
   organizerId: string;
   organizerAvatar: string;
   location: string;
+  latitude?: number;
+  longitude?: number;
   tags: string[];
   daysLeft: number;
   isPublic: boolean;
@@ -57,6 +74,8 @@ export interface TreePlantingSubmission {
   photoUrl: string;
   description: string;
   location: string;
+  latitude?: number;
+  longitude?: number;
   treesCount: number;
   status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
@@ -69,7 +88,9 @@ export interface Discussion {
   content: string;
   author: User;
   upvotes: number;
+  downvotes?: number;
   commentsCount: number;
+  comment_count?: number;
   postedAt: string;
   category: 'General' | 'Help' | 'Success Story' | 'Tech';
   mediaUrls?: string[];

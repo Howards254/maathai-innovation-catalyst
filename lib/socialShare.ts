@@ -1,3 +1,5 @@
+import { toast } from 'react-toastify';
+
 // Social Sharing Service for Viral Growth
 interface ShareData {
   title: string;
@@ -35,7 +37,7 @@ class SocialShareService {
     const instagramText = `${data.title}\n\n${data.description}\n\n🔗 Link in bio: ${data.url}\n\n${data.hashtags?.map(tag => `#${tag}`).join(' ') || '#environment #sustainability #climateaction'}`;
     
     navigator.clipboard.writeText(instagramText).then(() => {
-      alert('Caption copied to clipboard! Open Instagram and paste it with your post.');
+      toast.info('Caption copied to clipboard! Open Instagram and paste it with your post.');
       // Optionally open Instagram web
       window.open('https://www.instagram.com/', '_blank');
     });
@@ -62,7 +64,7 @@ class SocialShareService {
     } else {
       // Fallback to copy link
       navigator.clipboard.writeText(data.url);
-      alert('Link copied to clipboard!');
+      toast.success('Link copied to clipboard!');
     }
   }
 

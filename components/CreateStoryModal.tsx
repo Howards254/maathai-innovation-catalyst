@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { toast } from 'react-toastify';
 import { X, Upload, Camera, Video, Image, MapPin, Hash } from 'lucide-react';
 import { uploadMedia } from '../lib/uploadMedia';
 import { useStories } from '../contexts/StoriesContext';
@@ -36,14 +37,14 @@ const CreateStoryModal = ({ isOpen, onClose }: CreateStoryModalProps) => {
 
     // Validate file size (10MB)
     if (selectedFile.size > 10 * 1024 * 1024) {
-      alert('File size must be less than 10MB');
+      toast.error('File size must be less than 10MB');
       return;
     }
 
     // Validate file type
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/webm', 'video/quicktime'];
     if (!allowedTypes.includes(selectedFile.type)) {
-      alert('Only images (JPEG, PNG, WebP) and videos (MP4, WebM, MOV) are allowed');
+      toast.error('Only images (JPEG, PNG, WebP) and videos (MP4, WebM, MOV) are allowed');
       return;
     }
 
@@ -93,7 +94,7 @@ const CreateStoryModal = ({ isOpen, onClose }: CreateStoryModalProps) => {
       onClose();
     } catch (error) {
       console.error('Error creating story:', error);
-      alert(error instanceof Error ? error.message : 'Failed to create story');
+      toast.error(error instanceof Error ? error.message : 'Failed to create story');
     } finally {
       setUploading(false);
       setUploadProgress(0);

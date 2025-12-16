@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { toast } from 'react-toastify';
 import { Share2, MessageCircle, Twitter, Facebook, Instagram, Linkedin, Copy, X } from 'lucide-react';
 import { socialShare } from '../lib/socialShare';
 
@@ -84,7 +85,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
       color: 'bg-gray-500 hover:bg-gray-600',
       action: () => {
         navigator.clipboard.writeText(shareData.url);
-        alert('Link copied to clipboard!');
+        toast.success('Link copied to clipboard!');
         setShowModal(false);
       }
     }
@@ -160,7 +161,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(shareData.url);
-                    alert('Link copied!');
+                    toast.success('Link copied!');
                   }}
                   className="text-emerald-600 hover:text-emerald-700"
                 >

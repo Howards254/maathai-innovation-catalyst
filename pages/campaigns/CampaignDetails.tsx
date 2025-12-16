@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useCampaigns } from '../../contexts/CampaignContext';
 import { useAuth } from '../../contexts/AuthContext';
 import MapPicker from '../../components/MapPicker';
@@ -75,7 +76,7 @@ const CampaignDetails: React.FC = () => {
     e.preventDefault();
     
     if (!plantingData.photoUrl) {
-      alert('Please upload a photo of your tree planting');
+      toast.warning('Please upload a photo of your tree planting');
       return;
     }
     
@@ -472,8 +473,7 @@ const CampaignDetails: React.FC = () => {
                   placeholder="e.g., Karura Forest, Nairobi"
                 />
                 <MapPicker
-                  initialLat={plantingData.latitude}
-                  initialLng={plantingData.longitude}
+                  initialPosition={[plantingData.latitude, plantingData.longitude]}
                   height="300px"
                   onLocationSelect={(lat, lng, address) => {
                     setPlantingData(prev => ({

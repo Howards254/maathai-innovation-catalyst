@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Play, Users, Clock, Calendar, Send, Heart, ThumbsUp, Fire, Smile } from 'lucide-react';
+import { Play, Users, Clock, Calendar, Send, Heart, ThumbsUp, Flame, Smile } from 'lucide-react';
 import { useLiveStream } from '../contexts/LiveStreamContext';
 import { formatDistanceToNow } from 'date-fns';
 

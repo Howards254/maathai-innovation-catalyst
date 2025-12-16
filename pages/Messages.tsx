@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { toast } from 'react-toastify';
 import { MessageCircle, Send, Search, Image, Users, X } from 'lucide-react';
 import { useMessaging } from '../contexts/MessagingContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -28,10 +29,6 @@ const Messages: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  if (isMobile) {
-    return <MobileMessages />;
-  }
-
   useEffect(() => {
     if (user) {
       loadFriends();
@@ -39,9 +36,13 @@ const Messages: React.FC = () => {
     }
   }, [user, searchParams]);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  const handleStartChat = async (friendId: string) => {
+    setShowNewChat(false);
+    const convId = await startDirectChat(friendId);
+    if (!convId) {
+      toast.error('Failed to start chat. Please try again.');
+    }
+  };
 
   const loadFriends = async () => {
     if (!user) return;
@@ -70,6 +71,14 @@ const Messages: React.FC = () => {
     await handleStartChat(sellerId);
   };
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  if (isMobile) {
+    return <MobileMessages />;
+  }
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !activeConversation) return;
@@ -93,14 +102,6 @@ const Messages: React.FC = () => {
       console.error('Upload failed:', error);
     } finally {
       setUploading(false);
-    }
-  };
-
-  const handleStartChat = async (friendId: string) => {
-    setShowNewChat(false);
-    const convId = await startDirectChat(friendId);
-    if (!convId) {
-      alert('Failed to start chat. Please try again.');
     }
   };
 

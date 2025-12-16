@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useAuth } from '../../contexts/AuthContext';
 import { useUser, useUsers } from '../../contexts/UserContext';
 import { supabase } from '../../lib/supabase';
@@ -201,11 +202,11 @@ const ProfileEdit: React.FC = () => {
       // Update user causes, skills, and activities in separate tables if they exist
       // For now, we'll store them in the looking_for field as a combined array
       
-      alert('Profile updated successfully!');
+      toast.success('Profile updated successfully!');
       navigate(`/app/profile/${formData.username}`);
     } catch (error) {
       console.error('Failed to update profile:', error);
-      alert('Failed to update profile. Please try again.');
+      toast.error('Failed to update profile. Please try again.');
     } finally {
       setLoading(false);
     }

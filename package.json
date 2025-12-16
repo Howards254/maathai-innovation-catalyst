@@ -15,8 +15,11 @@
     "docker:build": "docker build -t greenverse .",
     "docker:run": "docker run -p 3000:80 greenverse",
     "docker:compose": "docker-compose up -d",
-    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "type-check": "tsc --noEmit"
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
+    "type-check": "tsc --noEmit",
+    "check": "npm run type-check && npm run lint",
+    "prepare": "husky"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.84.0",
@@ -33,11 +36,20 @@
     "react-toastify": "^11.0.5"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "husky": "^9.1.6",
+    "lint-staged": "^15.2.10",
+    "prettier": "^3.3.3",
     "@types/node": "^22.14.0",
     "@types/react": "^19.2.6",
     "@types/react-dom": "^19.2.3",
+    "@typescript-eslint/eslint-plugin": "^8.50.0",
+    "@typescript-eslint/parser": "^8.50.0",
     "@vitejs/plugin-react": "^5.0.0",
     "autoprefixer": "^10.4.22",
+    "eslint": "^9.39.2",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.17",
     "typescript": "~5.8.2",

@@ -1,0 +1,48 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Africa/Nairobi"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "Howards254"
+    labels:
+      - "dependencies"
+      - "automated"
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      react:
+        patterns:
+          - "react*"
+          - "@types/react*"
+      typescript:
+        patterns:
+          - "typescript*"
+          - "@typescript-eslint/*"
+      vite:
+        patterns:
+          - "vite*"
+          - "@vitejs/*"
+      eslint:
+        patterns:
+          - "eslint*"
+      tailwind:
+        patterns:
+          - "tailwindcss*"
+          - "autoprefixer*"
+          - "postcss*"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "ci"
+      - "automated"
+    commit-message:
+      prefix: "ci(deps)"

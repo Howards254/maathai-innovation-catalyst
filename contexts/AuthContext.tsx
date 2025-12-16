@@ -10,6 +10,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   resetPasswordForEmail: (email: string) => Promise<void>;
   updatePassword: (newPassword: string) => Promise<void>;
+  resendVerificationEmail: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -45,11 +46,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string) => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       if (error) throw error;
+      
+      // Check if email is verified
+      if (data.user && !data.user.email_confirmed_at) {
+        // Sign out the user immediately if email is not verified
+        await supabase.auth.signOut();
+        throw new Error('Please verify your email before signing in. Check your inbox for the confirmation link.');
+      }
     } catch (error) {
       setLoading(false);
       throw error;
@@ -59,7 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (email: string, password: string, fullName: string, username: string) => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -69,7 +77,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
       });
-      if (error) throw error;
+      
+      if (error) {
+        // Provide more helpful error messages
+        if (error.message.includes('already registered')) {
+          throw new Error('This email is already registered. Please sign in or use a different email.');
+        }
+        if (error.message.includes('password')) {
+          throw new Error('Password must be at least 6 characters long.');
+        }
+        throw error;
+      }
+      
+      // Check if user was created but email confirmation is required
+      if (data.user && !data.session) {
+        // User created but needs to confirm email - this is expected behavior
+        return;
+      }
+      
+      // If user already exists but is unconfirmed, data.user will be null
+      if (!data.user) {
+        throw new Error('Unable to create account. This email may already be registered.');
+      }
     } catch (error) {
       setLoading(false);
       throw error;
@@ -95,6 +124,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) throw error;
   };
 
+  const resendVerificationEmail = async (email: string) => {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: email,
+    });
+    if (error) throw error;
+  };
+
   const value = {
     user,
     loading,
@@ -102,7 +139,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signUp,
     signOut,
     resetPasswordForEmail,
-    updatePassword
+    updatePassword,
+    resendVerificationEmail
   };
 
   return (

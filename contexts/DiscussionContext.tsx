@@ -111,7 +111,7 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             avatarUrl: d.profiles?.avatar_url || '',
             impactPoints: d.profiles?.impact_points || 0,
             badges: [],
-            role: (d.profiles?.role || 'user') as const
+            role: (d.profiles?.role || 'user') as 'user' | 'admin'
           };
           
           return {
@@ -383,7 +383,7 @@ export const DiscussionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           avatarUrl: c.profiles?.avatar_url || '',
           impactPoints: c.profiles?.impact_points || 0,
           badges: [],
-          role: (c.profiles?.role || 'user') as const
+          role: (c.profiles?.role || 'user') as 'user' | 'admin'
         };
         
         return {

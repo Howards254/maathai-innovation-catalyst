@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Mail, Lock, Eye, EyeOff, Leaf, Home } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Leaf, Home, AlertCircle, CheckCircle } from 'lucide-react';
 
 const Login: React.FC = () => {
-  const { signIn } = useAuth();
+  const { signIn, resendVerificationEmail } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
@@ -12,18 +12,50 @@ const Login: React.FC = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showResendOption, setShowResendOption] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
+    setShowResendOption(false);
+    setResendSuccess(false);
     
     try {
       await signIn(formData.email, formData.password);
       navigate('/app/dashboard');
-    } catch (error: any) {
-      alert(error.message);
+    } catch (err: any) {
+      const errorMessage = err.message || 'An error occurred during sign in';
+      setError(errorMessage);
+      
+      // Check if error is about email verification
+      if (errorMessage.toLowerCase().includes('verify your email') || 
+          errorMessage.toLowerCase().includes('email not confirmed')) {
+        setShowResendOption(true);
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!formData.email) {
+      setError('Please enter your email address first');
+      return;
+    }
+    
+    setResendLoading(true);
+    try {
+      await resendVerificationEmail(formData.email);
+      setResendSuccess(true);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || 'Failed to resend verification email');
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -49,6 +81,36 @@ const Login: React.FC = () => {
         </div>
 
         <div className="p-8">
+          {/* Error Message */}
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start space-x-3">
+              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm text-red-700">{error}</p>
+                {showResendOption && (
+                  <button
+                    type="button"
+                    onClick={handleResendVerification}
+                    disabled={resendLoading}
+                    className="mt-2 text-sm font-medium text-red-600 hover:text-red-700 underline"
+                  >
+                    {resendLoading ? 'Sending...' : 'Resend verification email'}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Success Message */}
+          {resendSuccess && (
+            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start space-x-3">
+              <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-green-700">
+                Verification email sent! Please check your inbox and click the confirmation link.
+              </p>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email Field */}
             <div>

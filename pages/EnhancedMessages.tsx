@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { toast } from 'react-toastify';
 import { MessageCircle, Send, Search, Image, Users, X, Phone, Video, Info, Plus, Smile, AlertCircle } from 'lucide-react';
 import { useMessaging } from '../contexts/MessagingContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -122,7 +123,7 @@ const EnhancedMessages: React.FC = () => {
         .limit(20);
       
       if (data) {
-        const friendsData = data.map(f => f.profiles).filter(Boolean);
+        const friendsData = data.map(f => f.profiles).flat().filter(Boolean) as User[];
         setFriends(friendsData);
       } else {
         setFriends([]);
@@ -144,7 +145,7 @@ const EnhancedMessages: React.FC = () => {
         .limit(20);
       
       if (data) {
-        const followersData = data.map(f => f.profiles).filter(Boolean);
+        const followersData = data.map(f => f.profiles).flat().filter(Boolean) as User[];
         setFollowers(followersData);
       } else {
         setFollowers([]);
@@ -166,7 +167,7 @@ const EnhancedMessages: React.FC = () => {
         .limit(20);
       
       if (data) {
-        const followingData = data.map(f => f.profiles).filter(Boolean);
+        const followingData = data.map(f => f.profiles).flat().filter(Boolean) as User[];
         setFollowing(followingData);
       } else {
         setFollowing([]);
@@ -211,7 +212,7 @@ const EnhancedMessages: React.FC = () => {
     setShowNewChat(false);
     const convId = await startDirectChat(userId);
     if (!convId) {
-      alert('Failed to start chat. Please try again.');
+      toast.error('Failed to start chat. Please try again.');
     }
   };
 
@@ -262,7 +263,7 @@ const EnhancedMessages: React.FC = () => {
         {/* Header */}
         <div className="p-4 border-b border-gray-100">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold text-gray-900">{user?.full_name}</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{user?.user_metadata?.full_name || 'Messages'}</h1>
             <button
               onClick={() => setShowNewChat(true)}
               className="p-2 bg-green-100 hover:bg-green-200 rounded-full transition-colors"
