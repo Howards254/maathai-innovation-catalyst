@@ -29,9 +29,9 @@ const Landing = () => {
             </div>
             <span className="text-lg font-bold text-white">GreenVerse</span>
           </div>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Link to="/login" className="text-white/90 font-medium hover:text-white transition-colors text-xs sm:text-sm px-1 sm:px-0">Sign In</Link>
-            <Link to="/register" className="px-2 py-1 sm:px-4 sm:py-2 bg-white/20 backdrop-blur-sm text-white rounded-full font-medium hover:bg-white/30 transition-all border border-white/30 text-xs sm:text-sm">
+          <div className="flex items-center gap-3">
+            <Link to="/login" className="text-white/90 font-medium hover:text-white transition-colors text-sm">Sign In</Link>
+            <Link to="/register" className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-full font-medium hover:bg-white/30 transition-all border border-white/30 text-sm">
               Join
             </Link>
           </div>
@@ -105,14 +105,14 @@ const Landing = () => {
           
           <div className="flex flex-row gap-3 justify-center animate-fade-in-up animation-delay-400 px-4 max-w-lg mx-auto">
             <Link to="/register" className="flex-1">
-              <button className="group w-full px-4 md:px-8 py-3 md:py-4 bg-white text-green-800 rounded-xl font-semibold text-sm md:text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2">
+              <button className="group w-full px-3 md:px-8 py-3 md:py-4 bg-white text-green-800 rounded-xl font-semibold text-sm md:text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center justify-center gap-1 md:gap-2 min-h-[48px]">
                 <span className="hidden sm:inline">Start Your Journey</span>
                 <span className="sm:hidden">Start</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-3 md:w-4 h-3 md:h-4 group-hover:translate-x-1 transition-transform flex-shrink-0" />
               </button>
             </Link>
             <Link to="/app/campaigns" className="flex-1">
-              <button className="w-full px-4 md:px-8 py-3 md:py-4 bg-white/10 backdrop-blur-md border-2 border-white/40 text-white rounded-xl font-semibold text-sm md:text-lg hover:bg-white hover:text-green-800 hover:scale-105 transition-all duration-300 shadow-xl">
+              <button className="w-full px-3 md:px-8 py-3 md:py-4 bg-white/10 backdrop-blur-md border-2 border-white/40 text-white rounded-xl font-semibold text-sm md:text-lg hover:bg-white hover:text-green-800 hover:scale-105 transition-all duration-300 shadow-xl min-h-[48px]">
                 <span className="hidden sm:inline">Explore Campaigns</span>
                 <span className="sm:hidden">Explore</span>
               </button>
@@ -251,34 +251,34 @@ const Landing = () => {
             <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">Our Global Impact</h2>
             <p className="text-lg text-gray-600">Together, we're making a measurable difference</p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
             <div className="text-center group">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-3xl mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all shadow-lg">
-                <TreePine className="text-white" size={36} />
+              <div className="inline-flex items-center justify-center w-16 md:w-20 h-16 md:h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-3xl mb-3 md:mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all shadow-lg">
+                <TreePine className="text-white" size={28} />
               </div>
-              <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-2">1.2M+</h2>
-              <p className="text-gray-600 font-semibold">Trees Planted</p>
+              <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-1 md:mb-2">1.2M+</h2>
+              <p className="text-gray-600 font-semibold text-sm md:text-base">Trees Planted</p>
             </div>
             <div className="text-center group">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all shadow-lg">
-                <Users className="text-white" size={36} />
+              <div className="inline-flex items-center justify-center w-16 md:w-20 h-16 md:h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl mb-3 md:mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all shadow-lg">
+                <Users className="text-white" size={28} />
               </div>
-              <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">50K+</h2>
-              <p className="text-gray-600 font-semibold">Active Members</p>
+              <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-1 md:mb-2">50K+</h2>
+              <p className="text-gray-600 font-semibold text-sm md:text-base">Active Members</p>
             </div>
             <div className="text-center group">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-600 rounded-3xl mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all shadow-lg">
-                <Zap className="text-white" size={36} />
+              <div className="inline-flex items-center justify-center w-16 md:w-20 h-16 md:h-20 bg-gradient-to-br from-purple-500 to-pink-600 rounded-3xl mb-3 md:mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all shadow-lg">
+                <Zap className="text-white" size={28} />
               </div>
-              <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">850+</h2>
-              <p className="text-gray-600 font-semibold">Active Campaigns</p>
+              <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-1 md:mb-2">850+</h2>
+              <p className="text-gray-600 font-semibold text-sm md:text-base">Active Campaigns</p>
             </div>
             <div className="text-center group">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-3xl mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all shadow-lg">
-                <Globe2 className="text-white" size={36} />
+              <div className="inline-flex items-center justify-center w-16 md:w-20 h-16 md:h-20 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-3xl mb-3 md:mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all shadow-lg">
+                <Globe2 className="text-white" size={28} />
               </div>
-              <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent mb-2">120+</h2>
-              <p className="text-gray-600 font-semibold">Countries</p>
+              <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent mb-1 md:mb-2">120+</h2>
+              <p className="text-gray-600 font-semibold text-sm md:text-base">Countries</p>
             </div>
           </div>
         </div>
@@ -304,14 +304,14 @@ const Landing = () => {
           
           <div className="flex flex-row gap-4 justify-center max-w-lg mx-auto">
             <Link to="/register" className="flex-1">
-              <button className="group w-full px-4 md:px-8 py-3 md:py-4 bg-white text-green-800 rounded-xl font-semibold text-sm md:text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2">
+              <button className="group w-full px-3 md:px-8 py-3 md:py-4 bg-white text-green-800 rounded-xl font-semibold text-sm md:text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center justify-center gap-1 md:gap-2 min-h-[48px]">
                 <span className="hidden sm:inline">Create Account</span>
                 <span className="sm:hidden">Create</span>
-                <ArrowRight className="w-4 md:w-5 h-4 md:h-5 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-3 md:w-5 h-3 md:h-5 group-hover:translate-x-1 transition-transform flex-shrink-0" />
               </button>
             </Link>
             <Link to="/app/campaigns" className="flex-1">
-              <button className="w-full px-4 md:px-8 py-3 md:py-4 bg-white/10 backdrop-blur-md border-2 border-white/40 text-white rounded-xl font-semibold text-sm md:text-lg hover:bg-white hover:text-green-800 hover:scale-105 transition-all duration-300 shadow-xl">
+              <button className="w-full px-3 md:px-8 py-3 md:py-4 bg-white/10 backdrop-blur-md border-2 border-white/40 text-white rounded-xl font-semibold text-sm md:text-lg hover:bg-white hover:text-green-800 hover:scale-105 transition-all duration-300 shadow-xl min-h-[48px]">
                 <span className="hidden sm:inline">Browse Campaigns</span>
                 <span className="sm:hidden">Browse</span>
               </button>
