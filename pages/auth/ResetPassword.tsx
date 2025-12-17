@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Lock, Eye, EyeOff, Leaf, Home, CheckCircle, AlertCircle } from 'lucide-react';
 
 const ResetPassword: React.FC = () => {
-  const { updatePassword, user } = useAuth();
+  const { updatePasswordWithToken } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     password: '',
@@ -15,21 +15,18 @@ const ResetPassword: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
-  const [validSession, setValidSession] = useState(true);
+  const [validToken, setValidToken] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check if user has a valid recovery session
-    // When user clicks the reset link, Supabase automatically logs them in with a recovery session
-    if (!user) {
-      // Give it a moment for the auth state to update
-      const timer = setTimeout(() => {
-        if (!user) {
-          setValidSession(false);
-        }
-      }, 2000);
-      return () => clearTimeout(timer);
+    // Get the reset token from sessionStorage
+    const token = sessionStorage.getItem('password_reset_token');
+    
+    if (!token) {
+      setError('Invalid or expired reset link. Please request a new one.');
+    } else {
+      setValidToken(token);
     }
-  }, [user]);
+  }, []);
 
   const validatePassword = (password: string): string | null => {
     if (password.length < 6) {
@@ -41,6 +38,11 @@ const ResetPassword: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!validToken) {
+      setError('Invalid reset token. Please request a new reset link.');
+      return;
+    }
 
     // Validate password
     const passwordError = validatePassword(formData.password);
@@ -58,10 +60,12 @@ const ResetPassword: React.FC = () => {
     setLoading(true);
     
     try {
-      await updatePassword(formData.password);
+      await updatePasswordWithToken(validToken, formData.password);
+      // Clear the token from storage
+      sessionStorage.removeItem('password_reset_token');
       setSuccess(true);
-    } catch (err: any) {
-      setError(err.message || 'Failed to reset password. Please try again.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to reset password. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -109,8 +113,8 @@ const ResetPassword: React.FC = () => {
     );
   }
 
-  // Invalid session state
-  if (!validSession) {
+  // Invalid token state
+  if (error && !validToken) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-green-100 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
@@ -132,7 +136,7 @@ const ResetPassword: React.FC = () => {
           <div className="p-8 text-center">
             <div className="mb-6">
               <p className="text-gray-600 mb-4">
-                This password reset link is invalid or has expired. Please request a new password reset link.
+                {error}
               </p>
             </div>
 

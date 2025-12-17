@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -107,7 +107,7 @@ const App: React.FC = () => {
                           <ActivityFeedProvider>
                             <MatchmakingProvider>
                               <FollowProvider>
-                <HashRouter>
+                <BrowserRouter>
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Landing />} />
@@ -182,7 +182,7 @@ const App: React.FC = () => {
           <Route path="marketplace/:id/edit" element={<EditListing />} />
         </Route>
       </Routes>
-          </HashRouter>
+          </BrowserRouter>
                               </FollowProvider>
                             </MatchmakingProvider>
                           </ActivityFeedProvider>

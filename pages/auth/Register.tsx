@@ -78,6 +78,7 @@ const Register: React.FC = () => {
     setFormData(prev => ({ ...prev, [field]: newArray }));
   };
 
+
   const checkUsernameAvailability = async (username: string) => {
     if (!username || username.length < 3) return false;
     
@@ -95,15 +96,22 @@ const Register: React.FC = () => {
       }
       
       return !data; // Available if no data found
-    } catch (error) {
+    } catch {
       return true; // Assume available if profiles table doesn't exist
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (formData.password !== formData.confirmPassword) {
       toast.error('Passwords do not match');
+      return;
+    }
+
+    // Validate password length
+    if (formData.password.length < 6) {
+      toast.error('Password must be at least 6 characters long');
       return;
     }
 
@@ -131,10 +139,10 @@ const Register: React.FC = () => {
       await signUp(formData.email, formData.password, formData.fullName, formData.username);
       
       // Show success message for email confirmation
-      toast.success('Registration successful! Please check your email to confirm your account.');
+      toast.success('Registration successful! Please check your email inbox and click the verification link to confirm your account before signing in.');
       navigate('/login');
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'An error occurred');
     } finally {
       setLoading(false);
     }

@@ -8,6 +8,29 @@ const AuthCallback: React.FC = () => {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
+        // Check if this is a password recovery flow by looking at URL hash
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const type = hashParams.get('type');
+        const accessToken = hashParams.get('access_token');
+        
+        // If this is a password recovery flow, handle it without auto-login
+        if (type === 'recovery' || type === 'password_recovery') {
+          if (accessToken) {
+            // Store the recovery token temporarily
+            sessionStorage.setItem('password_reset_token', accessToken);
+            
+            // Sign out to prevent auto-login
+            await supabase.auth.signOut();
+            
+            // Redirect to reset password page
+            navigate('/reset-password');
+            return;
+          } else {
+            navigate('/reset-password?error=invalid_token');
+            return;
+          }
+        }
+        
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {

@@ -10,6 +10,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   resetPasswordForEmail: (email: string) => Promise<void>;
   updatePassword: (newPassword: string) => Promise<void>;
+  updatePasswordWithToken: (token: string, newPassword: string) => Promise<void>;
   resendVerificationEmail: (email: string) => Promise<void>;
 }
 
@@ -79,13 +80,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
       if (error) {
-        // Provide more helpful error messages
+        // Provide more helpful error messages for specific cases
         if (error.message.includes('already registered')) {
           throw new Error('This email is already registered. Please sign in or use a different email.');
         }
-        if (error.message.includes('password')) {
+        if (error.message.includes('password') && error.message.includes('at least')) {
           throw new Error('Password must be at least 6 characters long.');
         }
+        // Let other errors pass through as-is from Supabase
         throw error;
       }
       
@@ -112,7 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetPasswordForEmail = async (email: string) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/#/reset-password`,
+      redirectTo: `${window.location.origin}/auth/callback`,
     });
     if (error) throw error;
   };
@@ -122,6 +124,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       password: newPassword,
     });
     if (error) throw error;
+  };
+const updatePasswordWithToken = async (token: string, newPassword: string) => {
+    // Set the session using the recovery token
+    const { error: sessionError } = await supabase.auth.setSession({
+      access_token: token,
+      refresh_token: token,
+    });
+    
+    if (sessionError) throw new Error('Invalid or expired reset token');
+
+    // Update the password
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+    
+    if (updateError) throw updateError;
+
+    // Sign out immediately after password reset
+    await supabase.auth.signOut();
   };
 
   const resendVerificationEmail = async (email: string) => {
@@ -140,6 +161,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut,
     resetPasswordForEmail,
     updatePassword,
+    updatePasswordWithToken,
     resendVerificationEmail
   };
 
