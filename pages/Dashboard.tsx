@@ -10,6 +10,9 @@ import SuggestedUsers from '../components/SuggestedUsers';
 import FriendsActivityFeed from '../components/FriendsActivityFeed';
 import MobileDashboard from '../components/mobile/MobileDashboard';
 import { CampaignCardSkeleton, DiscussionCardSkeleton, LoadingSpinner, EmptyState } from '../components/LoadingStates';
+import { PersonalizedGreeting, QuickActions, ActivitySummary, PersonalizedRecommendations } from '../components/PersonalizedDashboard';
+import { NotificationManager } from '../components/NotificationToast';
+import { OnboardingTips } from '../components/OnboardingTips';
 
 const Dashboard: React.FC = () => {
   const { campaigns, loading: campaignsLoading } = useCampaigns();
@@ -51,23 +54,35 @@ const Dashboard: React.FC = () => {
   };
 
   const getFilteredDiscussions = () => {
+    let filtered = [...discussions];
+    
+    // Smart filtering based on user interests (mock implementation)
+    if (user?.interests) {
+      filtered = filtered.filter(discussion => 
+        user.interests.some(interest => 
+          discussion.category?.toLowerCase().includes(interest.toLowerCase()) ||
+          discussion.title?.toLowerCase().includes(interest.toLowerCase())
+        )
+      );
+    }
+    
     switch (filter) {
       case 'hot':
-        return [...discussions].sort((a, b) => {
-          const aScore = a.upvotes + a.commentsCount;
-          const bScore = b.upvotes + b.commentsCount;
+        return filtered.sort((a, b) => {
+          const aScore = (a.upvotes || 0) + (a.commentsCount || 0) * 2;
+          const bScore = (b.upvotes || 0) + (b.commentsCount || 0) * 2;
           return bScore - aScore;
         }).slice(0, 5);
       case 'new':
-        return [...discussions].sort((a, b) => {
+        return filtered.sort((a, b) => {
           const aTime = new Date(a.postedAt).getTime() || Date.now();
           const bTime = new Date(b.postedAt).getTime() || Date.now();
           return bTime - aTime;
         }).slice(0, 5);
       case 'top':
-        return [...discussions].sort((a, b) => b.upvotes - a.upvotes).slice(0, 5);
+        return filtered.sort((a, b) => (b.upvotes || 0) - (a.upvotes || 0)).slice(0, 5);
       default:
-        return discussions.slice(0, 5);
+        return filtered.slice(0, 5);
     }
   };
 
@@ -117,9 +132,19 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        <div className="p-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6">
+        <div className="p-4 space-y-6">
+            {/* Personalized Header */}
+            <PersonalizedGreeting />
+            
+            {/* Quick Actions */}
+            <QuickActions />
+            
+            {/* Activity Summary */}
+            <ActivitySummary />
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Main Content */}
+                <div className="lg:col-span-2 space-y-6">
             {/* Featured Campaigns */}
             <div className="animate-fade-in-up">
                 <div className="flex items-center justify-between mb-4">
@@ -193,37 +218,44 @@ const Dashboard: React.FC = () => {
                 </div>
                 
                 {/* Filter Tabs */}
-                <div className="flex bg-gray-100 rounded-lg p-1 w-fit mb-4">
-                    <button 
-                      onClick={() => setFilter('hot')}
-                      className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
-                        filter === 'hot' 
-                          ? 'bg-white text-gray-900 shadow-sm' 
-                          : 'text-gray-600 hover:text-gray-900'
-                      }`}
-                    >
-                      🔥 Hot
-                    </button>
-                    <button 
-                      onClick={() => setFilter('new')}
-                      className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
-                        filter === 'new' 
-                          ? 'bg-white text-gray-900 shadow-sm' 
-                          : 'text-gray-600 hover:text-gray-900'
-                      }`}
-                    >
-                      ✨ New
-                    </button>
-                    <button 
-                      onClick={() => setFilter('top')}
-                      className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
-                        filter === 'top' 
-                          ? 'bg-white text-gray-900 shadow-sm' 
-                          : 'text-gray-600 hover:text-gray-900'
-                      }`}
-                    >
-                      🏆 Top
-                    </button>
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex bg-gray-100 rounded-lg p-1">
+                        <button 
+                          onClick={() => setFilter('hot')}
+                          className={`px-4 py-2 text-sm font-medium rounded-md transition-all micro-bounce ${
+                            filter === 'hot' 
+                              ? 'bg-white text-gray-900 shadow-sm' 
+                              : 'text-gray-600 hover:text-gray-900'
+                          }`}
+                        >
+                          🔥 Hot
+                        </button>
+                        <button 
+                          onClick={() => setFilter('new')}
+                          className={`px-4 py-2 text-sm font-medium rounded-md transition-all micro-bounce ${
+                            filter === 'new' 
+                              ? 'bg-white text-gray-900 shadow-sm' 
+                              : 'text-gray-600 hover:text-gray-900'
+                          }`}
+                        >
+                          ✨ New
+                        </button>
+                        <button 
+                          onClick={() => setFilter('top')}
+                          className={`px-4 py-2 text-sm font-medium rounded-md transition-all micro-bounce ${
+                            filter === 'top' 
+                              ? 'bg-white text-gray-900 shadow-sm' 
+                              : 'text-gray-600 hover:text-gray-900'
+                          }`}
+                        >
+                          🏆 Top
+                        </button>
+                    </div>
+                    {user?.interests && (
+                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">
+                            Personalized for you
+                        </span>
+                    )}
                 </div>
                 <div className="space-y-3">
                     {discussionsLoading ? (
@@ -429,12 +461,14 @@ const Dashboard: React.FC = () => {
                     )}
                 </div>
             </div>
-            </div>
-            
-            {/* Sidebar */}
-            <div className="space-y-6">
-                <SuggestedUsers />
-                <FriendsActivityFeed />
+                </div>
+                
+                {/* Sidebar */}
+                <div className="space-y-6">
+                    <PersonalizedRecommendations campaigns={campaigns} />
+                    <SuggestedUsers />
+                    <FriendsActivityFeed />
+                </div>
             </div>
         </div>
         
@@ -444,6 +478,12 @@ const Dashboard: React.FC = () => {
         ) : (
           <EnhancedCreateStoryModal isOpen={showCreateStory} onClose={() => setShowCreateStory(false)} />
         )}
+        
+        {/* Notification Manager */}
+        <NotificationManager />
+        
+        {/* Onboarding Tips */}
+        <OnboardingTips />
     </div>
   );
 };
