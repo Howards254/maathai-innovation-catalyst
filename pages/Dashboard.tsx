@@ -3,12 +3,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCampaigns } from '../contexts/CampaignContext';
 import { useDiscussions } from '../contexts/DiscussionContext';
 import { useUser } from '../contexts/UserContext';
-import { Play, ThumbsUp, ThumbsDown, Camera, ArrowUp, ArrowDown } from 'lucide-react';
+import { Play, ThumbsUp, ThumbsDown, Camera, ArrowUp, ArrowDown, Sparkles, TrendingUp } from 'lucide-react';
 import CreateStoryModal from '../components/CreateStoryModal';
 import EnhancedCreateStoryModal from '../components/EnhancedCreateStoryModal';
 import SuggestedUsers from '../components/SuggestedUsers';
 import FriendsActivityFeed from '../components/FriendsActivityFeed';
 import MobileDashboard from '../components/mobile/MobileDashboard';
+import { CampaignCardSkeleton, DiscussionCardSkeleton, LoadingSpinner, EmptyState } from '../components/LoadingStates';
 
 const Dashboard: React.FC = () => {
   const { campaigns, loading: campaignsLoading } = useCampaigns();
@@ -75,25 +76,43 @@ const Dashboard: React.FC = () => {
   return (
     <div className="bg-gray-50 min-h-full">
         {/* Create Post Bar */}
-        <div className="bg-white border-b border-gray-200 sticky top-16 z-10">
+        <div className="bg-white border-b border-gray-200 sticky top-16 z-10 animate-fade-in-down">
           <div className="p-4 flex items-center gap-3">
-            <img src={user?.avatarUrl || 'https://picsum.photos/200'} alt="User" className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-100" />
-            <input 
-                type="text" 
-                placeholder="What's on your mind about the environment?" 
-                className="flex-1 bg-gray-100 hover:bg-white border border-gray-200 hover:border-green-300 rounded-full px-4 py-3 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-green-500 cursor-pointer"
-                onClick={() => navigate('/app/discussions')}
-                readOnly
-            />
+            <div className="relative">
+                <img 
+                    src={user?.avatarUrl || 'https://picsum.photos/200'} 
+                    alt="User" 
+                    className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-100 hover:ring-green-300 transition-all cursor-pointer" 
+                    onClick={() => navigate(`/app/profile/${user?.username}`)}
+                />
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse-green"></div>
+            </div>
+            <div className="flex-1 relative group">
+                <input 
+                    type="text" 
+                    placeholder="What's on your mind about the environment?" 
+                    className="w-full bg-gray-100 hover:bg-white border border-gray-200 hover:border-green-300 rounded-full px-4 py-3 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-green-500 cursor-pointer smooth-transition"
+                    onClick={() => navigate('/app/discussions')}
+                    readOnly
+                />
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 group-hover:text-green-500 transition-colors">
+                    <Sparkles className="w-4 h-4" />
+                </div>
+            </div>
             <button 
                 onClick={() => setShowCreateStory(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-full text-sm font-medium hover:bg-green-700 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-full text-sm font-medium hover:bg-green-700 transition-all micro-bounce card-hover"
             >
                 <Camera className="w-4 h-4" />
-                Share Story
+                <span className="hidden sm:inline">Share Story</span>
+                <span className="sm:hidden">Story</span>
             </button>
-            <button className="p-2 text-gray-400 hover:bg-green-50 hover:text-green-600 rounded-full transition-colors">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            <button 
+                onClick={() => navigate('/app/campaigns/create')}
+                className="p-2 text-gray-400 hover:bg-green-50 hover:text-green-600 rounded-full transition-all micro-lift"
+                title="Create Campaign"
+            >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
             </button>
           </div>
         </div>
@@ -102,19 +121,36 @@ const Dashboard: React.FC = () => {
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-6">
             {/* Featured Campaigns */}
-            <div>
-                <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  🌟 Featured Campaigns
-                </h2>
+            <div className="animate-fade-in-up">
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                      🌟 Featured Campaigns
+                    </h2>
+                    <Link 
+                        to="/app/campaigns" 
+                        className="text-green-600 hover:text-green-700 text-sm font-medium flex items-center gap-1 transition-colors"
+                    >
+                        View all <TrendingUp className="w-4 h-4" />
+                    </Link>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {campaignsLoading ? (
-                        <div className="col-span-full text-center py-8">
-                            <div className="w-8 h-8 border-2 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                            <p className="text-gray-500 text-sm">Loading campaigns...</p>
+                        Array.from({ length: 6 }).map((_, i) => (
+                            <CampaignCardSkeleton key={i} />
+                        ))
+                    ) : campaigns.length === 0 ? (
+                        <div className="col-span-full">
+                            <EmptyState 
+                                icon="🌱"
+                                title="No campaigns yet"
+                                description="Be the first to create an environmental campaign and start making a difference!"
+                                actionLabel="Create Campaign"
+                                onAction={() => navigate('/app/campaigns/create')}
+                            />
                         </div>
                     ) : (
-                        campaigns.slice(0, 6).map(campaign => (
-                        <Link to={`/app/campaigns/${campaign.id}`} key={campaign.id} className="group block bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-md hover:border-green-200 transition-all">
+                        campaigns.slice(0, 6).map((campaign, index) => (
+                        <Link to={`/app/campaigns/${campaign.id}`} key={campaign.id} className="group block bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-md hover:border-green-200 transition-all card-hover animate-fade-in-up stagger-item">
                             <div className="h-40 bg-gray-200 relative">
                                 <img src={campaign.imageUrl} alt={campaign.title} className="w-full h-full object-cover" />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
@@ -125,8 +161,11 @@ const Dashboard: React.FC = () => {
                             <div className="p-4">
                                 <h3 className="font-bold text-gray-900 group-hover:text-green-600 mb-2 line-clamp-2">{campaign.title}</h3>
                                 <p className="text-sm text-gray-500 mb-3">by {campaign.organizer}</p>
-                                <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                                    <div className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full" style={{ width: `${(campaign.plantedTrees / campaign.targetTrees) * 100}%` }}></div>
+                                <div className="w-full bg-gray-200 rounded-full h-2 mb-2 overflow-hidden">
+                                    <div 
+                                        className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full animate-progress transition-all duration-1000 ease-out" 
+                                        style={{ width: `${(campaign.plantedTrees / campaign.targetTrees) * 100}%` }}
+                                    ></div>
                                 </div>
                                 <div className="text-sm text-gray-600 flex justify-between">
                                     <span>🌳 {campaign.plantedTrees.toLocaleString()}</span>
@@ -140,10 +179,18 @@ const Dashboard: React.FC = () => {
             </div>
 
             {/* Discussion Feed */}
-            <div>
-                <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  💬 Recent Discussions
-                </h2>
+            <div className="animate-fade-in-up animation-delay-200">
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                      💬 Recent Discussions
+                    </h2>
+                    <Link 
+                        to="/app/discussions" 
+                        className="text-green-600 hover:text-green-700 text-sm font-medium flex items-center gap-1 transition-colors"
+                    >
+                        View all <Sparkles className="w-4 h-4" />
+                    </Link>
+                </div>
                 
                 {/* Filter Tabs */}
                 <div className="flex bg-gray-100 rounded-lg p-1 w-fit mb-4">
@@ -180,10 +227,9 @@ const Dashboard: React.FC = () => {
                 </div>
                 <div className="space-y-3">
                     {discussionsLoading ? (
-                        <div className="text-center py-8">
-                            <div className="w-8 h-8 border-2 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                            <p className="text-gray-500 text-sm">Loading discussions...</p>
-                        </div>
+                        Array.from({ length: 3 }).map((_, i) => (
+                            <DiscussionCardSkeleton key={i} />
+                        ))
                     ) : filteredDiscussions.length > 0 ? (
                         filteredDiscussions.map(post => (
                         <div key={post.id} className="bg-white rounded-xl border border-gray-200 hover:border-green-200 hover:shadow-md transition-all overflow-hidden">
@@ -373,16 +419,13 @@ const Dashboard: React.FC = () => {
                         </div>
                         ))
                     ) : (
-                        <div className="text-center py-8 bg-white rounded-xl border border-gray-200">
-                            <div className="text-4xl mb-2">💬</div>
-                            <p className="text-gray-500 text-sm">No discussions yet. Be the first to start a conversation!</p>
-                            <button 
-                              onClick={() => navigate('/app/discussions')}
-                              className="mt-3 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
-                            >
-                              Start Discussion
-                            </button>
-                        </div>
+                        <EmptyState 
+                            icon="💬"
+                            title="No discussions yet"
+                            description="Be the first to start a conversation about environmental topics!"
+                            actionLabel="Start Discussion"
+                            onAction={() => navigate('/app/discussions')}
+                        />
                     )}
                 </div>
             </div>
