@@ -65,11 +65,11 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({ notificati
 
   return (
     <div
-      className={`fixed top-20 right-4 z-50 max-w-sm w-full transform transition-all duration-300 ${
+      className={`fixed top-20 right-2 md:right-4 z-50 max-w-sm w-full mx-2 md:mx-0 transform transition-all duration-300 ${
         isVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
       }`}
     >
-      <div className={`${getBgColor()} border rounded-xl p-4 shadow-lg animate-slide-in-right`}>
+      <div className={`${getBgColor()} border rounded-xl p-3 md:p-4 shadow-lg animate-slide-in-right`}>
         <div className="flex items-start gap-3">
           <div className="flex-shrink-0 mt-0.5">
             {getIcon()}

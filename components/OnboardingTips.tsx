@@ -115,7 +115,7 @@ export const OnboardingTips: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 max-w-sm w-full animate-slide-in-right">
+    <div className="fixed bottom-4 right-2 md:right-4 z-50 max-w-sm w-full mx-2 md:mx-0 animate-slide-in-right">
       <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
         {/* Progress bar */}
         <div className="h-1 bg-gray-200">
@@ -125,7 +125,7 @@ export const OnboardingTips: React.FC = () => {
           ></div>
         </div>
         
-        <div className="p-6">
+        <div className="p-4 md:p-6">
           {/* Header */}
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-2">

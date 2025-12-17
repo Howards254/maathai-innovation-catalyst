@@ -26,15 +26,15 @@ export const PersonalizedGreeting: React.FC = () => {
   };
 
   return (
-    <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-6 text-white animate-fade-in-up">
+    <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-4 md:p-6 text-white animate-fade-in-up">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold mb-1">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-lg md:text-2xl font-bold mb-1">
             {getTimeBasedGreeting()}, {user?.fullName?.split(' ')[0] || 'Friend'}! 👋
           </h1>
-          <p className="text-green-100 text-sm">{getMotivationalMessage()}</p>
+          <p className="text-green-100 text-xs md:text-sm">{getMotivationalMessage()}</p>
         </div>
-        <div className="text-4xl animate-bounce">🌱</div>
+        <div className="text-2xl md:text-4xl animate-bounce ml-2">🌱</div>
       </div>
     </div>
   );
@@ -82,17 +82,17 @@ export const QuickActions: React.FC = () => {
       <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
         ⚡ Quick Actions
       </h2>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
         {actions.map((action, index) => (
           <Link
             key={action.label}
             to={action.href}
-            className={`${action.color} text-white p-4 rounded-xl transition-all card-hover animate-scale-in stagger-item group`}
+            className={`${action.color} text-white p-3 md:p-4 rounded-xl transition-all card-hover animate-scale-in stagger-item group`}
           >
             <div className="flex flex-col items-center text-center">
-              <action.icon className="w-6 h-6 mb-2 group-hover:scale-110 transition-transform" />
-              <span className="font-semibold text-sm">{action.label}</span>
-              <span className="text-xs opacity-90 mt-1">{action.count}</span>
+              <action.icon className="w-5 md:w-6 h-5 md:h-6 mb-1 md:mb-2 group-hover:scale-110 transition-transform" />
+              <span className="font-semibold text-xs md:text-sm">{action.label}</span>
+              <span className="text-xs opacity-90 mt-0.5 md:mt-1 hidden sm:block">{action.count}</span>
             </div>
           </Link>
         ))}
@@ -117,7 +117,7 @@ export const ActivitySummary: React.FC = () => {
     {
       icon: Award,
       label: 'Points Earned',
-      value: user?.totalPoints || 0,
+      value: user?.impactPoints || 0,
       change: '+45 today',
       color: 'text-yellow-600 bg-yellow-50'
     },
@@ -131,7 +131,7 @@ export const ActivitySummary: React.FC = () => {
     {
       icon: Zap,
       label: 'Impact Score',
-      value: Math.floor((user?.totalPoints || 0) / 10),
+      value: Math.floor((user?.impactPoints || 0) / 10),
       change: 'Rising',
       color: 'text-purple-600 bg-purple-50'
     }
@@ -142,22 +142,22 @@ export const ActivitySummary: React.FC = () => {
       <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
         📊 Your Impact
       </h2>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {stats.map((stat, index) => (
           <div
             key={stat.label}
-            className="bg-white rounded-xl p-4 border border-gray-200 hover:border-gray-300 transition-all card-hover animate-fade-in-up stagger-item"
+            className="bg-white rounded-xl p-3 md:p-4 border border-gray-200 hover:border-gray-300 transition-all card-hover animate-fade-in-up stagger-item"
           >
             <div className="flex items-center justify-between mb-2">
-              <div className={`p-2 rounded-lg ${stat.color}`}>
-                <stat.icon className="w-4 h-4" />
+              <div className={`p-1.5 md:p-2 rounded-lg ${stat.color}`}>
+                <stat.icon className="w-3 md:w-4 h-3 md:h-4" />
               </div>
-              <span className="text-xs text-green-600 font-medium">{stat.change}</span>
+              <span className="text-xs text-green-600 font-medium hidden sm:block">{stat.change}</span>
             </div>
-            <div className="text-2xl font-bold text-gray-900 mb-1">
+            <div className="text-lg md:text-2xl font-bold text-gray-900 mb-1">
               {stat.value.toLocaleString()}
             </div>
-            <div className="text-sm text-gray-600">{stat.label}</div>
+            <div className="text-xs md:text-sm text-gray-600">{stat.label}</div>
           </div>
         ))}
       </div>
