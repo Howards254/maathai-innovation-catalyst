@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, Plus, Heart, MessageCircle, Share2, Eye, Clock, Music, Sparkles, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Camera, Plus, Heart, MessageCircle, Share2, Eye, Clock, Music, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import CreateStoryModal from '../components/CreateStoryModal';
@@ -18,9 +18,9 @@ interface Story {
   tags?: string[];
   music_url?: string;
   music_title?: string;
-  filters?: any;
-  stickers?: any[];
-  text_overlays?: any[];
+  filters?: Record<string, unknown>;
+  stickers?: Array<{ type: string; position: { x: number; y: number } }>;
+  text_overlays?: Array<{ text: string; position: { x: number; y: number } }>;
   views_count: number;
   reactions_count: number;
   comments_count: number;
@@ -47,21 +47,21 @@ const EnhancedStories: React.FC = () => {
   const [viewedStories, setViewedStories] = useState<Set<string>>(new Set());
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
-  const [storyReactions, setStoryReactions] = useState<Record<string, any>>({});
-  const [storyComments, setStoryComments] = useState<any[]>([]);
+  const [storyReactions, setStoryReactions] = useState<Record<string, string | null>>({});
+  const [storyComments, setStoryComments] = useState<Array<{ id: string; content: string; created_at?: string; author?: { id: string; full_name: string; avatar_url?: string } }>>([]);
   const [loadingComments, setLoadingComments] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const progressInterval = useRef<NodeJS.Timeout>();
-  const observerRef = useRef<IntersectionObserver>();
+  const progressInterval = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     loadStories();
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
 
@@ -73,6 +73,7 @@ const EnhancedStories: React.FC = () => {
       stopProgress();
     }
     return () => stopProgress();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFullScreen, currentIndex, isPaused, showComments]);
 
   useEffect(() => {
@@ -115,16 +116,19 @@ const EnhancedStories: React.FC = () => {
         
         if (basicError) throw basicError;
         
-        const formattedStories = basicData?.map(story => ({
-          ...story,
-          author_name: story.author?.full_name || 'Unknown User',
-          author_username: story.author?.username || 'unknown',
-          author_avatar: story.author?.avatar_url,
-          reactions_count: 0,
-          comments_count: 0,
-          has_viewed: false,
-          user_reaction: null
-        })) || [];
+        const formattedStories = basicData?.map(story => {
+          const author = story.author as unknown as { id: string; full_name: string; username: string; avatar_url: string } | null;
+          return {
+            ...story,
+            author_name: author?.full_name || 'Unknown User',
+            author_username: author?.username || 'unknown',
+            author_avatar: author?.avatar_url,
+            reactions_count: 0,
+            comments_count: 0,
+            has_viewed: false,
+            user_reaction: null
+          };
+        }) || [];
         
         if (append) {
           setStories(prev => [...prev, ...formattedStories]);
@@ -137,7 +141,7 @@ const EnhancedStories: React.FC = () => {
       }
       
       // Process RPC results
-      const formattedStories = storiesData?.map((story: any) => ({
+      const formattedStories = storiesData?.map((story: Record<string, unknown>) => ({
         ...story,
         author_name: story.author_name || 'Unknown User',
         author_username: story.author_username || 'unknown',
@@ -147,9 +151,9 @@ const EnhancedStories: React.FC = () => {
       
       // Set user reactions for UI state
       const userReactions: Record<string, string> = {};
-      formattedStories.forEach((story: any) => {
+      formattedStories.forEach((story: Record<string, unknown>) => {
         if (story.user_reaction) {
-          userReactions[story.id] = story.user_reaction;
+          userReactions[story.id as string] = story.user_reaction as string;
         }
       });
       
@@ -178,7 +182,7 @@ const EnhancedStories: React.FC = () => {
     }
   };
 
-  const recordView = async (storyId: string, duration: number = 0) => {
+  const recordView = async (storyId: string, _duration: number = 0) => {
     if (!user) return;
     
     try {
@@ -434,7 +438,7 @@ const EnhancedStories: React.FC = () => {
     }
     groups[authorId].stories.push({ ...story, originalIndex: index });
     return groups;
-  }, {} as Record<string, any>);
+  }, {} as Record<string, { author: { id: string; name: string; username: string; avatar?: string }; stories: Array<Story & { originalIndex: number }>; firstIndex: number }>);
 
   const storyGroups = Object.values(groupedStories);
 
@@ -454,7 +458,7 @@ const EnhancedStories: React.FC = () => {
 
       {/* Grouped Stories */}
       {storyGroups.map((group) => {
-        const hasUnviewed = group.stories.some((s: any) => !viewedStories.has(s.id));
+        const hasUnviewed = group.stories.some((s) => !viewedStories.has(s.id));
         const storyCount = group.stories.length;
         
         return (
@@ -535,7 +539,7 @@ const EnhancedStories: React.FC = () => {
             <>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {storyGroups.map((group) => (
-                group.stories.map((story: any, storyIndex: number) => (
+                group.stories.map((story) => (
                 <div
                   key={story.id}
                   onClick={() => openFullScreen(story.originalIndex)}
@@ -548,7 +552,6 @@ const EnhancedStories: React.FC = () => {
                       className="w-full h-full object-cover"
                       muted
                       preload="metadata"
-                      loading="lazy"
                     />
                   ) : (
                     <img

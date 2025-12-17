@@ -102,7 +102,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .order('impact_points', { ascending: false });
       
       if (error) {
-        console.log('Profiles table not found, using auth users only');
         setUsers([]);
         return;
       }
@@ -114,7 +113,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const avatarUrl = typeof profile.avatar_url === 'string' ? profile.avatar_url : `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.id}`;
         const impactPoints = typeof profile.impact_points === 'number' ? profile.impact_points : 0;
         const badges: string[] = [];
-        const role = profile.role === 'admin' ? 'admin' : 'user';
+        const role: 'user' | 'admin' = profile.role === 'admin' ? 'admin' : 'user';
         
         return {
           id: String(profile.id),
@@ -134,7 +133,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const saveUsers = (newUsers: User[]) => {
+  const _saveUsers = (newUsers: User[]) => {
     setUsers(newUsers);
   };
 
@@ -175,7 +174,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const awardPoints = async (userId: string, points: number, action: string) => {
+  const awardPoints = async (userId: string, points: number, _action: string) => {
     try {
       // Try to update points in Supabase profiles table
       const { data: profile } = await supabase
@@ -213,9 +212,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
   
-  const updateChallengeProgress = async (action: string, userId: string) => {
+  const _updateChallengeProgress = async (_action: string, _userId: string) => {
     // This would integrate with a proper challenge tracking system
-    console.log(`Challenge progress updated for ${userId}: ${action}`);
   };
 
   const getLeaderboard = () => {

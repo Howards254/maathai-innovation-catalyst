@@ -9,13 +9,13 @@ interface StoriesFeedProps {
 }
 
 const StoriesFeed = ({ feedType = 'all' }: StoriesFeedProps) => {
-  const { stories, loading, getStories, reactToStory, removeReaction, incrementViews } = useStories();
+  const { stories, loading, loadStories, reactToStory, removeReaction, incrementViews } = useStories();
   const { user } = useAuth();
   const [selectedStory, setSelectedStory] = useState<Story | null>(null);
 
   useEffect(() => {
-    getStories(feedType);
-  }, [feedType]);
+    loadStories();
+  }, [loadStories, feedType]);
 
   const reactionEmojis = {
     planted: '🌱',

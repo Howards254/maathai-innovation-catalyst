@@ -40,15 +40,16 @@ const CreateCampaign: React.FC = () => {
       const campaignData = {
         ...formData,
         tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-        status: 'active' as const
+        status: 'active' as const,
+        organizer: ''
       };
       
       await createCampaign(campaignData);
       toast.success('🌳 Campaign created successfully!');
       navigate('/app/campaigns');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Campaign creation error:', err);
-      const errorMsg = err?.message || 'Failed to create campaign. Please check your database setup.';
+      const errorMsg = (err instanceof Error ? err.message : null) || 'Failed to create campaign. Please check your database setup.';
       setError(errorMsg);
       toast.error(errorMsg);
     } finally {
@@ -57,7 +58,7 @@ const CreateCampaign: React.FC = () => {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: name === 'targetTrees' ? parseInt(value) || 0 : 

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Search, Crown, Shield, User, MessageSquare, Calendar, Pin, Heart, ThumbsUp, Share2, MoreHorizontal, Image, Video, FileText, MapPin, Clock, Eye, Lock, Globe, Filter, TrendingUp, Star, Award } from 'lucide-react';
-import { useGroups } from '../contexts/GroupsContext';
+import { Users, Plus, Search, Crown, Shield, User, MessageSquare, Calendar, Pin, ThumbsUp, Share2, MoreHorizontal, Image, FileText, MapPin, Eye, Lock, Filter, TrendingUp, Star } from 'lucide-react';
+import { useGroups, Group } from '../contexts/GroupsContext';
 import { formatDistanceToNow } from 'date-fns';
 
 const Groups: React.FC = () => {
   const { groups, myGroups, groupPosts, loading, createGroup, joinGroup, leaveGroup, loadGroupPosts, createGroupPost, likePost, addComment, loadGroups, loadMyGroups } = useGroups();
   const [activeTab, setActiveTab] = useState<'discover' | 'my-groups' | 'group-detail'>('discover');
-  const [selectedGroup, setSelectedGroup] = useState<any>(null);
+  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -14,7 +14,7 @@ const Groups: React.FC = () => {
   const [sortBy, setSortBy] = useState<'recent' | 'popular' | 'members'>('recent');
   const [postContent, setPostContent] = useState('');
   const [postTitle, setPostTitle] = useState('');
-  const [postType, setPostType] = useState<'discussion' | 'announcement' | 'photo' | 'poll'>('discussion');
+  const [postType, setPostType] = useState<'discussion' | 'announcement' | 'event' | 'poll'>('discussion');
   const [newComment, setNewComment] = useState<{[key: string]: string}>({});
 
   const categories = ['Environmental Action', 'Tree Planting', 'Climate Change', 'Sustainability', 'Conservation', 'Education'];
@@ -23,12 +23,14 @@ const Groups: React.FC = () => {
   // Load groups on component mount
   useEffect(() => {
     loadGroups().catch(console.error);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (activeTab === 'my-groups') {
       loadMyGroups();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   const filteredGroups = groups.filter(group => {
@@ -48,7 +50,7 @@ const Groups: React.FC = () => {
     }
   });
 
-  const handleGroupClick = (group: any) => {
+  const handleGroupClick = (group: Group) => {
     if (!group || !group.id) {
       console.error('Invalid group data:', group);
       return;
@@ -105,7 +107,7 @@ const Groups: React.FC = () => {
             name: formData.get('name') as string,
             description: formData.get('description') as string,
             category: formData.get('category') as string,
-            visibility: formData.get('visibility') as string,
+            visibility: formData.get('visibility') as 'public' | 'private' | 'secret',
             location: formData.get('location') as string,
             tags: (formData.get('tags') as string)?.split(',').map(t => t.trim()).filter(Boolean) || []
           });
@@ -205,10 +207,10 @@ const Groups: React.FC = () => {
                 { type: 'announcement', icon: Pin, label: 'Announcement' },
                 { type: 'photo', icon: Image, label: 'Photo' },
                 { type: 'poll', icon: FileText, label: 'Poll' }
-              ].map(({ type, icon: Icon, label }) => (
+              ].map(({ type, icon: Icon, label }: { type: string; icon: React.ComponentType<{ className?: string }>; label: string }) => (
                 <button
                   key={type}
-                  onClick={() => setPostType(type as any)}
+                  onClick={() => setPostType(type as 'discussion' | 'announcement' | 'event' | 'poll')}
                   className={`flex items-center space-x-2 px-3 py-2 rounded-lg border ${
                     postType === type ? 'bg-emerald-50 border-emerald-500 text-emerald-700' : 'border-gray-300 hover:bg-gray-50'
                   }`}
@@ -363,7 +365,7 @@ const Groups: React.FC = () => {
                   <TrendingUp className="w-4 h-4 text-gray-500" />
                   <select
                     value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as any)}
+                    onChange={(e) => setSortBy(e.target.value as 'recent' | 'popular' | 'members')}
                     className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 text-sm"
                   >
                     <option value="recent">Most Recent</option>
@@ -421,7 +423,7 @@ const Groups: React.FC = () => {
                       {/* Tags */}
                       {group.tags && group.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1 mb-3">
-                          {group.tags.slice(0, 3).map((tag, index) => (
+                          {group.tags.slice(0, 3).map((tag: string, index: number) => (
                             <span key={index} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
                               #{tag}
                             </span>
@@ -592,7 +594,7 @@ const Groups: React.FC = () => {
                 {/* Tags */}
                 {selectedGroup.tags && selectedGroup.tags.length > 0 && (
                   <div className="flex flex-wrap gap-2">
-                    {selectedGroup.tags.map((tag, index) => (
+                    {selectedGroup.tags.map((tag: string, index: number) => (
                       <span key={index} className="px-3 py-1 bg-emerald-100 text-emerald-700 text-sm rounded-full">
                         #{tag}
                       </span>

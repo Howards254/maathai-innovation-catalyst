@@ -24,22 +24,12 @@ interface Listing {
 }
 
 const Marketplace: React.FC = () => {
-  const { user } = useAuth();
+  useAuth();
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  if (isMobile) {
-    return <MobileMarketplace />;
-  }
 
   const categories = [
     { id: 'all', label: 'All Items', icon: '🛒' },
@@ -51,8 +41,19 @@ const Marketplace: React.FC = () => {
   ];
 
   useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
     loadListings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory]);
+
+  if (isMobile) {
+    return <MobileMarketplace />;
+  }
 
   const loadListings = async () => {
     setLoading(true);

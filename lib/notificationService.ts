@@ -7,7 +7,7 @@ interface NotificationPayload {
   icon?: string;
   badge?: string;
   tag?: string;
-  data?: any;
+  data?: Record<string, unknown>;
   actions?: Array<{
     action: string;
     title: string;
@@ -26,7 +26,7 @@ class NotificationService {
 
     try {
       this.registration = await navigator.serviceWorker.register('/sw.js');
-      console.log('Service Worker registered');
+      // Service Worker registered successfully
       return true;
     } catch (error) {
       console.error('Service Worker registration failed:', error);
@@ -121,9 +121,7 @@ class NotificationService {
       badge: payload.badge || '/badge-72x72.png',
       tag: payload.tag,
       data: payload.data,
-      actions: payload.actions,
-      requireInteraction: true,
-      vibrate: [200, 100, 200]
+      requireInteraction: true
     };
 
     await this.registration.showNotification(payload.title, options);

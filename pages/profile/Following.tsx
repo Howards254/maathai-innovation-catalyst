@@ -19,10 +19,11 @@ const Following: React.FC = () => {
   const { user: currentUser } = useAuth();
   const [following, setFollowing] = useState<Following[]>([]);
   const [loading, setLoading] = useState(true);
-  const [profileUser, setProfileUser] = useState<any>(null);
+  const [profileUser, setProfileUser] = useState<{ id: string; username: string; full_name: string } | null>(null);
 
   useEffect(() => {
     loadFollowing();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [username]);
 
   const loadFollowing = async () => {
@@ -59,14 +60,17 @@ const Following: React.FC = () => {
 
         const friendIds = new Set(mutualFollows?.map(f => f.following_id) || []);
 
-        const formattedFollowing = followingData.map(f => ({
-          id: f.profiles.id,
-          username: f.profiles.username,
-          full_name: f.profiles.full_name,
-          avatar_url: f.profiles.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(f.profiles.full_name)}&background=10b981&color=fff&size=80`,
-          bio: f.profiles.bio || 'Environmental enthusiast',
-          isFriend: friendIds.has(f.following_id)
-        }));
+        const formattedFollowing = followingData.map(f => {
+          const profile = f.profiles as unknown as { id: string; username: string; full_name: string; avatar_url: string; bio: string };
+          return {
+            id: profile.id,
+            username: profile.username,
+            full_name: profile.full_name,
+            avatar_url: profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.full_name)}&background=10b981&color=fff&size=80`,
+            bio: profile.bio || 'Environmental enthusiast',
+            isFriend: friendIds.has(f.following_id)
+          };
+        });
 
         setFollowing(formattedFollowing);
       }

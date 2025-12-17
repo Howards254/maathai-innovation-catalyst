@@ -47,9 +47,9 @@ const CreateEvent: React.FC = () => {
       });
       toast.success('Event submitted for review!');
       navigate('/app/events');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to create event:', error);
-      toast.error(error.message || 'Failed to create event');
+      toast.error((error instanceof Error ? error.message : null) || 'Failed to create event');
     } finally {
       setLoading(false);
     }
@@ -313,7 +313,7 @@ const CreateEvent: React.FC = () => {
                   🖼️ Event Image *
                 </label>
                 <ImageUpload
-                  onUpload={(url) => setFormData(prev => ({ ...prev, imageUrl: url }))}
+                  onUploadComplete={(url) => setFormData(prev => ({ ...prev, imageUrl: url }))}
                   currentImage={formData.imageUrl}
                   folder="events"
                 />

@@ -8,7 +8,7 @@ interface ActivityItem {
   activity_type: 'tree_planted' | 'campaign_joined' | 'story_posted' | 'event_attended' | 'discussion_created' | 'achievement_earned' | 'follow' | 'group_joined';
   title: string;
   description?: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
   points_earned: number;
   is_public: boolean;
   created_at: string;
@@ -155,11 +155,8 @@ export const ActivityFeedProvider: React.FC<{ children: React.ReactNode }> = ({ 
           progress: 0
         });
 
-      // Update participant count
-      await supabase
-        .from('live_challenges')
-        .update({ participant_count: supabase.sql`participant_count + 1` })
-        .eq('id', challengeId);
+      // Update participant count using RPC
+      await supabase.rpc('increment_challenge_participants', { challenge_id: challengeId });
 
       await loadChallenges();
     } catch (error) {
@@ -175,7 +172,7 @@ export const ActivityFeedProvider: React.FC<{ children: React.ReactNode }> = ({ 
       if (!challenge) return;
 
       const isCompleted = progress >= challenge.target_value;
-      const updateData: any = { progress };
+      const updateData: { progress: number; completed_at?: string; points_earned?: number } = { progress };
       
       if (isCompleted && !challenge.user_completed) {
         updateData.completed_at = new Date().toISOString();
@@ -189,15 +186,24 @@ export const ActivityFeedProvider: React.FC<{ children: React.ReactNode }> = ({ 
         .eq('user_id', user.id);
 
       // Update challenge progress
-      await supabase
+      const progressDelta = progress - (challenge.user_progress || 0);
+      const { data: currentChallenge } = await supabase
         .from('live_challenges')
-        .update({ 
-          current_progress: supabase.sql`current_progress + ${progress - (challenge.user_progress || 0)}`,
-          completion_count: isCompleted && !challenge.user_completed 
-            ? supabase.sql`completion_count + 1` 
-            : supabase.sql`completion_count`
-        })
-        .eq('id', challengeId);
+        .select('current_progress, completion_count')
+        .eq('id', challengeId)
+        .single();
+
+      if (currentChallenge) {
+        await supabase
+          .from('live_challenges')
+          .update({ 
+            current_progress: (currentChallenge.current_progress || 0) + progressDelta,
+            completion_count: isCompleted && !challenge.user_completed 
+              ? (currentChallenge.completion_count || 0) + 1 
+              : currentChallenge.completion_count
+          })
+          .eq('id', challengeId);
+      }
 
       // Award points to user if completed
       if (isCompleted && !challenge.user_completed) {
@@ -222,7 +228,7 @@ export const ActivityFeedProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
-  const subscribeToActivities = () => {
+  const _subscribeToActivities = () => {
     const channel = supabase
       .channel('activity_feed')
       .on('postgres_changes', 

@@ -57,8 +57,7 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({ userId, isOwnProfile 
   };
 
   const handleMessageUser = () => {
-    // Navigate to messages with this user
-    console.log('Start conversation with user:', userId);
+    // Navigate to messages with this user - TODO: implement navigation
   };
 
   return (
@@ -234,10 +233,9 @@ const EnhancedProfile: React.FC<EnhancedProfileProps> = ({ userId, isOwnProfile 
             <div className="border-t border-gray-200 pt-4">
               <h3 className="font-medium text-gray-900 mb-2">Current Badge</h3>
               <div className="inline-flex items-center space-x-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg">
-                <span className="text-2xl">{user.current_badge.icon}</span>
+                <span className="text-2xl">🏆</span>
                 <div>
-                  <div className="font-medium text-emerald-900">{user.current_badge.name}</div>
-                  <div className="text-sm text-emerald-700">{user.current_badge.description}</div>
+                  <div className="font-medium text-emerald-900">{user.current_badge}</div>
                 </div>
               </div>
             </div>

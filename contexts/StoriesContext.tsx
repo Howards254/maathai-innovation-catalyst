@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useUser } from './UserContext';
 
-interface Story {
+export interface Story {
   id: string;
   author_id: string;
   title: string;
@@ -21,9 +21,11 @@ interface Story {
     full_name: string;
     username: string;
     avatar_url?: string;
+    level?: string;
   };
-  reactions?: any[];
-  comments?: any[];
+  reactions?: Array<{ type?: string; reaction_type?: string; count: number }>;
+  comments?: Array<{ id: string; content: string; author_id: string; author?: { id: string; full_name: string; avatar_url?: string } }>;
+  user_reaction?: string;
 }
 
 interface StoriesContextType {
@@ -31,6 +33,9 @@ interface StoriesContextType {
   loading: boolean;
   createStory: (data: Partial<Story>) => Promise<void>;
   loadStories: () => Promise<void>;
+  reactToStory: (storyId: string, reactionType: string) => Promise<void>;
+  removeReaction: (storyId: string, reactionType: string) => Promise<void>;
+  incrementViews: (storyId: string) => Promise<void>;
 }
 
 const StoriesContext = createContext<StoriesContextType | undefined>(undefined);
@@ -44,6 +49,7 @@ export const StoriesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (user?.id && user.id !== 'user-1') {
       loadStories();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   const loadStories = async () => {
@@ -70,7 +76,14 @@ export const StoriesProvider: React.FC<{ children: React.ReactNode }> = ({ child
           .limit(30);
         
         if (basicError) throw basicError;
-        setStories(basicData || []);
+        const formattedStories = (basicData || []).map(story => {
+          const author = story.author as unknown as { id: string; full_name: string; username: string; avatar_url?: string } | null;
+          return {
+            ...story,
+            author: author || { id: '', full_name: 'Unknown', username: 'unknown' }
+          };
+        });
+        setStories(formattedStories);
         return;
       }
       
@@ -87,7 +100,7 @@ export const StoriesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!user?.id || user.id === 'user-1') return;
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('stories')
         .insert({
           author_id: user.id,
@@ -116,12 +129,84 @@ export const StoriesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  const reactToStory = async (storyId: string, reactionType: string) => {
+    if (!user?.id || user.id === 'user-1') return;
+
+    try {
+      const { error } = await supabase
+        .from('story_reactions')
+        .upsert({
+          story_id: storyId,
+          user_id: user.id,
+          reaction_type: reactionType
+        }, { onConflict: 'story_id,user_id' });
+
+      if (error) throw error;
+      
+      setStories(prev => prev.map(story => 
+        story.id === storyId 
+          ? { ...story, user_reaction: reactionType }
+          : story
+      ));
+    } catch (error) {
+      console.error('Error reacting to story:', error);
+    }
+  };
+
+  const removeReaction = async (storyId: string, reactionType: string) => {
+    if (!user?.id || user.id === 'user-1') return;
+
+    try {
+      const { error } = await supabase
+        .from('story_reactions')
+        .delete()
+        .eq('story_id', storyId)
+        .eq('user_id', user.id)
+        .eq('reaction_type', reactionType);
+
+      if (error) throw error;
+      
+      setStories(prev => prev.map(story => 
+        story.id === storyId 
+          ? { ...story, user_reaction: undefined }
+          : story
+      ));
+    } catch (error) {
+      console.error('Error removing reaction:', error);
+    }
+  };
+
+  const incrementViews = async (storyId: string) => {
+    try {
+      const { error } = await supabase.rpc('increment_story_views', { story_id: storyId });
+      
+      if (error) {
+        // Fallback: direct update
+        await supabase
+          .from('stories')
+          .update({ views_count: supabase.rpc('increment', { x: 1 }) })
+          .eq('id', storyId);
+      }
+      
+      setStories(prev => prev.map(story => 
+        story.id === storyId 
+          ? { ...story, views_count: story.views_count + 1 }
+          : story
+      ));
+    } catch (error) {
+      console.error('Error incrementing views:', error);
+    }
+  };
+
   return (
     <StoriesContext.Provider value={{
       stories,
       loading,
       createStory,
-      loadStories
+      loadStories,
+      reactToStory,
+      removeReaction,
+      incrementViews
     }}>
       {children}
     </StoriesContext.Provider>

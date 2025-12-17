@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useUser } from './UserContext';
 
-interface Group {
+export interface Group {
   id: string;
   name: string;
   description?: string;
@@ -73,6 +73,7 @@ export const GroupsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       loadGroups().catch(console.error);
       loadMyGroups().catch(console.error);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   const loadGroups = async () => {
@@ -118,7 +119,7 @@ export const GroupsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               is_member: !!membership,
               user_role: membership?.role
             };
-          } catch (error) {
+          } catch {
             // If error (like table doesn't exist), default to not a member
             return { ...group, is_member: false };
           }
@@ -152,13 +153,16 @@ export const GroupsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return;
       }
 
-      const myGroupsData = (data || []).map(item => ({
-        ...item.groups,
-        user_role: item.role,
-        is_member: true
-      }));
+      const myGroupsData = (data || []).map(item => {
+        const groups = item.groups as unknown as Group;
+        return {
+          ...groups,
+          user_role: item.role,
+          is_member: true
+        };
+      });
 
-      setMyGroups(myGroupsData);
+      setMyGroups(myGroupsData as Group[]);
     } catch (error) {
       console.error('Error loading my groups:', error);
       setMyGroups([]);
@@ -209,7 +213,6 @@ export const GroupsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .single();
 
       if (existingMember) {
-        console.log('Already a member of this group');
         return;
       }
 
