@@ -54,7 +54,7 @@ interface MatchmakingContextType {
   createTeam: (teamData: Partial<GreenTeam>) => Promise<void>;
   joinTeam: (teamId: string) => Promise<void>;
   loadTeams: () => Promise<void>;
-  updateMatchmakingPreferences: (preferences: any) => Promise<void>;
+  updateMatchmakingPreferences: (preferences: Record<string, unknown>) => Promise<void>;
 }
 
 const MatchmakingContext = createContext<MatchmakingContextType | undefined>(undefined);
@@ -73,6 +73,7 @@ export const MatchmakingProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }, 500);
       return () => clearTimeout(timer);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   const loadMatches = async () => {
@@ -115,12 +116,12 @@ export const MatchmakingProvider: React.FC<{ children: React.ReactNode }> = ({ c
       if (error) throw error;
 
       // Create match records for new matches
-      const newMatches = data?.filter((match: any) => 
+      const newMatches = data?.filter((match: Record<string, unknown>) => 
         !matches.some(existing => existing.matched_user_id === match.matched_user_id)
       ) || [];
 
       if (newMatches.length > 0) {
-        const matchInserts = newMatches.map((match: any) => ({
+        const matchInserts = newMatches.map((match: Record<string, unknown>) => ({
           user_id: user.id,
           matched_user_id: match.matched_user_id,
           match_type: matchType || 'collaborator',
@@ -213,11 +214,19 @@ export const MatchmakingProvider: React.FC<{ children: React.ReactNode }> = ({ c
           role: 'member'
         });
 
-      // Update team member count
-      await supabase
+      // Update team member count - fetch current and increment
+      const { data: teamData } = await supabase
         .from('green_teams')
-        .update({ current_members: supabase.sql`current_members + 1` })
-        .eq('id', teamId);
+        .select('current_members')
+        .eq('id', teamId)
+        .single();
+      
+      if (teamData) {
+        await supabase
+          .from('green_teams')
+          .update({ current_members: (teamData.current_members || 0) + 1 })
+          .eq('id', teamId);
+      }
 
       await loadTeams();
     } catch (error) {
@@ -246,7 +255,7 @@ export const MatchmakingProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   };
 
-  const updateMatchmakingPreferences = async (preferences: any) => {
+  const updateMatchmakingPreferences = async (preferences: Record<string, unknown>) => {
     if (!user?.id || user.id === 'user-1') return;
 
     try {

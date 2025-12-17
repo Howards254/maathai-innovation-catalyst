@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
 // Fix for default marker icon
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -43,8 +44,8 @@ const MapPicker: React.FC<MapPickerProps> = ({
   const [position, setPosition] = useState<[number, number]>(initialPosition);
   const [searchQuery, setSearchQuery] = useState('');
   const [searching, setSearching] = useState(false);
-  const [suggestions, setSuggestions] = useState<any[]>([]);
-  const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const [suggestions, setSuggestions] = useState<{ lat: string; lon: string; display_name: string }[]>([]);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const handlePositionChange = async (lat: number, lng: number) => {
     setPosition([lat, lng]);
@@ -56,7 +57,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
       );
       const data = await response.json();
       onLocationSelect(lat, lng, data.display_name);
-    } catch (error) {
+    } catch {
       onLocationSelect(lat, lng);
     }
   };
@@ -91,7 +92,7 @@ const MapPicker: React.FC<MapPickerProps> = ({
     }, 300);
   };
 
-  const selectSuggestion = (suggestion: any) => {
+  const selectSuggestion = (suggestion: { lat: string; lon: string; display_name: string }) => {
     const lat = parseFloat(suggestion.lat);
     const lng = parseFloat(suggestion.lon);
     setPosition([lat, lng]);

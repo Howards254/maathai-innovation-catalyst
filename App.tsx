@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { HashRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -75,7 +75,7 @@ import ListingDetail from './pages/marketplace/ListingDetail';
 import EditListing from './pages/marketplace/EditListing';
 
 // Placeholder components for routes not fully detailed yet
-const Placeholder = ({ title }: { title: string }) => (
+const _Placeholder = ({ title }: { title: string }) => (
   <div className="p-8 text-center bg-white rounded-lg shadow-sm border border-gray-200">
     <h2 className="text-2xl font-bold text-gray-800 mb-4">{title}</h2>
     <p className="text-gray-500">This feature is currently under development.</p>

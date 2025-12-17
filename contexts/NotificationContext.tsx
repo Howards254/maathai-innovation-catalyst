@@ -36,9 +36,12 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       loadNotifications();
       const channel = subscribeToNotifications();
       return () => {
-        supabase.removeChannel(channel);
+        if (channel && 'unsubscribe' in channel && typeof channel.unsubscribe === 'function') {
+          channel.unsubscribe();
+        }
       };
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const loadNotifications = async () => {
@@ -46,7 +49,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     try {
       // First try with the join
-      let { data, error } = await supabase
+      const { data, error } = await supabase
         .from('notifications')
         .select('*')
         .eq('user_id', user.id)
@@ -54,7 +57,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         .limit(20);
 
       if (error) {
-        console.log('Notifications table not found, skipping...', error);
+        console.warn('Notifications table not found, skipping...', error);
         return;
       }
 
@@ -90,8 +93,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           () => loadNotifications()
         )
         .subscribe();
-    } catch (error) {
-      console.log('Could not subscribe to notifications');
+    } catch {
+      console.warn('Could not subscribe to notifications');
       return { unsubscribe: () => {} };
     }
   };

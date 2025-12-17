@@ -78,7 +78,7 @@ export const InnovationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       ...innovationData,
       id: `i${Date.now()}`,
       creatorId: user.id,
-      creatorName: user.fullName,
+      creatorName: user.user_metadata?.full_name || 'Unknown',
       status: 'pending',
       currentFunding: 0,
       createdAt: new Date().toISOString(),

@@ -6,7 +6,7 @@ import ShareButton from '../../components/ShareButton';
 
 const DiscussionDetail: React.FC = () => {
   const { id } = useParams();
-  const { getDiscussion, getComments, voteDiscussion, getUserVote, addComment, likeComment, getUserCommentLike } = useDiscussions();
+  const { getDiscussion, getComments, voteDiscussion, getUserVote, addComment, likeComment, getUserCommentLike: _getUserCommentLike } = useDiscussions();
   const { user } = useAuth();
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -216,12 +216,12 @@ const DiscussionDetail: React.FC = () => {
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-6">
             <div className="flex items-center gap-3 mb-4">
               <img 
-                src={user.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName || user.username || 'User')}&background=10b981&color=fff&size=200`} 
-                alt={user.username} 
+                src={user.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.user_metadata?.full_name || user.user_metadata?.username || 'User')}&background=10b981&color=fff&size=200`} 
+                alt={user.user_metadata?.username || 'User'} 
                 className="w-10 h-10 rounded-full ring-2 ring-gray-100" 
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
-                  target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName || user.username || 'User')}&background=10b981&color=fff&size=200`;
+                  target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.user_metadata?.full_name || user.user_metadata?.username || 'User')}&background=10b981&color=fff&size=200`;
                 }}
               />
               <h3 className="font-semibold text-gray-900">Add a comment</h3>
@@ -369,12 +369,12 @@ const DiscussionDetail: React.FC = () => {
                           <div className="mt-4 pl-4 border-l-2 border-blue-200">
                             <div className="flex gap-3">
                               <img 
-                                src={user?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.fullName || user?.username || 'User')}&background=10b981&color=fff&size=200`} 
-                                alt={user?.username} 
+                                src={user.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.user_metadata?.full_name || user.user_metadata?.username || 'User')}&background=10b981&color=fff&size=200`} 
+                                alt={user.user_metadata?.username || 'User'} 
                                 className="w-8 h-8 rounded-full ring-2 ring-gray-100 flex-shrink-0" 
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
-                                  target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.fullName || user?.username || 'User')}&background=10b981&color=fff&size=200`;
+                                  target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.user_metadata?.full_name || user.user_metadata?.username || 'User')}&background=10b981&color=fff&size=200`;
                                 }}
                               />
                               <div className="flex-1">

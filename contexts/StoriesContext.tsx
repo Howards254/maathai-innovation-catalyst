@@ -24,7 +24,7 @@ export interface Story {
     level?: string;
   };
   reactions?: Array<{ type?: string; reaction_type?: string; count: number }>;
-  comments?: Array<{ id: string; content: string; author_id: string; author?: { id: string; full_name: string; avatar_url?: string } }>;
+  comments?: Array<{ id: string; content: string; author_id: string; author?: { id: string; full_name: string; username?: string; avatar_url?: string } }>;
   user_reaction?: string;
 }
 
