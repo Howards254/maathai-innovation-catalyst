@@ -29,10 +29,10 @@
     "leaflet": "^1.9.4",
     "lucide-react": "^0.554.0",
     "qrcode": "^1.5.4",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
     "react-leaflet": "^5.0.0",
-    "react-router-dom": "^7.9.6",
+    "react-router-dom": "^7.11.0",
     "react-toastify": "^11.0.5"
   },
   "devDependencies": {
@@ -41,7 +41,7 @@
     "lint-staged": "^15.2.10",
     "prettier": "^3.3.3",
     "@types/node": "^22.14.0",
-    "@types/react": "^19.2.6",
+    "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@typescript-eslint/eslint-plugin": "^8.50.0",
     "@typescript-eslint/parser": "^8.50.0",
